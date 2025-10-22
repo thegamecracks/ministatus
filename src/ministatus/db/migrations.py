@@ -25,7 +25,7 @@ class Migrations(tuple[Migration, ...]):
         return cls(sorted(it, key=lambda m: m.version))
 
 
-def read_migrations(self) -> Migrations:
+def read_migrations() -> Migrations:
     migrations: list[Migration] = [Migration(version=-1, sql="")]
 
     assert __package__ is not None
@@ -67,7 +67,6 @@ class Migrator(ABC):
                 await self.conn.execute(script)
 
             await self.set_version(version)
-            await self.conn.execute("UPDATE schema_version SET version = $1", version)
 
 
 class SQLiteMigrator(Migrator):

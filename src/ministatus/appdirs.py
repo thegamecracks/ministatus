@@ -6,3 +6,4 @@ APP_DIRS = platformdirs.PlatformDirs(
     ensure_exists=True,
     opinion=True,
 )
+DB_PATH = APP_DIRS.user_data_path / f"{APP_DIRS.appname}.db"
