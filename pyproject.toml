@@ -1,0 +1,17 @@
+[build-system]
+requires = ["uv-build~=0.9.5"]
+build-backend = "uv_build"
+
+[project]
+name = "ministatus"
+description = "A Discord bot for managing game server status embeds."
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "asqlite~=2.0",
+    "discord.py~=2.6",
+    "jishaku~=2.6",
+]
+
+[project.scripts]
+ministatus = "ministatus.__main__:main"
