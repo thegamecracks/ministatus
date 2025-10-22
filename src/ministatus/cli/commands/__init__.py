@@ -1,12 +1,21 @@
-from click import Group
+import importlib
+import pkgutil
+from typing import Iterable
 
-from ministatus.cli.commands.appdirs import appdirs
-from ministatus.cli.commands.config import config
-from ministatus.cli.commands.db import db
+from click import Command, Group
 
 
 def add_commands(group: Group) -> None:
-    # TODO: automatic indexing of commands
-    group.add_command(appdirs)
-    group.add_command(config)
-    group.add_command(db)
+    for info in pkgutil.iter_modules(__path__):
+        module_name = info.name
+        module = importlib.import_module(f".{module_name}", package=__name__)
+
+        members = getattr(module, "__all__", None)
+        if members is None:
+            members = getattr(module, module_name, None)
+        if not isinstance(members, Iterable):
+            members = [members]
+
+        commands = [m for m in members if isinstance(m, Command)]
+        for cmd in commands:
+            group.add_command(cmd)
