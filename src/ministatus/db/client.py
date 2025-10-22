@@ -8,7 +8,10 @@ class DatabaseClient:
         self.conn = conn
 
     async def get_setting(self, name: str, default: Any = None) -> Any:
-        row = await self.conn.fetchrow("SELECT value FROM setting WHERE name = $1", name)
+        row = await self.conn.fetchrow(
+            "SELECT value FROM setting WHERE name = $1",
+            name,
+        )
         if row is None:
             return default
         return row[0]
@@ -21,8 +24,12 @@ class DatabaseClient:
             value,
         )
 
-    async def delete_setting(self, name: str) -> None:
-        await self.conn.execute("DELETE FROM setting WHERE name = $1", name)
+    async def delete_setting(self, name: str) -> bool:
+        ret = await self.conn.fetchval(
+            "DELETE FROM setting WHERE name = $1 RETURNING 1",
+            name,
+        )
+        return ret is not None
 
     async def add_discord_user(
         self,

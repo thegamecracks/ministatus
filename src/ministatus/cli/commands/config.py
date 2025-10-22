@@ -68,7 +68,9 @@ async def set_setting(conn: Connection, name: str, value: Any) -> None:
 
 async def delete_setting(conn: Connection, name: str) -> None:
     client = DatabaseClient(conn)
-    await client.delete_setting(name)
+    found = await client.delete_setting(name)
+    if not found:
+        return click.secho(f"{name!r} not found", fg="yellow")
 
 
 def parse_value(value: str) -> float | int | str | None:
