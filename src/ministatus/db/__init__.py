@@ -1,7 +1,11 @@
+from __future__ import annotations
+
+import logging
 from contextlib import asynccontextmanager
-from typing import AsyncIterator
+from typing import TYPE_CHECKING, Any, AsyncIterator, Callable
 
 from ministatus.appdirs import DB_PATH
+from ministatus import state
 
 from .client import DatabaseClient as DatabaseClient
 from .connection import (
@@ -18,13 +22,18 @@ from .migrations import (
 )
 from .secret import Secret as Secret
 
+if TYPE_CHECKING:
+    import sqlite3
+
+    import asqlite
+
+log = logging.getLogger(__name__)
+
 
 @asynccontextmanager
 async def connect(*, transaction: bool = True) -> AsyncIterator[SQLiteConnection]:
-    import asqlite
-
     database = str(DB_PATH)
-    async with asqlite.connect(database) as conn:
+    async with _connect(database, preinit=maybe_encrypt) as conn:
         wrapped = SQLiteConnection(conn)
         if transaction:
             async with wrapped.transaction():
@@ -44,3 +53,67 @@ async def run_migrations() -> None:
     async with connect() as conn:
         migrator = SQLiteMigrator(conn)
         await migrator.run_migrations(migrations)
+
+
+# Derived from asqlite.connect(), v2.0.0
+def _connect(
+    database: str,
+    *,
+    preinit: Callable[[sqlite3.Connection], Any],
+    timeout: float | None = None,
+    **kwargs: Any,
+) -> asqlite._ContextManagerMixin[sqlite3.Connection, asqlite.Connection]:
+    import asyncio
+    import sqlite3
+    from unittest.mock import patch
+
+    import asqlite
+
+    loop = asyncio.get_event_loop()
+    queue = asqlite._Worker(loop=loop)
+    queue.start()
+    _real_connect = sqlite3.connect
+
+    def factory(con: sqlite3.Connection) -> asqlite.Connection:
+        return asqlite.Connection(con, queue)
+
+    def patched_connect(*args, **kwargs) -> sqlite3.Connection:
+        conn = _real_connect(*args, **kwargs)
+        preinit(conn)
+        return conn
+
+    def new_connect(db: str, **kwargs: Any) -> sqlite3.Connection:
+        with patch("sqlite3.connect", patched_connect):
+            conn = asqlite._connect_pragmas(db, **kwargs)
+        return conn
+
+    return asqlite._ContextManagerMixin(
+        queue,
+        factory,
+        new_connect,
+        database,
+        timeout=timeout,
+        **kwargs,
+    )
+
+
+def maybe_encrypt(conn: sqlite3.Connection) -> None:
+    if state.DB_PASSWORD is None:
+        return
+
+    key = state.DB_PASSWORD.get_secret_value()
+    key = key.replace("'", "''")
+
+    # Key formats:
+    # https://www.zetetic.net/sqlcipher/sqlcipher-api/#PRAGMA_key
+    # https://utelle.github.io/SQLite3MultipleCiphers/docs/configuration/config_sql_pragmas/#pragma-key--hexkey
+    c = conn.execute(f"PRAGMA key = '{key}'")
+    ret = c.fetchone()
+    c.close()
+
+    # Expected result is an 'ok' string
+    if ret is None:
+        raise RuntimeError(
+            "Encryption/decryption failed, sqlite3 library does not support "
+            "the 'PRAGMA key' statement"
+        )

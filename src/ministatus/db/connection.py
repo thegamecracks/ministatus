@@ -7,7 +7,6 @@ from typing import (
     AsyncIterator,
     Iterator,
     Protocol,
-    Self,
     Sequence,
     TypeVar,
 )
@@ -63,9 +62,3 @@ class SQLiteConnection(Connection):
     async def transaction(self) -> AsyncIterator[asqlite.Transaction]:
         async with self.conn.transaction() as transaction:
             yield transaction
-
-    @classmethod
-    @asynccontextmanager
-    async def connect(cls, database: str) -> AsyncIterator[Self]:
-        async with asqlite.connect(database) as conn:
-            yield cls(conn)
