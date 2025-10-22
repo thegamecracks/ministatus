@@ -30,12 +30,8 @@ class Bot(commands.Bot):
         *,
         transaction: bool = True,
     ) -> AsyncIterator[SQLiteConnection]:
-        async with connect() as conn:
-            if transaction:
-                async with conn.transaction():
-                    yield conn
-            else:
-                yield conn
+        async with connect(transaction=transaction) as conn:
+            yield conn
 
     @asynccontextmanager
     async def acquire_db_client(

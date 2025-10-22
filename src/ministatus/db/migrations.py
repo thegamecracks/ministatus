@@ -64,12 +64,11 @@ class Migrator(ABC):
             sys.exit(f"Unrecognized database version: {version}")
             return
 
-        async with self.conn.transaction():
-            for version, script in migrations.after_version(version):
-                log.info(f"Migrating database to v{version}")
-                await self.conn.executescript(script)
+        for version, script in migrations.after_version(version):
+            log.info(f"Migrating database to v{version}")
+            await self.conn.executescript(script)
 
-            await self.set_version(version)
+        await self.set_version(version)
 
 
 class SQLiteMigrator(Migrator):
