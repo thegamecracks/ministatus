@@ -1,17 +1,22 @@
 from __future__ import annotations
 
 import logging
+import sqlite3
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any, AsyncIterator, Callable
 
-from ministatus.appdirs import DB_PATH
 from ministatus import state
+from ministatus.appdirs import DB_PATH
 
 from .client import DatabaseClient as DatabaseClient
 from .connection import (
     Connection as Connection,
     Record as Record,
     SQLiteConnection as SQLiteConnection,
+)
+from .errors import (
+    DatabaseEncryptedError as DatabaseEncryptedError,
+    EncryptionUnsupportedError as EncryptionUnsupportedError,
 )
 from .migrations import (
     Migration as Migration,
@@ -23,8 +28,6 @@ from .migrations import (
 from .secret import Secret as Secret
 
 if TYPE_CHECKING:
-    import sqlite3
-
     import asqlite
 
 log = logging.getLogger(__name__)
@@ -98,22 +101,37 @@ def _connect(
 
 
 def maybe_encrypt(conn: sqlite3.Connection) -> None:
-    if state.DB_PASSWORD is None:
-        return
+    if state.DB_PASSWORD is not None:
+        encrypt(conn, state.DB_PASSWORD)
 
-    key = state.DB_PASSWORD.get_secret_value()
-    key = key.replace("'", "''")
 
+def encrypt(
+    conn: sqlite3.Connection,
+    password: Secret[str],
+    *,
+    rekey: bool = False,
+) -> None:
     # Key formats:
     # https://www.zetetic.net/sqlcipher/sqlcipher-api/#PRAGMA_key
     # https://utelle.github.io/SQLite3MultipleCiphers/docs/configuration/config_sql_pragmas/#pragma-key--hexkey
-    c = conn.execute(f"PRAGMA key = '{key}'")
+    key = password.get_secret_value()
+    key = key.replace("'", "''")
+    pragma = "rekey" if rekey else "key"
+
+    try:
+        if rekey:
+            conn.execute("PRAGMA journal_mode = delete")
+
+        c = conn.execute(f"PRAGMA {pragma} = '{key}'")
+
+        if not rekey:
+            conn.execute("SELECT * FROM sqlite_schema")  # Test decryption
+    except sqlite3.DatabaseError as e:
+        if e.sqlite_errorcode == 26:  # SQLITE_NOTADB
+            raise DatabaseEncryptedError() from None
+        raise
+
     ret = c.fetchone()
     c.close()
-
-    # Expected result is an 'ok' string
     if ret is None:
-        raise RuntimeError(
-            "Encryption/decryption failed, sqlite3 library does not support "
-            "the 'PRAGMA key' statement"
-        )
+        raise EncryptionUnsupportedError()  # Expected 'ok' to be returned
