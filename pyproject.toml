@@ -9,6 +9,7 @@ version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [
     "asqlite~=2.0",
+    "click~=8.3",
     "discord.py~=2.6",
     "jishaku~=2.6",
     "platformdirs~=4.5",
