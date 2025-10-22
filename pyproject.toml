@@ -11,6 +11,7 @@ dependencies = [
     "asqlite~=2.0",
     "click~=8.3",
     "discord.py~=2.6",
+    "dnspython~=2.8",
     "jishaku~=2.6",
     "opengsq~=3.4",
     "platformdirs~=4.5",
