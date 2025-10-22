@@ -178,6 +178,7 @@ class JSONFormatter(logging.Formatter):
             tz=datetime.timezone.utc,
         )
 
+        data["level"] = record.levelname
         data["created"] = created.isoformat()
         data["message"] = record.getMessage()
 
