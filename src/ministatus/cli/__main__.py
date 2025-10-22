@@ -17,6 +17,7 @@ CONTEXT_SETTINGS = dict(
 @click.option("-v", "--verbose", count=True)
 @click.version_option(__version__, "-V", "--version")
 def main(verbose: int) -> None:
+    """A Discord bot for managing game server status embeds."""
     setup_logging(verbose=verbose)
 
 
