@@ -396,6 +396,7 @@ dependencies = [
     { name = "click" },
     { name = "discord-py" },
     { name = "jishaku" },
+    { name = "opengsq" },
     { name = "platformdirs" },
 ]
 
@@ -405,6 +406,7 @@ requires-dist = [
     { name = "click", specifier = "~=8.3" },
     { name = "discord-py", specifier = "~=2.6" },
     { name = "jishaku", specifier = "~=2.6" },
+    { name = "opengsq", specifier = "~=3.4" },
     { name = "platformdirs", specifier = "~=4.5" },
 ]
 
@@ -523,6 +525,18 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/ba/8f/0a60e501584145588be1af5cc829265701ba3c35a64aec8e07cbb71d39bb/multidict-6.7.0-cp314-cp314t-win_amd64.whl", hash = "sha256:09929cab6fcb68122776d575e03c6cc64ee0b8fca48d17e135474b042ce515cd", size = 53507, upload-time = "2025-10-06T14:51:53.672Z" },
     { url = "https://files.pythonhosted.org/packages/7f/ae/3148b988a9c6239903e786eac19c889fab607c31d6efa7fb2147e5680f23/multidict-6.7.0-cp314-cp314t-win_arm64.whl", hash = "sha256:cc41db090ed742f32bd2d2c721861725e6109681eddf835d0a82bd3a5c382827", size = 44804, upload-time = "2025-10-06T14:51:55.415Z" },
     { url = "https://files.pythonhosted.org/packages/b7/da/7d22601b625e241d4f23ef1ebff8acfc60da633c9e7e7922e24d10f592b3/multidict-6.7.0-py3-none-any.whl", hash = "sha256:394fc5c42a333c9ffc3e421a4c85e08580d990e08b99f6bf35b4132114c5dcb3", size = 12317, upload-time = "2025-10-06T14:52:29.272Z" },
+]
+
+[[package]]
+name = "opengsq"
+version = "3.4.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "aiohttp" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/97/68/ba889b2f11480e5675064838f43b3b801f33083d0c75ca83deede9b90dec/opengsq-3.4.1.tar.gz", hash = "sha256:e12cc685ec50ca76b1cabcd18b2b02a5490b7557103cfa42470cc557f52c969c", size = 57766, upload-time = "2025-07-10T11:15:55.526Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ed/e8/057e8c6c9506a9d8e466e26c39c6907f2f3eb27f66af4f54ac0e3dde8958/opengsq-3.4.1-py3-none-any.whl", hash = "sha256:6ad5b3fc58483324b3425e1a8e185e5ec5134cfe764b53c2a512cea40d89236e", size = 93677, upload-time = "2025-07-10T11:15:53.823Z" },
 ]
 
 [[package]]
