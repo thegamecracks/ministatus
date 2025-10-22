@@ -10,11 +10,11 @@ from .connection import (
     SQLiteConnection as SQLiteConnection,
 )
 from .migrations import (
-    Migration,
-    Migrations,
-    Migrator,
-    SQLiteMigrator,
-    read_migrations,
+    Migration as Migration,
+    Migrations as Migrations,
+    Migrator as Migrator,
+    SQLiteMigrator as SQLiteMigrator,
+    read_migrations as read_migrations,
 )
 
 
