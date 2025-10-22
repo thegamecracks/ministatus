@@ -2,12 +2,13 @@ import re
 
 import click
 
-from ministatus.cli.commands.asyncio import mark_async
+from ministatus.cli.commands.markers import mark_async, mark_db
 from ministatus.db import Secret
 
 
 @click.command()
 @mark_async()
+@mark_db()
 async def start() -> None:
     """Start the Discord bot in the current process."""
     token = await read_token()

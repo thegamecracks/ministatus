@@ -3,7 +3,7 @@ from typing import Any
 
 import click
 
-from ministatus.cli.commands.asyncio import mark_async
+from ministatus.cli.commands.markers import mark_async, mark_db
 from ministatus.db import Connection, DatabaseClient, Secret, connect
 
 
@@ -13,6 +13,7 @@ from ministatus.db import Connection, DatabaseClient, Secret, connect
 @click.argument("value", default=None)
 @click.pass_context
 @mark_async()
+@mark_db()
 async def config(
     ctx: click.Context,
     name: str,

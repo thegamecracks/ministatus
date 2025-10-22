@@ -36,6 +36,7 @@ WRONG_PASSWORD = click.style(
 )
 
 
+# Don't use @mark_db() here, we need to handle decryption ourselves
 @click.group()
 def db() -> None:
     """Manage the application database."""
@@ -107,9 +108,6 @@ def decrypt(password: Secret[str] | None) -> None:
     """Decrypt the database with an old password."""
     if state.DB_PASSWORD is not None:
         password = state.DB_PASSWORD
-    elif password is None:
-        password = click.prompt("Database Password", hide_input=True, type=Secret)
-        assert isinstance(password, Secret)
 
     with closing(sqlite3.connect(DB_PATH)) as conn:
         try:
@@ -117,6 +115,10 @@ def decrypt(password: Secret[str] | None) -> None:
             sys.exit(ALREADY_DECRYPTED)
         except sqlite3.DatabaseError:
             pass
+
+        if password is None:
+            password = click.prompt("Database Password", hide_input=True, type=Secret)
+            assert isinstance(password, Secret)
 
         try:
             db_encrypt(conn, password)
