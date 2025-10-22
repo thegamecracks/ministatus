@@ -8,21 +8,21 @@ class DatabaseClient:
         self.conn = conn
 
     async def get_setting(self, name: str, default: Any = None) -> Any:
-        row = await self.conn.fetchrow("SELECT value FROM setting WHERE name = ?", name)
+        row = await self.conn.fetchrow("SELECT value FROM setting WHERE name = $1", name)
         if row is None:
             return default
         return row[0]
 
     async def set_setting(self, name: str, value: Any) -> None:
         await self.conn.execute(
-            "INSERT INTO setting (name, value) VALUES (?, ?) "
+            "INSERT INTO setting (name, value) VALUES ($1, $2) "
             "ON CONFLICT (name) DO UPDATE SET value = excluded.value",
             name,
             value,
         )
 
     async def delete_setting(self, name: str) -> None:
-        await self.conn.execute("DELETE FROM setting WHERE name = ?", name)
+        await self.conn.execute("DELETE FROM setting WHERE name = $1", name)
 
     async def add_discord_user(
         self,
