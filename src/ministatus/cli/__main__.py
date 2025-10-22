@@ -4,6 +4,7 @@ import logging
 import click
 
 from ministatus import __version__
+from ministatus.appdirs import DB_PATH
 from ministatus.cli.commands import add_commands
 from ministatus.db import run_migrations
 from ministatus.logging import setup_logging
@@ -22,6 +23,12 @@ CONTEXT_SETTINGS = dict(
 def main(verbose: int) -> None:
     """A Discord bot for managing game server status embeds."""
     setup_logging(verbose=verbose)
+    maybe_run_migrations()
+
+
+def maybe_run_migrations() -> None:
+    if DB_PATH.exists():
+        return
     asyncio.run(run_migrations())
 
 
