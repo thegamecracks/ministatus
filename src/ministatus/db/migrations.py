@@ -64,7 +64,7 @@ class Migrator(ABC):
         async with self.conn.transaction():
             for version, script in migrations.after_version(version):
                 print(f"Migrating database to v{version}")
-                await self.conn.execute(script)
+                await self.conn.executescript(script)
 
             await self.set_version(version)
 
