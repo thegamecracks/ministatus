@@ -32,6 +32,12 @@ async def connect(*, transaction: bool = True) -> AsyncIterator[SQLiteConnection
             yield wrapped
 
 
+@asynccontextmanager
+async def connect_client(*, transaction: bool = True) -> AsyncIterator[DatabaseClient]:
+    async with connect(transaction=transaction) as conn:
+        yield DatabaseClient(conn)
+
+
 async def run_migrations() -> None:
     migrations = read_migrations()
     async with connect() as conn:

@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 
 from ministatus.bot.cogs import list_extensions
-from ministatus.db import DatabaseClient, SQLiteConnection, connect
+from ministatus.db import DatabaseClient, SQLiteConnection, connect, connect_client
 
 log = logging.getLogger(__name__)
 
@@ -43,8 +43,8 @@ class Bot(commands.Bot):
         *,
         transaction: bool = True,
     ) -> AsyncIterator[DatabaseClient]:
-        async with self.acquire_db_conn(transaction=transaction) as conn:
-            yield DatabaseClient(conn)
+        async with connect_client(transaction=transaction) as client:
+            yield client
 
     async def setup_hook(self) -> None:
         for extension in list_extensions():
