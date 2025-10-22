@@ -19,12 +19,17 @@ from .migrations import (
 
 
 @asynccontextmanager
-async def connect() -> AsyncIterator[SQLiteConnection]:
+async def connect(*, transaction: bool = True) -> AsyncIterator[SQLiteConnection]:
     import asqlite
 
     database = str(DB_PATH)
     async with asqlite.connect(database) as conn:
-        yield SQLiteConnection(conn)
+        wrapped = SQLiteConnection(conn)
+        if transaction:
+            async with wrapped.transaction():
+                yield wrapped
+        else:
+            yield wrapped
 
 
 async def run_migrations() -> None:
