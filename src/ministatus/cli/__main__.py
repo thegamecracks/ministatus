@@ -1,9 +1,11 @@
+import asyncio
 import logging
 
 import click
 
 from ministatus import __version__
 from ministatus.cli.commands import add_commands
+from ministatus.db import run_migrations
 from ministatus.logging import setup_logging
 
 log = logging.getLogger(__name__)
@@ -20,6 +22,7 @@ CONTEXT_SETTINGS = dict(
 def main(verbose: int) -> None:
     """A Discord bot for managing game server status embeds."""
     setup_logging(verbose=verbose)
+    asyncio.run(run_migrations())
 
 
 add_commands(main)
