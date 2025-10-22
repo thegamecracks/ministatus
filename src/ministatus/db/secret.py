@@ -1,3 +1,4 @@
+import sqlite3
 from typing import Generic, TypeVar
 
 T = TypeVar("T")
@@ -14,6 +15,10 @@ class Secret(Generic[T]):
 
     def __str__(self) -> str:
         return "****"
+
+    def __conform__(self, protocol):
+        if protocol is sqlite3.PrepareProtocol:
+            return self._value
 
     def get_secret_value(self) -> T:
         return self._value
