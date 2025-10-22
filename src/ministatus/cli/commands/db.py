@@ -1,5 +1,6 @@
 import sqlite3
 import sys
+from contextlib import closing
 
 import click
 
@@ -50,18 +51,17 @@ def encrypt(password: Secret[str] | None) -> None:
         password = click.prompt("Database Password", hide_input=True, type=Secret)
         assert isinstance(password, Secret)
 
-    conn = sqlite3.connect(DB_PATH)
-
-    try:
-        db_encrypt(conn, password, rekey=True)
-    except DatabaseEncryptedError:
+    with closing(sqlite3.connect(DB_PATH)) as conn:
         try:
-            db_encrypt(conn, password)
-            sys.exit(ALREADY_ENCRYPTED)
+            db_encrypt(conn, password, rekey=True)
         except DatabaseEncryptedError:
-            sys.exit(WRONG_PASSWORD)
-    except EncryptionUnsupportedError:
-        sys.exit(ENCRYPTION_NOT_SUPPORTED)
+            try:
+                db_encrypt(conn, password)
+                sys.exit(ALREADY_ENCRYPTED)
+            except DatabaseEncryptedError:
+                sys.exit(WRONG_PASSWORD)
+        except EncryptionUnsupportedError:
+            sys.exit(ENCRYPTION_NOT_SUPPORTED)
 
     click.echo(SUCCESSFUL_ENCRYPTION)
 
@@ -71,22 +71,21 @@ def encrypt(password: Secret[str] | None) -> None:
 @click.argument("new", default=None, type=Secret)
 def reencrypt(old: Secret[str] | None, new: Secret[str] | None) -> None:
     """Re-encrypt the database with a new password."""
-    conn = sqlite3.connect(DB_PATH)
+    with closing(sqlite3.connect(DB_PATH)) as conn:
+        try:
+            db_encrypt(conn, Secret(""))
+            click.echo(ALREADY_DECRYPTED)
+        except DatabaseEncryptedError:
+            _decrypt_old(conn, old)
+        except EncryptionUnsupportedError:
+            sys.exit(ENCRYPTION_NOT_SUPPORTED)
 
-    try:
-        db_encrypt(conn, Secret(""))
-        click.echo(ALREADY_DECRYPTED)
-    except DatabaseEncryptedError:
-        _decrypt_old(conn, old)
-    except EncryptionUnsupportedError:
-        sys.exit(ENCRYPTION_NOT_SUPPORTED)
+        if new is None or not new.get_secret_value():
+            new = click.prompt("New Password", hide_input=True, type=Secret)
+            assert isinstance(new, Secret)
 
-    if new is None or not new.get_secret_value():
-        new = click.prompt("New Password", hide_input=True, type=Secret)
-        assert isinstance(new, Secret)
-
-    db_encrypt(conn, new, rekey=True)
-    click.echo(SUCCESSFUL_ENCRYPTION)
+        db_encrypt(conn, new, rekey=True)
+        click.echo(SUCCESSFUL_ENCRYPTION)
 
 
 def _decrypt_old(conn: sqlite3.Connection, old: Secret[str] | None):
@@ -112,20 +111,19 @@ def decrypt(password: Secret[str] | None) -> None:
         password = click.prompt("Database Password", hide_input=True, type=Secret)
         assert isinstance(password, Secret)
 
-    conn = sqlite3.connect(DB_PATH)
+    with closing(sqlite3.connect(DB_PATH)) as conn:
+        try:
+            conn.execute("SELECT * FROM sqlite_schema")
+            sys.exit(ALREADY_DECRYPTED)
+        except sqlite3.DatabaseError:
+            pass
 
-    try:
-        conn.execute("SELECT * FROM sqlite_schema")
-        sys.exit(ALREADY_DECRYPTED)
-    except sqlite3.DatabaseError:
-        pass
-
-    try:
-        db_encrypt(conn, password)
-        db_encrypt(conn, Secret(""), rekey=True)
-    except DatabaseEncryptedError:
-        sys.exit(WRONG_PASSWORD)
-    except EncryptionUnsupportedError:
-        sys.exit(ENCRYPTION_NOT_SUPPORTED)
+        try:
+            db_encrypt(conn, password)
+            db_encrypt(conn, Secret(""), rekey=True)
+        except DatabaseEncryptedError:
+            sys.exit(WRONG_PASSWORD)
+        except EncryptionUnsupportedError:
+            sys.exit(ENCRYPTION_NOT_SUPPORTED)
 
     click.echo(SUCCESSFUL_DECRYPTION)
