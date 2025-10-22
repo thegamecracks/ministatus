@@ -5,6 +5,9 @@ from ministatus.db.secret import Secret
 
 
 class DatabaseClient:
+    SECRET_SETTINGS = frozenset({"token"})
+    """A set of setting names that will always be marked as secrets."""
+
     def __init__(self, conn: Connection) -> None:
         self.conn = conn
 
@@ -26,6 +29,9 @@ class DatabaseClient:
         *,
         secret: bool = False,
     ) -> None:
+        if name in self.SECRET_SETTINGS:
+            secret = True
+
         # If a conflict occurs, don't overwrite the secret flag
         # so we avoid accidentally clearing it.
         await self.conn.execute(
