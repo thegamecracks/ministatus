@@ -1,3 +1,4 @@
+import logging
 import sys
 
 import click
@@ -6,6 +7,15 @@ import click
 @click.group(hidden=True)
 def debug() -> None:
     """Internal debugging utilities."""
+
+
+@debug.command()
+def levels() -> None:
+    """Trigger info and debug logs to test logging verbosity."""
+    logging.getLogger(__name__).info("Test 1")
+    logging.getLogger(__name__).debug("Test 2")
+    logging.getLogger().info("Test 3")
+    logging.getLogger().debug("Test 4")
 
 
 @debug.command()
