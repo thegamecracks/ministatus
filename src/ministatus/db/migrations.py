@@ -1,10 +1,13 @@
 import importlib.resources
+import logging
 import re
 import sys
 from abc import ABC, abstractmethod
 from typing import Iterable, NamedTuple, Self
 
 from ministatus.db.connection import Connection, SQLiteConnection
+
+log = logging.getLogger(__name__)
 
 
 class Migration(NamedTuple):
@@ -63,7 +66,7 @@ class Migrator(ABC):
 
         async with self.conn.transaction():
             for version, script in migrations.after_version(version):
-                print(f"Migrating database to v{version}")
+                log.info(f"Migrating database to v{version}")
                 await self.conn.executescript(script)
 
             await self.set_version(version)
