@@ -16,6 +16,7 @@ from .migrations import (
     SQLiteMigrator as SQLiteMigrator,
     read_migrations as read_migrations,
 )
+from .secret import Secret as Secret
 
 
 @asynccontextmanager

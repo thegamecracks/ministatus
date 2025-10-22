@@ -1,4 +1,9 @@
-CREATE TABLE setting (name TEXT PRIMARY KEY, value);
+CREATE TABLE setting (
+    name TEXT PRIMARY KEY,
+    value,
+    secret BOOLEAN NOT NULL DEFAULT 0
+);
+
 CREATE TABLE discord_user (user_id INTEGER PRIMARY KEY);
 CREATE TABLE discord_guild (guild_id INTEGER PRIMARY KEY);
 

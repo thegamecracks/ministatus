@@ -1,6 +1,7 @@
 from typing import Any
 
 from ministatus.db.connection import Connection
+from ministatus.db.secret import Secret
 
 
 class DatabaseClient:
@@ -9,19 +10,30 @@ class DatabaseClient:
 
     async def get_setting(self, name: str, default: Any = None) -> Any:
         row = await self.conn.fetchrow(
-            "SELECT value FROM setting WHERE name = $1",
+            "SELECT value, secret FROM setting WHERE name = $1",
             name,
         )
         if row is None:
             return default
+        elif row[1]:
+            return Secret(row[0])
         return row[0]
 
-    async def set_setting(self, name: str, value: Any) -> None:
+    async def set_setting(
+        self,
+        name: str,
+        value: Any,
+        *,
+        secret: bool = False,
+    ) -> None:
+        # If a conflict occurs, don't overwrite the secret flag
+        # so we avoid accidentally clearing it.
         await self.conn.execute(
-            "INSERT INTO setting (name, value) VALUES ($1, $2) "
+            "INSERT INTO setting (name, value, secret) VALUES ($1, $2, $3) "
             "ON CONFLICT (name) DO UPDATE SET value = excluded.value",
             name,
             value,
+            secret,
         )
 
     async def delete_setting(self, name: str) -> bool:
