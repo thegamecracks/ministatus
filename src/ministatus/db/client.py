@@ -11,6 +11,14 @@ class DatabaseClient:
     def __init__(self, conn: Connection) -> None:
         self.conn = conn
 
+    async def list_settings(self) -> list[tuple[str, Any]]:
+        rows = await self.conn.fetch(
+            "SELECT name, value, secret FROM setting ORDER BY name"
+        )
+        return [
+            (name, Secret(value) if secret else value) for name, value, secret in rows
+        ]
+
     async def get_setting(self, name: str, default: Any = None) -> Any:
         row = await self.conn.fetchrow(
             "SELECT value, secret FROM setting WHERE name = $1",
@@ -18,9 +26,9 @@ class DatabaseClient:
         )
         if row is None:
             return default
-        elif row[1]:
-            return Secret(row[0])
-        return row[0]
+        elif row["secret"]:
+            return Secret(row["value"])
+        return row["value"]
 
     async def set_setting(
         self,

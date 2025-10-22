@@ -4,7 +4,7 @@ from typing import Any
 import click
 
 from ministatus.cli.commands.asyncio import mark_async
-from ministatus.db import Connection, DatabaseClient, connect
+from ministatus.db import Connection, DatabaseClient, Secret, connect
 
 
 @click.command()
@@ -38,15 +38,16 @@ async def config(
 
 
 async def list_settings(conn: Connection) -> None:
-    rows = await conn.fetch("SELECT name, value FROM setting ORDER BY name")
+    client = DatabaseClient(conn)
+    rows = await client.list_settings()
     if not rows:
         return click.echo("There are no settings defined 🙁")
 
     # TODO: censor secrets
     click.echo("Settings:")
-    for row in rows:
-        name = click.style(row[0], fg="yellow")
-        value = click.style(row[1], fg="green")
+    for name, value in rows:
+        name = click.style(name, fg="yellow")
+        value = click.style(value, fg="green")
         click.secho(f"    {name} = {value}")
 
 
@@ -57,6 +58,9 @@ async def get_setting(conn: Connection, name: str) -> None:
     value = await client.get_setting(name, sentinel)
     if value is sentinel:
         return click.secho(f"{name!r} not found", fg="yellow")
+
+    if isinstance(value, Secret):
+        value = value.get_secret_value()
 
     click.secho(value, fg="green")
 
