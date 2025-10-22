@@ -1,7 +1,5 @@
 import click
 
-from ministatus.appdirs import APP_DIRS
-
 
 @click.group()
 def db() -> None:
