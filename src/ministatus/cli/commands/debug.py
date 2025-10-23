@@ -3,6 +3,10 @@ import sys
 
 import click
 
+from ministatus.appdirs import DB_PATH
+from ministatus.cli.commands.markers import mark_async
+from ministatus.db import connect
+
 
 @click.group(hidden=True)
 def debug() -> None:
@@ -39,3 +43,19 @@ def imports() -> None:
         click.secho(package, fg="green")
         for mod in submodules:
             click.secho(f"  .{mod}", fg="yellow")
+
+
+@debug.command()
+@click.confirmation_option(
+    prompt=click.style(
+        "DANGER!! Are you sure you want to wipe the database?",
+        fg="red",
+    ),
+)
+@mark_async()
+async def wipe() -> None:
+    """Delete the current database."""
+    async with connect(transaction=False) as conn:
+        await conn.execute("PRAGMA locking_mode = EXCLUSIVE")
+        await conn.execute("PRAGMA journal_mode = DELETE")
+    DB_PATH.unlink()
