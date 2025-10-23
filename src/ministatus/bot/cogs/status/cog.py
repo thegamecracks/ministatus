@@ -7,8 +7,8 @@ from discord import app_commands
 from discord.ext import commands, tasks
 
 from ministatus.bot.bot import Bot
-from ministatus.bot.db import DiscordDatabaseClient, fetch_active_statuses
-from ministatus.db import connect, connect_client
+from ministatus.bot.db import DiscordDatabaseClient
+from ministatus.db import connect, connect_client, fetch_active_statuses
 
 from .views import PlaceholderView
 
