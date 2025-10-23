@@ -103,9 +103,7 @@ class Book(CancellableView):
         rendered = page.render()
 
         if len(self.pages) > 1:
-            if isinstance(page, discord.ui.Container):
-                page.add_item(discord.ui.Separator())
-            page.add_item(BookControls(self))
+            self.add_item(BookControls(self))
 
         return rendered
 
