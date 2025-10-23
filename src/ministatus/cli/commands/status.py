@@ -97,6 +97,20 @@ async def create() -> None:
                 display.graph_colour,
             )
 
+        for query in status.queries:
+            await conn.execute(
+                "INSERT INTO status_query "
+                "(status_id, host, port, type, priority, enabled_at, extra) "
+                "VALUES ($1, $2, $3, $4, $5, $6, $7)",
+                status_id,
+                query.host,
+                query.port,
+                query.type,
+                query.priority,
+                enabled_at,
+                query.extra,
+            )
+
     click.secho(f"Successfully created status #{status_id}!", fg="green")
 
 
