@@ -101,10 +101,7 @@ class Book(CancellableView):
         page = self.pages[-1]
         self.add_item(page)
         rendered = page.render()
-
-        if len(self.pages) > 1:
-            self.add_item(BookControls(self))
-
+        self.add_item(BookControls(self))
         return rendered
 
 
@@ -113,10 +110,23 @@ class BookControls(discord.ui.ActionRow):
         super().__init__()
         self.book = book
 
-    @discord.ui.button(label="Back", style=discord.ButtonStyle.primary, emoji="⬅️")
+        self.clear_items()
+        if len(book.pages) > 1:
+            self.add_item(self.back)
+        else:
+            self.add_item(self.close)
+
+    @discord.ui.button(label="Back", emoji="⬅️")
     async def back(self, interaction: Interaction, button: discord.ui.Button) -> None:
         self.book.pop()
         await self.book.edit(interaction)
+
+    @discord.ui.button(label="Close", emoji="❌")
+    async def close(self, interaction: Interaction, button: discord.ui.Button) -> None:
+        assert self.view is not None
+        await interaction.response.defer()
+        await interaction.delete_original_response()
+        self.view.stop()
 
 
 class Page(discord.ui.Container, ABC):
