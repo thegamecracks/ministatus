@@ -69,11 +69,13 @@ CREATE TABLE status_query (
 );
 
 -- Cascading foreign key indexes
-CREATE INDEX ix_status_guild_id ON status (guild_id);
 CREATE INDEX ix_status_alert_channel_id ON status_alert (channel_id);
 CREATE INDEX ix_status_display_status_id ON status_display (status_id);
 CREATE INDEX ix_status_history_status_id ON status_history (status_id);
 CREATE INDEX ix_status_history_player_status_history_id ON status_history_player (status_history_id);
+
+-- Ensure status.label uniqueness per guild
+CREATE UNIQUE INDEX ix_status_guild_id_label ON status (guild_id, label);
 
 -- Optimize time-based queries on status history (largest index)
 CREATE INDEX ix_status_history_status_id_created_at ON status_history (status_id, created_at);
