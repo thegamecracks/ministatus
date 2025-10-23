@@ -19,7 +19,7 @@ STATUS_TEMPLATE = textwrap.dedent(
     f"""
     [status]
     label = "My server"  # A useful name for your server
-    user_id = -1         # Your Discord user ID
+    guild_id = -1         # Your guild ID
 
     [[status.alerts]]
     channel_id = -1 # Channel ID to send alerts to
@@ -55,9 +55,9 @@ async def create() -> None:
     async with connect() as conn:
         # TODO: add status methods to DatabaseClient
         status_id = await conn.fetchval(
-            "INSERT INTO status (user_id, label, enabled_at) "
+            "INSERT INTO status (guild_id, label, enabled_at) "
             "VALUES ($1, $2, $3) RETURNING status_id",
-            status.user_id,
+            status.guild_id,
             status.label,
             enabled_at,
         )

@@ -54,7 +54,7 @@ class DiscordMember(BaseModel):
 
 class Status(BaseModel):
     status_id: int
-    user_id: Snowflake
+    guild_id: Snowflake
     label: str
 
     title: str | None = Field(default=None)

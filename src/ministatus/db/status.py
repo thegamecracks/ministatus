@@ -73,7 +73,7 @@ async def fetch_active_statuses(
 
         status = Status(
             status_id=row["status_id"],
-            user_id=row["user_id"],
+            guild_id=row["guild_id"],
             label=row["label"],
             title=row["title"],
             address=row["address"],

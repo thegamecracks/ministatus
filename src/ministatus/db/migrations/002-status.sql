@@ -1,7 +1,7 @@
 -- Server statuses to track
 CREATE TABLE status (
     status_id INTEGER PRIMARY KEY,
-    user_id INTEGER NOT NULL REFERENCES discord_user (user_id) ON DELETE CASCADE,
+    guild_id INTEGER NOT NULL REFERENCES discord_guild (guild_id) ON DELETE CASCADE,
     label TEXT NOT NULL, -- User-defined label
 
     title TEXT,     -- Cached server name
@@ -15,7 +15,7 @@ CREATE TABLE status (
 CREATE TABLE status_alert (
     status_id INTEGER
         REFERENCES status (status_id) ON DELETE CASCADE,
-    channel_id INTEGER
+    channel_id INTEGER -- CAUTION: missing constraint on status.guild_id
         REFERENCES discord_channel (channel_id) ON DELETE CASCADE,
 
     enabled_at TIMESTAMP,
@@ -25,7 +25,7 @@ CREATE TABLE status_alert (
 
 -- Discord messages to periodically display status info
 CREATE TABLE status_display (
-    message_id INTEGER PRIMARY KEY
+    message_id INTEGER PRIMARY KEY -- CAUTION: missing constraint on status.guild_id
         REFERENCES discord_message (message_id) ON DELETE CASCADE,
     status_id INTEGER NOT NULL
         REFERENCES status (status_id) ON DELETE CASCADE,
@@ -69,7 +69,7 @@ CREATE TABLE status_query (
 );
 
 -- Cascading foreign key indexes
-CREATE INDEX ix_status_user_id ON status (user_id);
+CREATE INDEX ix_status_guild_id ON status (guild_id);
 CREATE INDEX ix_status_alert_channel_id ON status_alert (channel_id);
 CREATE INDEX ix_status_display_status_id ON status_display (status_id);
 CREATE INDEX ix_status_history_status_id ON status_history (status_id);
