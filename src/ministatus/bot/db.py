@@ -50,7 +50,7 @@ class Status:
     thumbnail: bytes | None
     enabled_at: datetime.datetime | None
 
-    alert: StatusAlert | None
+    alerts: list[StatusAlert]
     displays: list[StatusDisplay]
     queries: list[StatusQuery]
 
@@ -106,14 +106,14 @@ async def fetch_active_statuses(
         *status_ids,
         *guild_ids,
     )
-    status_alerts = {
-        row["status_id"]: StatusAlert(
+    status_alerts = collections.defaultdict(list)
+    for row in alerts:
+        alert = StatusAlert(
             status_id=row["status_id"],
             channel_id=row["channel_id"],
             enabled_at=row["enabled_at"],
         )
-        for row in alerts
-    }
+        status_alerts[row["status_id"]].append(alert)
 
     displays = await conn.fetch(
         GET_STATUS_DISPLAYS.format(sid=sid, gid=gid),
@@ -152,7 +152,7 @@ async def fetch_active_statuses(
 
     statuses = []
     for row in statuses:
-        alert = status_alerts.get(row["status_id"])
+        alerts = status_alerts[row["status_id"]]
         displays = status_displays[row["status_id"]]
         queries = status_queries[row["status_id"]]
         if not displays or not queries:
@@ -166,7 +166,7 @@ async def fetch_active_statuses(
             address=row["address"],
             thumbnail=row["thumbnail"],
             enabled_at=row["enabled_at"],
-            alert=alert,
+            alerts=alerts,
             displays=displays,
             queries=queries,
         )

@@ -24,7 +24,7 @@ STATUS_TEMPLATE = textwrap.dedent(
     label = "My server"  # A useful name for your server
     user_id = -1         # Your Discord user ID
 
-    [status.alert]
+    [[status.alert]]
     channel_id = -1 # Channel ID to send alerts to
 
     [[status.display]]
@@ -68,8 +68,8 @@ async def create() -> None:
             enabled_at,
         )
 
-        if status.alert is not None:
-            channel_id = status.alert.channel_id
+        for alert in status.alerts:
+            channel_id = alert.channel_id
             await client.add_discord_channel(channel_id=channel_id, guild_id=None)
             await conn.execute(
                 "INSERT INTO status_alert (status_id, channel_id, enabled_at) "
@@ -136,7 +136,7 @@ def fill_status_form() -> Status:
 class Status:
     user_id: int
     label: str
-    alert: StatusAlert | None
+    alerts: list[StatusAlert]
     displays: list[StatusDisplay]
     queries: list[StatusQuery]
 
@@ -150,17 +150,14 @@ class Status:
         if not label:
             raise ValueError("label must be set")
 
-        alert = d.get("alert")
-        if alert is not None:
-            alert = StatusAlert.from_dict(alert)
-
+        alerts = [StatusAlert.from_dict(x) for x in d.get("alert", ())]
         displays = [StatusDisplay.from_dict(x) for x in d.get("display", ())]
         queries = [StatusQuery.from_dict(x) for x in d.get("query", ())]
 
         return cls(
             user_id=user_id,
             label=label,
-            alert=alert,
+            alerts=alerts,
             displays=displays,
             queries=queries,
         )

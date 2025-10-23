@@ -13,16 +13,14 @@ CREATE TABLE status (
 
 -- Discord channels to send downtime alerts to
 CREATE TABLE status_alert (
-    status_id INTEGER PRIMARY KEY
+    status_id INTEGER
         REFERENCES status (status_id) ON DELETE CASCADE,
-    channel_id INTEGER NOT NULL
+    channel_id INTEGER
         REFERENCES discord_channel (channel_id) ON DELETE CASCADE,
 
-    enabled_at TIMESTAMP
+    enabled_at TIMESTAMP,
 
-    -- In theory multiple status alerts could be defined,
-    -- but most users are fine with one alert channel.
-    -- PRIMARY KEY (status_id, channel_id)
+    PRIMARY KEY (status_id, channel_id)
 );
 
 -- Discord messages to periodically display status info
