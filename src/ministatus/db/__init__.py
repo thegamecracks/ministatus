@@ -9,7 +9,14 @@ from ministatus import state
 from ministatus.appdirs import DB_PATH
 
 from . import converters as converters
-from .client import DatabaseClient as DatabaseClient
+from .client import (
+    DatabaseClient as DatabaseClient,
+    User as User,
+    Guild as Guild,
+    Channel as Channel,
+    Message as Message,
+    Member as Member,
+)
 from .connection import (
     Connection as Connection,
     Record as Record,
