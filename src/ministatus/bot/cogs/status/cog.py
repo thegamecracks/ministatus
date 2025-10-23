@@ -10,6 +10,8 @@ from ministatus.bot.bot import Bot
 from ministatus.bot.db import connect_discord_database_client
 from ministatus.db import Status, connect, fetch_statuses
 
+from .views import StatusManageView
+
 log = logging.getLogger(__name__)
 
 
@@ -26,6 +28,20 @@ class StatusCog(
 
     async def cog_load(self) -> None:
         self.query_loop.start()
+
+    @app_commands.command(name="manage")
+    async def status_manage(self, interaction: discord.Interaction[Bot]) -> None:
+        """Manage your server statuses."""
+        assert interaction.guild is not None
+        assert isinstance(interaction.user, discord.Member)
+
+        guild_id = interaction.guild.id
+        async with connect_discord_database_client(self.bot) as ddc:
+            await ddc.add_member(interaction.user)
+            statuses = await fetch_statuses(ddc.client.conn, guild_ids=[guild_id])
+
+        view = StatusManageView(interaction, statuses)
+        await view.send(interaction)
 
     @app_commands.command(name="create")
     async def status_create(
