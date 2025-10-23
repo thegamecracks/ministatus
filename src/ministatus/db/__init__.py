@@ -46,7 +46,7 @@ from .models import (
 )
 from .secret import Secret as Secret
 from .status import (
-    fetch_active_statuses as fetch_active_statuses,
+    fetch_statuses as fetch_statuses,
     fetch_status_alerts as fetch_status_alerts,
     fetch_status_displays as fetch_status_displays,
     fetch_status_queries as fetch_status_queries,

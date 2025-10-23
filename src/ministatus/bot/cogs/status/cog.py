@@ -8,7 +8,7 @@ from discord.ext import commands, tasks
 
 from ministatus.bot.bot import Bot
 from ministatus.bot.db import connect_discord_database_client
-from ministatus.db import Status, connect, fetch_active_statuses
+from ministatus.db import Status, connect, fetch_statuses
 
 log = logging.getLogger(__name__)
 
@@ -66,7 +66,7 @@ class StatusCog(
     async def query_loop(self) -> None:
         guild_ids = [guild.id for guild in self.bot.guilds]
         async with connect() as conn:
-            statuses = await fetch_active_statuses(conn, guild_ids=guild_ids)
+            statuses = await fetch_statuses(conn, enabled=True, guild_ids=guild_ids)
 
     @query_loop.before_loop
     async def query_before_loop(self) -> None:

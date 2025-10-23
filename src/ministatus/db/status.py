@@ -14,7 +14,7 @@ GET_STATUS_ALERTS = textwrap.dedent(
     """
     SELECT * FROM status_alert
     WHERE status_id IN ({sid})
-    AND enabled_at IS NOT NULL
+    AND {enabled}
     AND channel_id IN (
         SELECT channel_id FROM discord_channel
         WHERE guild_id IN ({gid})
@@ -26,7 +26,7 @@ GET_STATUS_DISPLAYS = textwrap.dedent(
     """
     SELECT * FROM status_display
     WHERE status_id IN ({sid})
-    AND enabled_at IS NOT NULL
+    AND {enabled}
     AND message_id IN (
         SELECT message_id FROM discord_message
         WHERE channel_id IN (
@@ -38,37 +38,45 @@ GET_STATUS_DISPLAYS = textwrap.dedent(
 ).strip()
 
 
-async def fetch_active_statuses(
+async def fetch_statuses(
     conn: SQLiteConnection,
     *,
+    enabled: bool | None = None,
     guild_ids: Collection[int],
 ) -> list[Status]:
     if not guild_ids:
         return []
 
-    statuses = await conn.fetch("SELECT * FROM status WHERE enabled_at IS NOT NULL")
+    enabled_expr = get_enabled_condition(enabled)
+    statuses = await conn.fetch(f"SELECT * FROM status WHERE {enabled_expr}")
     if not statuses:
         return []
 
     status_ids = {row["status_id"] for row in statuses}
     status_alerts = await fetch_status_alerts(
         conn,
+        enabled=enabled or None,  # don't pass enabled=False down
         status_ids=status_ids,
         guild_ids=guild_ids,
     )
     status_displays = await fetch_status_displays(
         conn,
+        enabled=enabled or None,
         status_ids=status_ids,
         guild_ids=guild_ids,
     )
-    status_queries = await fetch_status_queries(conn, status_ids=status_ids)
+    status_queries = await fetch_status_queries(
+        conn,
+        enabled=enabled or None,
+        status_ids=status_ids,
+    )
 
     statuses = []
     for row in statuses:
         alerts = status_alerts[row["status_id"]]
         displays = status_displays[row["status_id"]]
         queries = status_queries[row["status_id"]]
-        if not displays or not queries:
+        if enabled and (not displays or not queries):
             continue  # Would be nice to filter this in SQL
 
         status = Status(
@@ -88,19 +96,31 @@ async def fetch_active_statuses(
     return statuses
 
 
+def get_enabled_condition(enabled: bool | None) -> str:
+    if enabled:
+        return "enabled_at IS NOT NULL"
+    elif enabled is not None:
+        return "enabled_at IS NULL"
+    else:
+        return "true"
+
+
 async def fetch_status_alerts(
     conn: SQLiteConnection,
     *,
+    enabled: bool | None = None,
     status_ids: Collection[int],
     guild_ids: Collection[int],
 ) -> dict[int, list[StatusAlert]]:
     assert len(status_ids) > 0
     assert len(guild_ids) > 0
 
-    sid = ", ".join("?" * len(status_ids))
-    gid = ", ".join("?" * len(guild_ids))
     alerts = await conn.fetch(
-        GET_STATUS_ALERTS.format(sid=sid, gid=gid),
+        GET_STATUS_ALERTS.format(
+            enabled=get_enabled_condition(enabled),
+            sid=", ".join("?" * len(status_ids)),
+            gid=", ".join("?" * len(guild_ids)),
+        ),
         *status_ids,
         *guild_ids,
     )
@@ -120,16 +140,19 @@ async def fetch_status_alerts(
 async def fetch_status_displays(
     conn: SQLiteConnection,
     *,
+    enabled: bool | None = None,
     status_ids: Collection[int],
     guild_ids: Collection[int],
 ) -> dict[int, list[StatusDisplay]]:
     assert len(status_ids) > 0
     assert len(guild_ids) > 0
 
-    sid = ", ".join("?" * len(status_ids))
-    gid = ", ".join("?" * len(guild_ids))
     displays = await conn.fetch(
-        GET_STATUS_DISPLAYS.format(sid=sid, gid=gid),
+        GET_STATUS_DISPLAYS.format(
+            enabled=get_enabled_condition(enabled),
+            sid=", ".join("?" * len(status_ids)),
+            gid=", ".join("?" * len(guild_ids)),
+        ),
         *status_ids,
         *guild_ids,
     )
@@ -151,14 +174,16 @@ async def fetch_status_displays(
 async def fetch_status_queries(
     conn: SQLiteConnection,
     *,
+    enabled: bool | None = None,
     status_ids: Collection[int],
 ) -> dict[int, list[StatusQuery]]:
     assert len(status_ids) > 0
 
+    enabled_expr = get_enabled_condition(enabled)
     sid = ", ".join("?" * len(status_ids))
     queries = await conn.fetch(
         f"SELECT * FROM status_query WHERE status_id IN ({sid}) "
-        "AND enabled_at IS NOT NULL ORDER BY priority",
+        f"AND {enabled_expr} ORDER BY priority",
         *status_ids,
     )
 
