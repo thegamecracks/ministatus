@@ -1,7 +1,7 @@
 -- Server statuses to track
 CREATE TABLE status (
-    status_id BIGINT PRIMARY KEY,
-    user_id BIGINT NOT NULL REFERENCES discord_user (user_id) ON DELETE CASCADE,
+    status_id INTEGER PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES discord_user (user_id) ON DELETE CASCADE,
     label TEXT NOT NULL, -- User-defined label
 
     title TEXT,     -- Cached server name
@@ -13,9 +13,9 @@ CREATE TABLE status (
 
 -- Discord channels to send downtime alerts to
 CREATE TABLE status_alert (
-    status_id BIGINT PRIMARY KEY
+    status_id INTEGER PRIMARY KEY
         REFERENCES status (status_id) ON DELETE CASCADE,
-    channel_id BIGINT NOT NULL
+    channel_id INTEGER NOT NULL
         REFERENCES status (status_id) ON DELETE CASCADE,
 
     enabled_at TIMESTAMP
@@ -27,9 +27,9 @@ CREATE TABLE status_alert (
 
 -- Discord messages to periodically display status info
 CREATE TABLE status_display (
-    message_id BIGINT PRIMARY KEY
+    message_id INTEGER PRIMARY KEY
         REFERENCES discord_message (message_id) ON DELETE CASCADE,
-    status_id BIGINT NOT NULL
+    status_id INTEGER NOT NULL
         REFERENCES status (status_id) ON DELETE CASCADE,
 
     enabled_at TIMESTAMP,
@@ -39,27 +39,27 @@ CREATE TABLE status_display (
 
 -- Timeseries data for each status
 CREATE TABLE status_history (
-    status_history_id BIGINT PRIMARY KEY,
+    status_history_id INTEGER PRIMARY KEY,
     created_at TIMESTAMP NOT NULL,
-    status_id BIGINT NOT NULL
+    status_id INTEGER NOT NULL
         REFERENCES status (status_id) ON DELETE CASCADE,
     online BOOLEAN NOT NULL
 );
 
 -- Players online at a given status datapoint
 CREATE TABLE status_history_player (
-    status_history_player_id BIGINT PRIMARY KEY,
-    status_history_id BIGINT NOT NULL
+    status_history_player_id INTEGER PRIMARY KEY,
+    status_history_id INTEGER NOT NULL
         REFERENCES status_history (status_history_id) ON DELETE CASCADE,
     player_name TEXT NOT NULL
 );
 
 -- Methods to query server statuses
 CREATE TABLE status_query (
-    status_id BIGINT
+    status_id INTEGER
         REFERENCES status (status_id) ON DELETE CASCADE,
     host TEXT NOT NULL,
-    port BIGINT NOT NULL CHECK (port BETWEEN 0 AND 65535), -- port 0 means SRV lookup
+    port INTEGER NOT NULL CHECK (port BETWEEN 0 AND 65535), -- port 0 means SRV lookup
     type TEXT NOT NULL, -- Type of query to perform (should be an enum)
     priority INTEGER NOT NULL DEFAULT 0, -- Order in which query methods are used (usually one per status)
 
