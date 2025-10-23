@@ -1,5 +1,4 @@
 import asyncio
-import datetime
 import logging
 import time
 
@@ -8,7 +7,9 @@ from discord import app_commands
 from discord.ext import commands, tasks
 
 from ministatus.bot.bot import Bot
+from ministatus.db import connect
 
+from .db import fetch_active_statuses
 from .views import PlaceholderView
 
 log = logging.getLogger(__name__)
@@ -46,7 +47,8 @@ class Status(commands.Cog):
 
     @tasks.loop(seconds=60)
     async def query(self) -> None:
-        pass  # TODO
+        async with connect() as conn:
+            statuses = await fetch_active_statuses(conn)
 
     @query.before_loop
     async def query_before_loop(self) -> None:
