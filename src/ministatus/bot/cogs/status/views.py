@@ -87,21 +87,21 @@ class Book(CancellableView):
         return self.pages.pop()
 
     async def edit(self, interaction: Interaction, **kwargs) -> None:
-        rendered = self.render()
+        rendered = await self.render()
         kwargs = rendered.get_message_kwargs() | kwargs
         await interaction.response.edit_message(view=self, **kwargs)
 
     async def send(self, interaction: Interaction, **kwargs) -> None:
-        rendered = self.render()
+        rendered = await self.render()
         kwargs = rendered.get_message_kwargs() | kwargs
         await interaction.response.send_message(view=self, **kwargs)
 
-    def render(self) -> RenderArgs:
+    async def render(self) -> RenderArgs:
         self.clear_items()
 
         page = self.pages[-1]
         self.add_item(page)
-        rendered = page.render()
+        rendered = await page.render()
         self.add_item(BookControls(self))
         return rendered
 
@@ -141,7 +141,7 @@ class BookControls(discord.ui.ActionRow):
 
 class Page(discord.ui.Container, ABC):
     @abstractmethod
-    def render(self) -> RenderArgs: ...
+    async def render(self) -> RenderArgs: ...
 
 
 def get_enabled_text(enabled_at: datetime.datetime | None) -> str:
@@ -166,10 +166,10 @@ class StatusOverview(Page):
         self.book = book
         self.select = StatusOverviewSelect(statuses)
 
-    def render(self) -> RenderArgs:
+    async def render(self) -> RenderArgs:
         self.clear_items()
         self.add_item(self.select)
-        self.select.render()
+        await self.select.render()
         return RenderArgs()
 
 
@@ -180,7 +180,7 @@ class StatusOverviewSelect(discord.ui.ActionRow):
         super().__init__()
         self.statuses = statuses
 
-    def render(self) -> None:
+    async def render(self) -> None:
         options = [
             SelectOption(
                 label=status.label,
@@ -259,7 +259,7 @@ class StatusModify(Page):
         self.book = book
         self.status = status
 
-    def render(self) -> RenderArgs:
+    async def render(self) -> RenderArgs:
         rendered = RenderArgs()
         status = self.status
 
