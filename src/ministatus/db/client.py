@@ -180,7 +180,7 @@ class DatabaseClient:
             status.enabled_at,
         )
         assert row is not None
-        return Status.model_validate(row)
+        return Status.model_validate(dict(row))
 
     async def create_status_alert(self, alert: StatusAlert) -> StatusAlert:
         if alert.status_id < 1:
@@ -195,7 +195,7 @@ class DatabaseClient:
             alert.enabled_at,
         )
         assert row is not None
-        return StatusAlert.model_validate(row)
+        return StatusAlert.model_validate(dict(row))
 
     async def create_status_display(self, display: StatusDisplay) -> StatusDisplay:
         if display.status_id < 1:
@@ -212,7 +212,7 @@ class DatabaseClient:
             display.graph_colour,
         )
         assert row is not None
-        return StatusDisplay.model_validate(row)
+        return StatusDisplay.model_validate(dict(row))
 
     async def create_status_query(self, query: StatusQuery) -> StatusQuery:
         if query.status_id < 1:
@@ -232,4 +232,4 @@ class DatabaseClient:
             query.failed_at,
         )
         assert row is not None
-        return StatusQuery.model_validate(row)
+        return StatusQuery.model_validate(dict(row))

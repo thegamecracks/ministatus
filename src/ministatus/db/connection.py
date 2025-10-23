@@ -5,6 +5,7 @@ from typing import (
     TYPE_CHECKING,
     Any,
     AsyncIterator,
+    Iterable,
     Iterator,
     Protocol,
     Sequence,
@@ -20,6 +21,7 @@ T = TypeVar("T")
 
 
 class Record(Protocol):
+    def keys(self) -> Iterable[str]: ...
     def __getitem__(self, index: int | str, /) -> Any: ...
     def __iter__(self) -> Iterator[Any]: ...
     def __contains__(self, x: object, /) -> bool: ...
