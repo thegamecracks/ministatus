@@ -52,8 +52,9 @@ class Status(commands.Cog):
 
     @tasks.loop(seconds=60)
     async def query(self) -> None:
+        guild_ids = [guild.id for guild in self.bot.guilds]
         async with connect() as conn:
-            statuses = await fetch_active_statuses(conn)
+            statuses = await fetch_active_statuses(conn, guild_ids=guild_ids)
 
     @query.before_loop
     async def query_before_loop(self) -> None:

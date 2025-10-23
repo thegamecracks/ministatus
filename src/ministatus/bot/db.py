@@ -2,13 +2,41 @@ from __future__ import annotations
 
 import collections
 import datetime
+import textwrap
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Collection
 
 from ministatus.db import DatabaseClient, SQLiteConnection
 
 if TYPE_CHECKING:
     import discord
+
+GET_STATUS_ALERTS = textwrap.dedent(
+    """
+    SELECT * FROM status_alert
+    WHERE status_id IN ({sid})
+    AND enabled_at IS NOT NULL
+    AND channel_id IN (
+        SELECT channel_id FROM discord_channel
+        WHERE guild_id IN ({gid})
+    )
+    """
+).strip()
+
+GET_STATUS_DISPLAYS = textwrap.dedent(
+    """
+    SELECT * FROM status_display
+    WHERE status_id IN ({sid})
+    AND enabled_at IS NOT NULL
+    AND message_id IN (
+        SELECT message_id FROM discord_message
+        WHERE channel_id IN (
+            SELECT channel_id FROM discord_channel
+            WHERE guild_id IN ({gid})
+        )
+    )
+    """
+).strip()
 
 
 @dataclass
@@ -57,18 +85,26 @@ class StatusQuery:
     failed_at: datetime.datetime | None
 
 
-async def fetch_active_statuses(conn: SQLiteConnection) -> list[Status]:
+async def fetch_active_statuses(
+    conn: SQLiteConnection,
+    *,
+    guild_ids: Collection[int],
+) -> list[Status]:
+    if not guild_ids:
+        return []
+
     statuses = await conn.fetch("SELECT * FROM status WHERE enabled_at IS NOT NULL")
     if not statuses:
         return []
 
     status_ids = {row["status_id"] for row in statuses}
     sid = ", ".join("?" * len(status_ids))
+    gid = ", ".join("?" * len(guild_ids))
 
     alerts = await conn.fetch(
-        f"SELECT * FROM status_alert WHERE status_id IN ({sid}) "
-        "AND enabled_at IS NOT NULL",
+        GET_STATUS_ALERTS.format(sid=sid, gid=gid),
         *status_ids,
+        *guild_ids,
     )
     status_alerts = {
         row["status_id"]: StatusAlert(
@@ -80,9 +116,9 @@ async def fetch_active_statuses(conn: SQLiteConnection) -> list[Status]:
     }
 
     displays = await conn.fetch(
-        f"SELECT * FROM status_display WHERE status_id IN ({sid}) "
-        "AND enabled_at IS NOT NULL",
+        GET_STATUS_DISPLAYS.format(sid=sid, gid=gid),
         *status_ids,
+        *guild_ids,
     )
     status_displays = collections.defaultdict(list)
     for row in displays:
@@ -114,8 +150,15 @@ async def fetch_active_statuses(conn: SQLiteConnection) -> list[Status]:
         )
         status_queries[row["status_id"]].append(query)
 
-    return [
-        Status(
+    statuses = []
+    for row in statuses:
+        alert = status_alerts.get(row["status_id"])
+        displays = status_displays[row["status_id"]]
+        queries = status_queries[row["status_id"]]
+        if not displays or not queries:
+            continue  # Would be nice to filter this in SQL
+
+        status = Status(
             status_id=row["status_id"],
             user_id=row["user_id"],
             label=row["label"],
@@ -123,12 +166,12 @@ async def fetch_active_statuses(conn: SQLiteConnection) -> list[Status]:
             address=row["address"],
             thumbnail=row["thumbnail"],
             enabled_at=row["enabled_at"],
-            alert=status_alerts.get(row["status_id"]),
-            displays=status_displays[row["status_id"]],
-            queries=status_queries[row["status_id"]],
+            alert=alert,
+            displays=displays,
+            queries=queries,
         )
-        for row in statuses
-    ]
+        statuses.append(status)
+    return statuses
 
 
 class DiscordDatabaseClient:
