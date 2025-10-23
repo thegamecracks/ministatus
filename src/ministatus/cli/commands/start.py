@@ -1,9 +1,13 @@
+import logging
+import os
 import re
 
 import click
 
 from ministatus.cli.commands.markers import mark_async, mark_db
-from ministatus.db import Secret
+from ministatus.db import Secret, connect_client
+
+log = logging.getLogger(__name__)
 
 
 @click.command()
@@ -21,12 +25,14 @@ async def start() -> None:
 
 
 async def read_token() -> Secret[str]:
-    from ministatus.db import connect_client
-
     async with connect_client() as client:
         token = await client.get_setting("token")
 
     if token is not None:
+        return parse_token(token)
+
+    if token := os.getenv("MIST_TOKEN"):
+        log.info("Reading token from MIST_TOKEN environment variable")
         return parse_token(token)
 
     click.secho("No Discord bot token found in config.", fg="yellow")
