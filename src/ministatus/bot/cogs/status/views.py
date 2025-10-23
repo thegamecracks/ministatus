@@ -267,9 +267,9 @@ class StatusModify(Page):
 
         summary = discord.ui.TextDisplay(
             f"## {status.label}\n"
+            f"{get_enabled_text(status.enabled_at)}\n"
             f"**Server name:** {status.title}\n"
             f"**Address:** {status.address}\n"
-            f"{get_enabled_text(status.enabled_at)}\n"
         )
 
         if status.thumbnail is not None:
