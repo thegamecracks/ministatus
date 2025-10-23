@@ -7,7 +7,7 @@ import tomllib
 import click
 
 from ministatus.cli.commands.markers import mark_async, mark_db
-from ministatus.db import Status, connect
+from ministatus.db import Status, connect_client
 
 TYPES_ALLOWED = (
     "arma3",
@@ -50,55 +50,27 @@ def status() -> None:
 async def create() -> None:
     """Create a server status."""
     status = fill_status_form()
-    enabled_at = datetime.datetime.now(datetime.timezone.utc)
+    status.enabled_at = enabled_at = datetime.datetime.now(datetime.timezone.utc)
 
-    async with connect() as conn:
-        # TODO: add status methods to DatabaseClient
-        status_id = await conn.fetchval(
-            "INSERT INTO status (guild_id, label, enabled_at) "
-            "VALUES ($1, $2, $3) RETURNING status_id",
-            status.guild_id,
-            status.label,
-            enabled_at,
-        )
+    async with connect_client() as client:
+        status = await client.create_status(status)
 
         for alert in status.alerts:
-            channel_id = alert.channel_id
-            await conn.execute(
-                "INSERT INTO status_alert (status_id, channel_id, enabled_at) "
-                "VALUES ($1, $2, $3)",
-                status_id,
-                channel_id,
-                enabled_at,
-            )
+            alert.status_id = status.status_id
+            alert.enabled_at = enabled_at
+            await client.create_status_alert(alert)
 
         for display in status.displays:
-            await conn.execute(
-                "INSERT INTO status_display "
-                "(message_id, status_id, enabled_at, accent_colour, graph_colour) "
-                "VALUES ($1, $2, $3, $4, $5)",
-                display.message_id,
-                status_id,
-                enabled_at,
-                display.accent_colour,
-                display.graph_colour,
-            )
+            display.status_id = status.status_id
+            display.enabled_at = enabled_at
+            await client.create_status_display(display)
 
         for query in status.queries:
-            await conn.execute(
-                "INSERT INTO status_query "
-                "(status_id, host, port, type, priority, enabled_at, extra) "
-                "VALUES ($1, $2, $3, $4, $5, $6, $7)",
-                status_id,
-                query.host,
-                query.port,
-                query.type,
-                query.priority,
-                enabled_at,
-                query.extra,
-            )
+            query.status_id = status.status_id
+            query.enabled_at = enabled_at
+            await client.create_status_query(query)
 
-    click.secho(f"Successfully created status #{status_id}!", fg="green")
+    click.secho(f"Successfully created status #{status.status_id}!", fg="green")
 
 
 def fill_status_form() -> Status:

@@ -9,6 +9,10 @@ from ministatus.db.models import (
     DiscordMember,
     DiscordMessage,
     DiscordUser,
+    Status,
+    StatusAlert,
+    StatusDisplay,
+    StatusQuery,
 )
 from ministatus.db.secret import Secret
 
@@ -159,3 +163,73 @@ class DatabaseClient:
             user_id,
         )
         return cast(DiscordMember | None, row)
+
+    async def create_status(self, status: Status) -> Status:
+        if status.status_id > 0:
+            raise ValueError("Cannot create status with explicit status_id")
+
+        row = await self.conn.fetchrow(
+            "INSERT INTO status "
+            "(guild_id, label, title, address, thumbnail, enabled_at) "
+            "VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
+            status.guild_id,
+            status.label,
+            status.title,
+            status.address,
+            status.thumbnail,
+            status.enabled_at,
+        )
+        assert row is not None
+        return Status.model_validate(row)
+
+    async def create_status_alert(self, alert: StatusAlert) -> StatusAlert:
+        if alert.status_id < 1:
+            raise ValueError("Cannot create status alert without status_id")
+
+        row = await self.conn.fetchrow(
+            "INSERT INTO status_alert "
+            "(status_id, channel_id, enabled_at) "
+            "VALUES ($1, $2, $3) RETURNING *",
+            alert.status_id,
+            alert.channel_id,
+            alert.enabled_at,
+        )
+        assert row is not None
+        return StatusAlert.model_validate(row)
+
+    async def create_status_display(self, display: StatusDisplay) -> StatusDisplay:
+        if display.status_id < 1:
+            raise ValueError("Cannot create status display without status_id")
+
+        row = await self.conn.fetchrow(
+            "INSERT INTO status_display "
+            "(message_id, status_id, enabled_at, accent_colour, graph_colour) "
+            "VALUES ($1, $2, $3, $4, $5) RETURNING *",
+            display.message_id,
+            display.status_id,
+            display.enabled_at,
+            display.accent_colour,
+            display.graph_colour,
+        )
+        assert row is not None
+        return StatusDisplay.model_validate(row)
+
+    async def create_status_query(self, query: StatusQuery) -> StatusQuery:
+        if query.status_id < 1:
+            raise ValueError("Cannot create status query without status_id")
+
+        row = await self.conn.fetchrow(
+            "INSERT INTO status_query "
+            "(status_id, host, port, type, priority, enabled_at, extra, failed_at) "
+            "VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *",
+            query.status_id,
+            query.host,
+            query.port,
+            query.type,
+            query.priority,
+            query.enabled_at,
+            query.extra,
+            query.failed_at,
+        )
+        assert row is not None
+        return StatusQuery.model_validate(row)
