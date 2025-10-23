@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from ministatus.db.connection import Connection
+from ministatus.db.connection import SQLiteConnection
 from ministatus.db.models import (
     DiscordChannel,
     DiscordGuild,
@@ -21,7 +21,7 @@ class DatabaseClient:
     SECRET_SETTINGS = frozenset({"token"})
     """A set of setting names that will always be marked as secrets."""
 
-    def __init__(self, conn: Connection) -> None:
+    def __init__(self, conn: SQLiteConnection) -> None:
         self.conn = conn
 
     async def list_settings(self) -> list[tuple[str, Any]]:

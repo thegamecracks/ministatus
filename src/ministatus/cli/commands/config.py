@@ -4,7 +4,7 @@ from typing import Any
 import click
 
 from ministatus.cli.commands.markers import mark_async, mark_db
-from ministatus.db import Connection, DatabaseClient, Secret, connect
+from ministatus.db import DatabaseClient, Secret, SQLiteConnection, connect
 
 
 @click.command()
@@ -38,7 +38,7 @@ async def config(
             )
 
 
-async def list_settings(conn: Connection) -> None:
+async def list_settings(conn: SQLiteConnection) -> None:
     client = DatabaseClient(conn)
     rows = await client.list_settings()
     if not rows:
@@ -51,7 +51,7 @@ async def list_settings(conn: Connection) -> None:
         click.secho(f"    {name} = {value}")
 
 
-async def get_setting(conn: Connection, name: str) -> None:
+async def get_setting(conn: SQLiteConnection, name: str) -> None:
     client = DatabaseClient(conn)
     sentinel = object()
 
@@ -65,12 +65,12 @@ async def get_setting(conn: Connection, name: str) -> None:
     click.secho(value, fg="green")
 
 
-async def set_setting(conn: Connection, name: str, value: Any) -> None:
+async def set_setting(conn: SQLiteConnection, name: str, value: Any) -> None:
     client = DatabaseClient(conn)
     await client.set_setting(name, value)
 
 
-async def delete_setting(conn: Connection, name: str) -> None:
+async def delete_setting(conn: SQLiteConnection, name: str) -> None:
     client = DatabaseClient(conn)
     found = await client.delete_setting(name)
     if not found:
