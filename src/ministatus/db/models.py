@@ -29,6 +29,29 @@ DNSName = Annotated[
 Snowflake = Annotated[int, AfterValidator(is_snowflake)]
 
 
+class DiscordUser(BaseModel):
+    guild_id: Snowflake
+
+
+class DiscordGuild(BaseModel):
+    guild_id: Snowflake
+
+
+class DiscordChannel(BaseModel):
+    channel_id: Snowflake
+    guild_id: Snowflake | None = Field(default=None)
+
+
+class DiscordMessage(BaseModel):
+    message_id: Snowflake
+    channel_id: Snowflake
+
+
+class DiscordMember(BaseModel):
+    guild_id: Snowflake
+    user_id: Snowflake
+
+
 class Status(BaseModel):
     status_id: int
     user_id: Snowflake

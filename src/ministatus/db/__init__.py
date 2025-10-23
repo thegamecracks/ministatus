@@ -11,11 +11,11 @@ from ministatus.appdirs import DB_PATH
 from . import converters as converters
 from .client import (
     DatabaseClient as DatabaseClient,
-    User as User,
-    Guild as Guild,
-    Channel as Channel,
-    Message as Message,
-    Member as Member,
+    DiscordUser as DiscordUser,
+    DiscordGuild as DiscordGuild,
+    DiscordChannel as DiscordChannel,
+    DiscordMessage as DiscordMessage,
+    DiscordMember as DiscordMember,
 )
 from .connection import (
     Connection as Connection,
@@ -34,10 +34,15 @@ from .migrations import (
     read_migrations as read_migrations,
 )
 from .models import (
+    DiscordChannel as DiscordChannel,
+    DiscordGuild as DiscordGuild,
+    DiscordMember as DiscordMember,
+    DiscordMessage as DiscordMessage,
     Status as Status,
     StatusAlert as StatusAlert,
     StatusDisplay as StatusDisplay,
     StatusQuery as StatusQuery,
+    DiscordUser as DiscordUser,
 )
 from .secret import Secret as Secret
 from .status import (

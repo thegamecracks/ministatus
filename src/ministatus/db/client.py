@@ -1,8 +1,15 @@
 from __future__ import annotations
 
-from typing import Any, TypedDict, cast
+from typing import Any, cast
 
 from ministatus.db.connection import Connection
+from ministatus.db.models import (
+    DiscordChannel,
+    DiscordGuild,
+    DiscordMember,
+    DiscordMessage,
+    DiscordUser,
+)
 from ministatus.db.secret import Secret
 
 
@@ -118,60 +125,37 @@ class DatabaseClient:
             user_id,
         )
 
-    async def get_discord_user(self, *, user_id: int) -> User | None:
+    async def get_discord_user(self, *, user_id: int) -> DiscordUser | None:
         row = await self.conn.fetchrow(
             "SELECT * FROM discord_user WHERE user_id = $1",
             user_id,
         )
-        return cast(User | None, row)
+        return cast(DiscordUser | None, row)
 
-    async def get_discord_guild(self, *, guild_id: int) -> Guild | None:
+    async def get_discord_guild(self, *, guild_id: int) -> DiscordGuild | None:
         row = await self.conn.fetchrow(
             "SELECT * FROM discord_guild WHERE guild_id = $1",
             guild_id,
         )
-        return cast(Guild | None, row)
+        return cast(DiscordGuild | None, row)
 
-    async def get_discord_channel(self, *, channel_id: int) -> Channel | None:
+    async def get_discord_channel(self, *, channel_id: int) -> DiscordChannel | None:
         row = await self.conn.fetchrow(
             "SELECT * FROM discord_channel WHERE channel_id = $1",
             channel_id,
         )
-        return cast(Channel | None, row)
+        return cast(DiscordChannel | None, row)
 
-    async def get_discord_message(self, *, message_id: int) -> Message | None:
+    async def get_discord_message(self, *, message_id: int) -> DiscordMessage | None:
         row = await self.conn.fetchrow(
             "SELECT * FROM discord_message WHERE message_id = $1",
             message_id,
         )
-        return cast(Message | None, row)
+        return cast(DiscordMessage | None, row)
 
-    async def get_discord_member(self, *, user_id: int) -> Member | None:
+    async def get_discord_member(self, *, user_id: int) -> DiscordMember | None:
         row = await self.conn.fetchrow(
             "SELECT * FROM discord_member WHERE user_id = $1",
             user_id,
         )
-        return cast(Member | None, row)
-
-
-class User(TypedDict):
-    guild_id: int
-
-
-class Guild(TypedDict):
-    guild_id: int
-
-
-class Channel(TypedDict):
-    channel_id: int
-    guild_id: int | None
-
-
-class Message(TypedDict):
-    message_id: int
-    channel_id: int
-
-
-class Member(TypedDict):
-    guild_id: int
-    user_id: int
+        return cast(DiscordMember | None, row)

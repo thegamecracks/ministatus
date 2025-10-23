@@ -48,7 +48,7 @@ class DiscordDatabaseClient:
         if channel is None:
             return
 
-        guild_id = channel["guild_id"]
+        guild_id = channel.guild_id
         guild = self.bot.get_guild(guild_id) if guild_id is not None else None
         channel = (
             guild.get_channel_or_thread(channel_id)
@@ -66,7 +66,7 @@ class DiscordDatabaseClient:
         if message is None:
             return
 
-        channel_id = message["channel_id"]
+        channel_id = message.channel_id
         channel = await self.get_channel(channel_id=channel_id)
         assert channel is not None
 
