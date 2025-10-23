@@ -8,8 +8,7 @@ from discord.ext import commands, tasks
 
 from ministatus.bot.bot import Bot
 from ministatus.bot.db import connect_discord_database_client
-from ministatus.db import connect, fetch_active_statuses
-from ministatus.db.models import Status
+from ministatus.db import Status, connect, fetch_active_statuses
 
 log = logging.getLogger(__name__)
 

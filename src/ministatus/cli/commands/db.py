@@ -6,8 +6,12 @@ import click
 
 from ministatus import state
 from ministatus.appdirs import DB_PATH
-from ministatus.db import Secret, encrypt as db_encrypt
-from ministatus.db.errors import DatabaseEncryptedError, EncryptionUnsupportedError
+from ministatus.db import (
+    DatabaseEncryptedError,
+    EncryptionUnsupportedError,
+    Secret,
+    encrypt as db_encrypt,
+)
 
 
 ALREADY_DECRYPTED = click.style(
