@@ -7,9 +7,9 @@ from discord import app_commands
 from discord.ext import commands, tasks
 
 from ministatus.bot.bot import Bot
-from ministatus.db import connect
+from ministatus.bot.db import DiscordDatabaseClient, fetch_active_statuses
+from ministatus.db import connect, connect_client
 
-from .db import fetch_active_statuses
 from .views import PlaceholderView
 
 log = logging.getLogger(__name__)
@@ -33,12 +33,18 @@ class Status(commands.Cog):
     ) -> None:
         """Create a placeholder display to later be linked to a status."""
         assert interaction.channel is not None
+        assert interaction.guild_id is not None
         assert not isinstance(
             interaction.channel, (discord.CategoryChannel, discord.ForumChannel)
         )
 
         view = PlaceholderView(interaction.user)
         message = await interaction.channel.send(view=view)
+
+        async with connect_client() as client:
+            discord_client = DiscordDatabaseClient(client)
+            await discord_client.add_message(message)
+
         await interaction.response.send_message(
             f"**Message ID**: {message.id}\n"
             f"**Channel ID**: {interaction.channel.id}",

@@ -3,9 +3,12 @@ from __future__ import annotations
 import collections
 import datetime
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from ministatus.db.connection import SQLiteConnection
+from ministatus.db import DatabaseClient, SQLiteConnection
+
+if TYPE_CHECKING:
+    import discord
 
 
 @dataclass
@@ -126,3 +129,36 @@ async def fetch_active_statuses(conn: SQLiteConnection) -> list[Status]:
         )
         for row in statuses
     ]
+
+
+class DiscordDatabaseClient:
+    def __init__(self, client: DatabaseClient) -> None:
+        self.client = client
+
+    async def add_user(self, user: discord.User | discord.Member) -> None:
+        await self.client.add_discord_user(user_id=user.id)
+        if isinstance(user, discord.Member):
+            await self.add_guild(user.guild)
+
+    async def add_guild(self, guild: discord.Guild) -> None:
+        await self.client.add_discord_guild(guild_id=guild.id)
+
+    async def add_channel(self, channel: discord.abc.MessageableChannel) -> None:
+        guild = channel.guild
+        if guild is not None:
+            await self.add_guild(guild)
+
+        await self.client.add_discord_channel(
+            channel_id=channel.id,
+            guild_id=guild.id if guild is not None else None,
+        )
+
+    async def add_message(self, message: discord.Message) -> None:
+        await self.add_channel(message.channel)
+        await self.client.add_discord_message(
+            message_id=message.id,
+            channel_id=message.channel.id,
+        )
+
+    async def add_member(self, member: discord.Member) -> None:
+        await self.add_user(member)
