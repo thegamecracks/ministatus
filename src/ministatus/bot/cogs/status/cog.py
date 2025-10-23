@@ -86,7 +86,7 @@ class StatusCog(
     async def query_loop(self) -> None:
         guild_ids = [guild.id for guild in self.bot.guilds]
         async with connect() as conn:
-            statuses = await fetch_statuses(
+            await fetch_statuses(
                 conn,
                 enabled=True,
                 guild_ids=guild_ids,
