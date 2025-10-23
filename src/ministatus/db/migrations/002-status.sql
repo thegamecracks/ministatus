@@ -16,7 +16,7 @@ CREATE TABLE status_alert (
     status_id INTEGER PRIMARY KEY
         REFERENCES status (status_id) ON DELETE CASCADE,
     channel_id INTEGER NOT NULL
-        REFERENCES status (status_id) ON DELETE CASCADE,
+        REFERENCES discord_channel (channel_id) ON DELETE CASCADE,
 
     enabled_at TIMESTAMP
 
