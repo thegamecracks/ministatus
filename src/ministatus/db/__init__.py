@@ -33,12 +33,14 @@ from .migrations import (
     SQLiteMigrator as SQLiteMigrator,
     read_migrations as read_migrations,
 )
-from .secret import Secret as Secret
-from .status import (
+from .models import (
     Status as Status,
     StatusAlert as StatusAlert,
     StatusDisplay as StatusDisplay,
     StatusQuery as StatusQuery,
+)
+from .secret import Secret as Secret
+from .status import (
     fetch_active_statuses as fetch_active_statuses,
     fetch_status_alerts as fetch_status_alerts,
     fetch_status_displays as fetch_status_displays,

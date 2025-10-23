@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import collections
-import datetime
 import textwrap
-from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Collection
+from typing import TYPE_CHECKING, Collection
+
+from ministatus.db.models import Status, StatusAlert, StatusDisplay, StatusQuery
 
 if TYPE_CHECKING:
     from ministatus.db.connection import SQLiteConnection
@@ -36,52 +36,6 @@ GET_STATUS_DISPLAYS = textwrap.dedent(
     )
     """
 ).strip()
-
-
-@dataclass(kw_only=True)
-class Status:
-    status_id: int
-    user_id: int
-    label: str
-
-    title: str | None
-    address: str | None
-    thumbnail: bytes | None
-    enabled_at: datetime.datetime | None
-
-    alerts: list[StatusAlert]
-    displays: list[StatusDisplay]
-    queries: list[StatusQuery]
-
-
-@dataclass(kw_only=True)
-class StatusAlert:
-    status_id: int
-    channel_id: int
-    enabled_at: datetime.datetime | None
-
-
-@dataclass(kw_only=True)
-class StatusDisplay:
-    message_id: int
-    status_id: int
-
-    enabled_at: datetime.datetime | None
-    accent_colour: int
-    graph_colour: int
-
-
-@dataclass(kw_only=True)
-class StatusQuery:
-    status_id: int
-    host: str
-    port: int
-    type: str
-    priority: int
-
-    enabled_at: datetime.datetime | None
-    extra: Any
-    failed_at: datetime.datetime | None
 
 
 async def fetch_active_statuses(

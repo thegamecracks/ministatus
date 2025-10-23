@@ -43,6 +43,7 @@ class Status(commands.Cog):
 
         async with connect_client() as client:
             discord_client = DiscordDatabaseClient(self.bot, client)
+            await discord_client.add_user(interaction.user)
             await discord_client.add_message(message)
 
         await interaction.response.send_message(
