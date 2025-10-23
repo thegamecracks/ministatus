@@ -17,8 +17,12 @@ class DiscordDatabaseClient:
 
     async def add_user(self, user: discord.User | discord.Member) -> None:
         await self.client.add_discord_user(user_id=user.id)
+
+    async def add_user_or_member(self, user: discord.User | discord.Member) -> None:
         if isinstance(user, discord.Member):
-            await self.add_guild(user.guild)
+            await self.add_member(user)
+        else:
+            await self.add_user(user)
 
     async def add_guild(self, guild: discord.Guild) -> None:
         await self.client.add_discord_guild(guild_id=guild.id)
@@ -42,6 +46,11 @@ class DiscordDatabaseClient:
 
     async def add_member(self, member: discord.Member) -> None:
         await self.add_user(member)
+        await self.add_guild(member.guild)
+        await self.client.add_discord_member(
+            guild_id=member.guild.id,
+            user_id=member.id,
+        )
 
     async def get_channel(self, *, channel_id: int):
         channel = await self.client.get_discord_channel(channel_id=channel_id)
