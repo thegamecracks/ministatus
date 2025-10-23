@@ -41,7 +41,7 @@ class StatusCog(
             statuses = await fetch_statuses(ddc.client.conn, guild_ids=[guild_id])
 
         view = StatusManageView(interaction, statuses)
-        await view.send(interaction)
+        await view.send(interaction, ephemeral=True)
 
     @app_commands.command(name="create")
     async def status_create(

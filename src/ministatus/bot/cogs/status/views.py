@@ -85,14 +85,14 @@ class Book(CancellableView):
     def pop(self) -> Page:
         return self.pages.pop()
 
-    async def edit(self, interaction: Interaction) -> None:
+    async def edit(self, interaction: Interaction, **kwargs) -> None:
         rendered = self.render()
-        kwargs = rendered.get_message_kwargs()
+        kwargs = rendered.get_message_kwargs() | kwargs
         await interaction.response.edit_message(view=self, **kwargs)
 
-    async def send(self, interaction: Interaction) -> None:
+    async def send(self, interaction: Interaction, **kwargs) -> None:
         rendered = self.render()
-        kwargs = rendered.get_message_kwargs()
+        kwargs = rendered.get_message_kwargs() | kwargs
         await interaction.response.send_message(view=self, **kwargs)
 
     def render(self) -> RenderArgs:
