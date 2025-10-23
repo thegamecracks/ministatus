@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, AsyncIterator, Callable
 from ministatus import state
 from ministatus.appdirs import DB_PATH
 
+from . import converters as converters
 from .client import DatabaseClient as DatabaseClient
 from .connection import (
     Connection as Connection,
