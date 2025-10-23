@@ -6,7 +6,8 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Callable, Self, cast
 
 import discord
-from discord import Interaction
+from discord import Interaction, SelectOption
+from discord.ui import Select
 
 from ministatus.db import connect_client
 from ministatus.db.models import Status
@@ -172,7 +173,7 @@ class StatusOverviewSelect(discord.ui.ActionRow):
 
     def render(self) -> None:
         options = [
-            discord.SelectOption(
+            SelectOption(
                 label=status.label,
                 description="Enabled" if status.enabled_at else "Disabled",
                 value=str(status.status_id),
@@ -181,20 +182,12 @@ class StatusOverviewSelect(discord.ui.ActionRow):
         ]
 
         options.append(
-            discord.SelectOption(
-                label="Create status...",
-                emoji="✳️",
-                value="create",
-            )
+            SelectOption(label="Create status...", emoji="✳️", value="create")
         )
         self.on_select.options = options
 
     @discord.ui.select()
-    async def on_select(
-        self,
-        interaction: Interaction[Bot],
-        select: discord.ui.Select,
-    ) -> None:
+    async def on_select(self, interaction: Interaction[Bot], select: Select) -> None:
         value = select.values[0]
         if value == "create":
             modal = CreateStatusModal(self._create_callback)
