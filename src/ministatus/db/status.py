@@ -38,7 +38,7 @@ GET_STATUS_DISPLAYS = textwrap.dedent(
 ).strip()
 
 
-@dataclass
+@dataclass(kw_only=True)
 class Status:
     status_id: int
     user_id: int
@@ -54,14 +54,14 @@ class Status:
     queries: list[StatusQuery]
 
 
-@dataclass
+@dataclass(kw_only=True)
 class StatusAlert:
     status_id: int
     channel_id: int
     enabled_at: datetime.datetime | None
 
 
-@dataclass
+@dataclass(kw_only=True)
 class StatusDisplay:
     message_id: int
     status_id: int
@@ -71,7 +71,7 @@ class StatusDisplay:
     graph_colour: int
 
 
-@dataclass
+@dataclass(kw_only=True)
 class StatusQuery:
     status_id: int
     host: str
