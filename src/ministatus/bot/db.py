@@ -1,13 +1,24 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from contextlib import asynccontextmanager
+from typing import TYPE_CHECKING, AsyncIterator
 
-from ministatus.db import DatabaseClient
+from ministatus.db import DatabaseClient, connect_client
 
 if TYPE_CHECKING:
     import discord
 
     from ministatus.bot.bot import Bot
+
+
+@asynccontextmanager
+async def connect_discord_database_client(
+    bot: Bot,
+    *,
+    transaction: bool = True,
+) -> AsyncIterator[DiscordDatabaseClient]:
+    async with connect_client(transaction=transaction) as client:
+        yield DiscordDatabaseClient(bot, client)
 
 
 class DiscordDatabaseClient:
