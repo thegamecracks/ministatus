@@ -5,15 +5,21 @@ import json
 import textwrap
 import tomllib
 from dataclasses import dataclass
-from typing import Any, Self
+from typing import Any, ClassVar, Self
 
 import click
 
 from ministatus.cli.commands.markers import mark_async, mark_db
 from ministatus.db import DatabaseClient, connect
 
+TYPES_ALLOWED = (
+    "arma3",
+    "arma-reforger",
+    "source",
+    "project-zomboid",
+)
 STATUS_TEMPLATE = textwrap.dedent(
-    """
+    f"""
     [status]
     label = "My server"  # A useful name for your server
     user_id = -1         # Your Discord user ID
@@ -30,7 +36,7 @@ STATUS_TEMPLATE = textwrap.dedent(
     [[status.query]]
     host = "127.0.0.1"  # Your server's hostname or IP address
     port = -1           # Your server's query port (or 0 for SRV lookup)
-    type = "source"     # The query protocol to use (source)
+    type = "source"     # The query protocol to use ({', '.join(TYPES_ALLOWED)})
     priority = 0        # The priority of this query protocol (0 is highest)
     extra = ""          # Extra data for the query protocol, like API keys
     """
@@ -200,6 +206,8 @@ class StatusQuery:
     priority: int
     extra: object
 
+    TYPES_ALLOWED: ClassVar[tuple[str, ...]] = TYPES_ALLOWED
+
     @classmethod
     def from_dict(cls, d: dict[str, Any]) -> Self:
         host = str(d["host"])
@@ -211,9 +219,9 @@ class StatusQuery:
             raise ValueError("port must be set")
 
         type = str(d["type"])
-        types_allowed = ("source",)
-        if type not in types_allowed:
-            raise ValueError(f"type must be one of: {', '.join(types_allowed)}")
+        if type not in cls.TYPES_ALLOWED:
+            allowed = ", ".join(cls.TYPES_ALLOWED)
+            raise ValueError(f"type must be one of: {allowed}")
 
         priority = int(d["priority"])
         if priority < 0:
