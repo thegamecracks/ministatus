@@ -269,10 +269,10 @@ class StatusModify(Page):
         rendered = RenderArgs()
         status = self.status
 
+        self.add_item(discord.ui.TextDisplay(f"## {status.label}"))
         self.add_item(discord.ui.Separator())
 
         summary = discord.ui.TextDisplay(
-            f"## {status.label}\n"
             f"{get_enabled_text(status.enabled_at)}\n"
             f"**Server name:** {status.title}\n"
             f"**Address:** {status.address}\n"
@@ -396,11 +396,9 @@ class StatusAlertPage(Page):
         channel = self.book.guild.get_channel_or_thread(alert.channel_id)
         mention = channel.mention if channel is not None else "<deleted channel>"
 
-        self.add_item(
-            discord.ui.TextDisplay(
-                f"## Alert {mention}\n{get_enabled_text(alert.enabled_at)}\n"
-            )
-        )
+        self.add_item(discord.ui.TextDisplay(f"## Alert {mention}"))
+        self.add_item(discord.ui.Separator())
+        self.add_item(discord.ui.TextDisplay(get_enabled_text(alert.enabled_at)))
 
         return RenderArgs()
 
@@ -419,9 +417,10 @@ class StatusDisplayPage(Page):
 
         link = message.jump_url if message is not None else "<deleted message>"
 
+        self.add_item(discord.ui.TextDisplay(f"## Display {link}"))
+        self.add_item(discord.ui.Separator())
         self.add_item(
             discord.ui.TextDisplay(
-                f"## Display {link}\n"
                 f"{get_enabled_text(display.enabled_at)}\n"
                 f"**Accent colour:** #{display.accent_colour:06X}\n"
                 f"**Graph colour:** #{display.graph_colour:06X}\n"
@@ -440,8 +439,10 @@ class StatusQueryPage(Page):
     async def render(self) -> RenderArgs:
         query = self.query
 
+        self.add_item(discord.ui.TextDisplay(f"## Query {query.host}"))
+        self.add_item(discord.ui.Separator())
+
         lines = [
-            f"## Query {query.host}",
             f"{get_enabled_text(query.enabled_at)}",
             f"**Host:** #{query.host}",
             f"**Port:** #{query.port}",
