@@ -105,6 +105,15 @@ class Book(CancellableView):
         self.add_item(BookControls(self))
         return rendered
 
+    @property
+    def bot(self) -> Bot:
+        return self.last_interaction.client
+
+    @property
+    def guild(self) -> discord.Guild:
+        assert self.last_interaction.guild is not None
+        return self.last_interaction.guild
+
 
 class BookControls(discord.ui.ActionRow):
     def __init__(self, book: Book) -> None:
