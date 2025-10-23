@@ -19,5 +19,5 @@ jobs:
           python-version: '3.11'
           enable-cache: true
       - run: uv sync --locked --all-extras --dev
-      - run: uv tool install pyright
+      - run: uv pip install pyright
       - run: pyright
