@@ -44,7 +44,6 @@ async def list_settings(conn: Connection) -> None:
     if not rows:
         return click.echo("There are no settings defined 🙁")
 
-    # TODO: censor secrets
     click.echo("Settings:")
     for name, value in rows:
         name = click.style(name, fg="yellow")
