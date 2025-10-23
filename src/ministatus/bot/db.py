@@ -98,57 +98,17 @@ async def fetch_active_statuses(
         return []
 
     status_ids = {row["status_id"] for row in statuses}
-    sid = ", ".join("?" * len(status_ids))
-    gid = ", ".join("?" * len(guild_ids))
-
-    alerts = await conn.fetch(
-        GET_STATUS_ALERTS.format(sid=sid, gid=gid),
-        *status_ids,
-        *guild_ids,
+    status_alerts = await fetch_status_alerts(
+        conn,
+        status_ids=status_ids,
+        guild_ids=guild_ids,
     )
-    status_alerts = collections.defaultdict(list)
-    for row in alerts:
-        alert = StatusAlert(
-            status_id=row["status_id"],
-            channel_id=row["channel_id"],
-            enabled_at=row["enabled_at"],
-        )
-        status_alerts[row["status_id"]].append(alert)
-
-    displays = await conn.fetch(
-        GET_STATUS_DISPLAYS.format(sid=sid, gid=gid),
-        *status_ids,
-        *guild_ids,
+    status_displays = await fetch_status_displays(
+        conn,
+        status_ids=status_ids,
+        guild_ids=guild_ids,
     )
-    status_displays = collections.defaultdict(list)
-    for row in displays:
-        display = StatusDisplay(
-            message_id=row["message_id"],
-            status_id=row["status_id"],
-            enabled_at=row["enabled_at"],
-            accent_colour=row["accent_colour"],
-            graph_colour=row["graph_colour"],
-        )
-        status_displays[row["status_id"]].append(display)
-
-    queries = await conn.fetch(
-        f"SELECT * FROM status_query WHERE status_id IN ({sid}) "
-        "AND enabled_at IS NOT NULL ORDER BY priority",
-        *status_ids,
-    )
-    status_queries = collections.defaultdict(list)
-    for row in queries:
-        query = StatusQuery(
-            status_id=row["status_id"],
-            host=row["host"],
-            port=row["port"],
-            type=row["type"],
-            priority=row["priority"],
-            enabled_at=row["enabled_at"],
-            extra=row["extra"],
-            failed_at=row["failed_at"],
-        )
-        status_queries[row["status_id"]].append(query)
+    status_queries = await fetch_status_queries(conn, status_ids=status_ids)
 
     statuses = []
     for row in statuses:
@@ -171,7 +131,99 @@ async def fetch_active_statuses(
             queries=queries,
         )
         statuses.append(status)
+
     return statuses
+
+
+async def fetch_status_alerts(
+    conn: SQLiteConnection,
+    *,
+    status_ids: Collection[int],
+    guild_ids: Collection[int],
+) -> dict[int, list[StatusAlert]]:
+    assert len(status_ids) > 0
+    assert len(guild_ids) > 0
+
+    sid = ", ".join("?" * len(status_ids))
+    gid = ", ".join("?" * len(guild_ids))
+    alerts = await conn.fetch(
+        GET_STATUS_ALERTS.format(sid=sid, gid=gid),
+        *status_ids,
+        *guild_ids,
+    )
+
+    status_alerts = collections.defaultdict(list)
+    for row in alerts:
+        alert = StatusAlert(
+            status_id=row["status_id"],
+            channel_id=row["channel_id"],
+            enabled_at=row["enabled_at"],
+        )
+        status_alerts[row["status_id"]].append(alert)
+
+    return status_alerts
+
+
+async def fetch_status_displays(
+    conn: SQLiteConnection,
+    *,
+    status_ids: Collection[int],
+    guild_ids: Collection[int],
+) -> dict[int, list[StatusDisplay]]:
+    assert len(status_ids) > 0
+    assert len(guild_ids) > 0
+
+    sid = ", ".join("?" * len(status_ids))
+    gid = ", ".join("?" * len(guild_ids))
+    displays = await conn.fetch(
+        GET_STATUS_DISPLAYS.format(sid=sid, gid=gid),
+        *status_ids,
+        *guild_ids,
+    )
+
+    status_displays = collections.defaultdict(list)
+    for row in displays:
+        display = StatusDisplay(
+            message_id=row["message_id"],
+            status_id=row["status_id"],
+            enabled_at=row["enabled_at"],
+            accent_colour=row["accent_colour"],
+            graph_colour=row["graph_colour"],
+        )
+        status_displays[row["status_id"]].append(display)
+
+    return status_displays
+
+
+async def fetch_status_queries(
+    conn: SQLiteConnection,
+    *,
+    status_ids: Collection[int],
+) -> dict[int, list[StatusQuery]]:
+    assert len(status_ids) > 0
+
+    sid = ", ".join("?" * len(status_ids))
+    queries = await conn.fetch(
+        f"SELECT * FROM status_query WHERE status_id IN ({sid}) "
+        "AND enabled_at IS NOT NULL ORDER BY priority",
+        *status_ids,
+    )
+
+    status_queries = collections.defaultdict(list)
+    for row in queries:
+        query = StatusQuery(
+            status_id=row["status_id"],
+            host=row["host"],
+            port=row["port"],
+            type=row["type"],
+            priority=row["priority"],
+            enabled_at=row["enabled_at"],
+            extra=row["extra"],
+            failed_at=row["failed_at"],
+        )
+        status_queries[row["status_id"]].append(query)
+
+    return status_queries
 
 
 class DiscordDatabaseClient:
