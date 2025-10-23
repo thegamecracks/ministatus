@@ -97,7 +97,7 @@ class DatabaseClient:
         channel_id: int,
     ) -> None:
         await self.conn.execute(
-            "INSERT INTO discord_channel (message_id, channel_id) VALUES ($1, $2) "
+            "INSERT INTO discord_message (message_id, channel_id) VALUES ($1, $2) "
             "ON CONFLICT DO NOTHING",
             message_id,
             channel_id,
