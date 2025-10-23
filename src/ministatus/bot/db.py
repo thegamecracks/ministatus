@@ -11,6 +11,8 @@ from ministatus.db import DatabaseClient, SQLiteConnection
 if TYPE_CHECKING:
     import discord
 
+    from ministatus.bot.bot import Bot
+
 GET_STATUS_ALERTS = textwrap.dedent(
     """
     SELECT * FROM status_alert
@@ -227,7 +229,8 @@ async def fetch_status_queries(
 
 
 class DiscordDatabaseClient:
-    def __init__(self, client: DatabaseClient) -> None:
+    def __init__(self, bot: Bot, client: DatabaseClient) -> None:
+        self.bot = bot
         self.client = client
 
     async def add_user(self, user: discord.User | discord.Member) -> None:
@@ -257,3 +260,36 @@ class DiscordDatabaseClient:
 
     async def add_member(self, member: discord.Member) -> None:
         await self.add_user(member)
+
+    async def get_channel(self, *, channel_id: int):
+        channel = await self.client.get_discord_channel(channel_id=channel_id)
+        if channel is None:
+            return
+
+        guild_id = channel["guild_id"]
+        guild = self.bot.get_guild(guild_id) if guild_id is not None else None
+        channel = (
+            guild.get_channel_or_thread(channel_id)
+            if guild is not None
+            else self.bot.get_channel(channel_id)
+        )
+
+        if channel is None:
+            channel = self.bot.get_partial_messageable(channel_id, guild_id=guild_id)
+
+        return channel
+
+    async def get_message(self, *, message_id: int) -> discord.PartialMessage | None:
+        message = await self.client.get_discord_message(message_id=message_id)
+        if message is None:
+            return
+
+        channel_id = message["channel_id"]
+        channel = await self.get_channel(channel_id=channel_id)
+        assert channel is not None
+
+        # NOTE: Not all channel types support get_partial_message()
+        try:
+            return channel.get_partial_message(message_id)  # type: ignore
+        except AttributeError:
+            return

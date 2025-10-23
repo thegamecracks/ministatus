@@ -42,7 +42,7 @@ class Status(commands.Cog):
         message = await interaction.channel.send(view=view)
 
         async with connect_client() as client:
-            discord_client = DiscordDatabaseClient(client)
+            discord_client = DiscordDatabaseClient(self.bot, client)
             await discord_client.add_message(message)
 
         await interaction.response.send_message(
