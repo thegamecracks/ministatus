@@ -41,46 +41,64 @@ GET_STATUS_DISPLAYS = textwrap.dedent(
 async def fetch_statuses(
     conn: SQLiteConnection,
     *,
-    enabled: bool | None = None,
     guild_ids: Collection[int],
+    enabled: bool | None = None,
+    with_relationships: bool = False,
 ) -> list[Status]:
     if not guild_ids:
         return []
 
     enabled_expr = get_enabled_condition(enabled)
-    statuses = await conn.fetch(f"SELECT * FROM status WHERE {enabled_expr}")
+    gid = ", ".join("?" * len(guild_ids))
+    statuses = await conn.fetch(
+        f"SELECT * FROM status WHERE {enabled_expr} AND guild_id IN ({gid})",
+        *guild_ids,
+    )
     if not statuses:
         return []
 
     status_ids = {row["status_id"] for row in statuses}
-    status_alerts = await fetch_status_alerts(
-        conn,
-        enabled=enabled or None,  # don't pass enabled=False down
-        status_ids=status_ids,
-        guild_ids=guild_ids,
+    status_alerts = (
+        await fetch_status_alerts(
+            conn,
+            enabled=enabled or None,  # don't pass enabled=False down
+            status_ids=status_ids,
+            guild_ids=guild_ids,
+        )
+        if with_relationships
+        else {}
     )
-    status_displays = await fetch_status_displays(
-        conn,
-        enabled=enabled or None,
-        status_ids=status_ids,
-        guild_ids=guild_ids,
+    status_displays = (
+        await fetch_status_displays(
+            conn,
+            enabled=enabled or None,
+            status_ids=status_ids,
+            guild_ids=guild_ids,
+        )
+        if with_relationships
+        else {}
     )
-    status_queries = await fetch_status_queries(
-        conn,
-        enabled=enabled or None,
-        status_ids=status_ids,
+    status_queries = (
+        await fetch_status_queries(
+            conn,
+            enabled=enabled or None,
+            status_ids=status_ids,
+        )
+        if with_relationships
+        else {}
     )
 
-    statuses = []
+    status_objs = []
     for row in statuses:
-        alerts = status_alerts[row["status_id"]]
-        displays = status_displays[row["status_id"]]
-        queries = status_queries[row["status_id"]]
+        status_id = row["status_id"]
+        alerts = status_alerts.get(status_id, [])
+        displays = status_displays.get(status_id, [])
+        queries = status_queries.get(status_id, [])
         if enabled and (not displays or not queries):
             continue  # Would be nice to filter this in SQL
 
         status = Status(
-            status_id=row["status_id"],
+            status_id=status_id,
             guild_id=row["guild_id"],
             label=row["label"],
             title=row["title"],
@@ -91,9 +109,9 @@ async def fetch_statuses(
             displays=displays,
             queries=queries,
         )
-        statuses.append(status)
+        status_objs.append(status)
 
-    return statuses
+    return status_objs
 
 
 def get_enabled_condition(enabled: bool | None) -> str:

@@ -26,8 +26,8 @@ class StatusCog(
     def __init__(self, bot: Bot) -> None:
         self.bot = bot
 
-    async def cog_load(self) -> None:
-        self.query_loop.start()
+    # async def cog_load(self) -> None:
+    #     self.query_loop.start()
 
     @app_commands.command(name="manage")
     async def status_manage(self, interaction: discord.Interaction[Bot]) -> None:
@@ -38,7 +38,11 @@ class StatusCog(
         guild_id = interaction.guild.id
         async with connect_discord_database_client(self.bot) as ddc:
             await ddc.add_member(interaction.user)
-            statuses = await fetch_statuses(ddc.client.conn, guild_ids=[guild_id])
+            statuses = await fetch_statuses(
+                ddc.client.conn,
+                guild_ids=[guild_id],
+                with_relationships=True,
+            )
 
         view = StatusManageView(interaction, statuses)
         await view.send(interaction, ephemeral=True)
@@ -82,7 +86,12 @@ class StatusCog(
     async def query_loop(self) -> None:
         guild_ids = [guild.id for guild in self.bot.guilds]
         async with connect() as conn:
-            statuses = await fetch_statuses(conn, enabled=True, guild_ids=guild_ids)
+            statuses = await fetch_statuses(
+                conn,
+                enabled=True,
+                guild_ids=guild_ids,
+                with_relationships=True,
+            )
 
     @query_loop.before_loop
     async def query_before_loop(self) -> None:
