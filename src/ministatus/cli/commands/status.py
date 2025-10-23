@@ -36,7 +36,7 @@ STATUS_TEMPLATE = textwrap.dedent(
     [[status.query]]
     host = "127.0.0.1"  # Your server's hostname or IP address
     port = -1           # Your server's query port (or 0 for SRV lookup)
-    type = "source"     # The query protocol to use ({', '.join(TYPES_ALLOWED)})
+    type = "source"     # The query protocol to use ({", ".join(TYPES_ALLOWED)})
     priority = 0        # The priority of this query protocol (0 is highest)
     extra = ""          # Extra data for the query protocol, like API keys
     """

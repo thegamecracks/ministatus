@@ -46,8 +46,7 @@ class Status(commands.Cog):
             await discord_client.add_message(message)
 
         await interaction.response.send_message(
-            f"**Message ID**: {message.id}\n"
-            f"**Channel ID**: {interaction.channel.id}",
+            f"**Message ID**: {message.id}\n**Channel ID**: {interaction.channel.id}",
             ephemeral=True,
         )
 
