@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
-from typing import TYPE_CHECKING, AsyncIterator
+from typing import TYPE_CHECKING, AsyncIterator, Protocol, runtime_checkable
 
 from ministatus.db import DatabaseClient, connect_client
 
@@ -38,15 +38,17 @@ class DiscordDatabaseClient:
     async def add_guild(self, guild: discord.Guild) -> None:
         await self.client.add_discord_guild(guild_id=guild.id)
 
-    async def add_channel(self, channel: discord.abc.MessageableChannel) -> None:
-        guild = channel.guild
-        if guild is not None:
-            await self.add_guild(guild)
+    async def add_channel(self, channel: _ChannelLike) -> None:
+        if isinstance(channel, _ChannelWithGuild):
+            guild_id = channel.guild and channel.guild.id
+        elif isinstance(channel, _ChannelWithGuildID):
+            guild_id = channel.guild_id
+        else:
+            guild_id = None
 
-        await self.client.add_discord_channel(
-            channel_id=channel.id,
-            guild_id=guild.id if guild is not None else None,
-        )
+        if guild_id is not None:
+            await self.client.add_discord_guild(guild_id=guild_id)
+        await self.client.add_discord_channel(channel_id=channel.id, guild_id=guild_id)
 
     async def add_message(self, message: discord.Message) -> None:
         await self.add_channel(message.channel)
@@ -95,3 +97,23 @@ class DiscordDatabaseClient:
             return channel.get_partial_message(message_id)  # type: ignore
         except AttributeError:
             return
+
+
+@runtime_checkable
+class _Channel(Protocol):
+    id: int
+
+
+@runtime_checkable
+class _ChannelWithGuild(_Channel, Protocol):
+    id: int
+    guild: discord.Guild | None
+
+
+@runtime_checkable
+class _ChannelWithGuildID(_Channel, Protocol):
+    id: int
+    guild_id: int | None
+
+
+_ChannelLike = _ChannelWithGuild | _ChannelWithGuildID | _Channel
