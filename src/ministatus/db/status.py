@@ -230,6 +230,26 @@ async def fetch_status_queries(
     return status_queries
 
 
+async def fetch_status_by_id(
+    conn: SQLiteConnection,
+    *,
+    status_id: int,
+) -> Status | None:
+    row = await conn.fetchrow("SELECT * FROM status WHERE status_id = $1", status_id)
+    if row is None:
+        return
+
+    return Status(
+        status_id=row["status_id"],
+        guild_id=row["guild_id"],
+        label=row["label"],
+        title=row["title"],
+        address=row["address"],
+        thumbnail=row["thumbnail"],
+        enabled_at=row["enabled_at"],
+    )
+
+
 async def fetch_status_display_by_id(
     conn: SQLiteConnection,
     *,

@@ -8,9 +8,10 @@ from discord.ext import commands, tasks
 
 from ministatus.bot.bot import Bot
 from ministatus.bot.db import connect_discord_database_client
-from ministatus.db import connect, fetch_statuses
+from ministatus.db import fetch_statuses
 
-from .views import StatusManageView
+from .query import run_query_jobs
+from .views import StatusManageView, display_cache
 
 log = logging.getLogger(__name__)
 
@@ -26,8 +27,13 @@ class StatusCog(
     def __init__(self, bot: Bot) -> None:
         self.bot = bot
 
-    # async def cog_load(self) -> None:
-    #     self.query_loop.start()
+    async def cog_load(self) -> None:
+        self.query_loop.start()
+
+    async def cog_unload(self) -> None:
+        self.query_loop.cancel()
+        for view in display_cache.values():
+            view.stop()
 
     @app_commands.command(name="manage")
     async def status_manage(self, interaction: discord.Interaction[Bot]) -> None:
@@ -49,14 +55,7 @@ class StatusCog(
 
     @tasks.loop(seconds=60)
     async def query_loop(self) -> None:
-        guild_ids = [guild.id for guild in self.bot.guilds]
-        async with connect() as conn:
-            await fetch_statuses(
-                conn,
-                enabled=True,
-                guild_ids=guild_ids,
-                with_relationships=True,
-            )
+        await run_query_jobs(self.bot)
 
     @query_loop.before_loop
     async def query_before_loop(self) -> None:

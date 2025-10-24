@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime
+import logging
 from typing import TYPE_CHECKING, Any, Callable, Self, cast
 
 import discord
@@ -8,7 +9,15 @@ from discord import Interaction, SelectOption
 from discord.ui import Button, Select
 
 from ministatus.bot.db import connect_discord_database_client
-from ministatus.db import Status, StatusDisplay, connect
+from ministatus.db import (
+    Status,
+    StatusDisplay,
+    StatusHistory,
+    connect,
+    fetch_status_by_id,
+    fetch_status_display_by_id,
+    fetch_status_history,
+)
 
 from .book import Book, Page, RenderArgs, get_enabled_text
 
@@ -16,6 +25,10 @@ if TYPE_CHECKING:
     from ministatus.bot.bot import Bot
 
     from .overview import StatusModify
+
+log = logging.getLogger(__name__)
+
+display_cache: dict[int, StatusDisplayView] = {}
 
 
 class StatusModifyDisplayRow(discord.ui.ActionRow):
@@ -219,4 +232,123 @@ class PlaceholderView(discord.ui.LayoutView):
                 f"Hey there! I'm a placeholder message sent by {user.mention}.\n"
                 f"This message isn't doing anything, for now..."
             )
+        )
+
+
+def get_online_message(history: StatusHistory | None) -> str:
+    if history is None:
+        return "🟡 Unknown"
+    elif history.online:
+        return "🟢 Online"
+    else:
+        return "🔴 Offline"
+
+
+class StatusDisplayView(discord.ui.LayoutView):
+    container = discord.ui.Container()
+
+    def __init__(self, bot: Bot, message_id: int) -> None:
+        super().__init__(timeout=None)
+        self.bot = bot
+        self.message_id = message_id
+
+    async def update(self) -> None:
+        async with connect_discord_database_client(self.bot) as ddc:
+            message = await ddc.get_message(message_id=self.message_id)
+
+            if message is None:
+                reason = f"Cannot retrieve message {self.message_id}"
+                return await disable_display(self.message_id, reason)
+
+            conn = ddc.client.conn
+            display = await fetch_status_display_by_id(conn, message_id=self.message_id)
+            assert display is not None
+
+            status = await fetch_status_by_id(conn, status_id=display.status_id)
+            assert status is not None
+
+            history = await fetch_status_history(
+                ddc.client.conn,
+                status_ids=[self.message_id],
+            )
+            history = history[self.message_id]
+
+        args = await self.render(status, display, history)
+        await message.edit(view=self, **args.get_message_kwargs())
+
+    async def render(
+        self,
+        status: Status,
+        display: StatusDisplay,
+        history: list[StatusHistory],
+    ) -> RenderArgs:
+        self.clear_items()
+        self.container.clear_items()
+        self.container.accent_colour = display.accent_colour
+
+        rendered = RenderArgs()
+
+        if status.thumbnail:
+            f = discord.File(status.thumbnail, "thumbnail.png")
+            rendered.files.append(f)
+            frame = discord.ui.Section(accessory=discord.ui.Thumbnail(f))
+        else:
+            frame = self.container
+
+        title = status.title or status.label
+        self.container.add_item(discord.ui.TextDisplay(f"## {title}"))
+        self.container.add_item(discord.ui.Separator())
+
+        latest = history[-1] if history else None
+        online = get_online_message(latest)
+        last_updated = latest and discord.utils.format_dt(latest.created_at, "R")
+        players = (
+            sorted(latest.players, key=lambda p: p.name.lower())
+            if latest is not None
+            else []
+        )
+        max_players = latest and latest.max_players
+
+        content = [
+            f"**Address:** {status.address}",
+            f"**Status:** {online}",
+            f"**Last updated:** {last_updated}",
+            f"**Player count:** {len(players)} / {max_players}",
+            # TODO: tailor details to game
+        ]
+
+        frame.add_item(discord.ui.TextDisplay("\n".join(content)))
+        self.container.add_item(discord.ui.Separator())
+
+        if players:
+            content = []
+            for chunk in discord.utils.as_chunks(players, 5):
+                content.append(", ".join([p.name for p in chunk]))
+            self.container.add_item(discord.ui.TextDisplay("\n".join(content)))
+            self.container.add_item(discord.ui.Separator())
+
+        # TODO: add graph
+
+        self.add_item(self.container)
+
+        return rendered
+
+
+async def update_display(bot: Bot, *, message_id: int) -> None:
+    view = display_cache.get(message_id)
+    if view is not None:
+        return await view.update()
+
+    view = StatusDisplayView(bot, message_id)
+    await view.update()
+    display_cache[message_id] = view
+
+
+async def disable_display(message_id: int, reason: str) -> None:
+    # TODO: store display failure reason in database
+    log.warning("Status display #%d is invalid: %s", message_id, reason)
+    async with connect() as conn:
+        await conn.execute(
+            "UPDATE status_display SET enabled_at = NULL WHERE message_id = $1",
+            message_id,
         )
