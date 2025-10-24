@@ -64,6 +64,13 @@ def setup_logging(*, verbose: int) -> None:
     root.addHandler(stream)
     root.addHandler(jsonl)
 
+    # NOTE: Logging propagation only applies to handlers and not filters,
+    #       so root.addFilter() won't catch logs from all loggers.
+    #       We need to add filters directly to each package's logger.
+    logging.getLogger("discord.client").addFilter(
+        lambda r: not r.getMessage().startswith("PyNaCl")
+    )
+
     pkg = logging.getLogger(__package__.partition(".")[0])
     pkg.setLevel(pkg_level)
 
