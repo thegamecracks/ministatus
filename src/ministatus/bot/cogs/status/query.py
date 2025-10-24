@@ -108,9 +108,14 @@ async def query_source(query: StatusQuery) -> Info:
 
     host, port = await resolve_host(query)
     proto = Source(host, port, QUERY_TIMEOUT)
-    info = await proto.get_info()
-    players = await proto.get_players()
-    # rules = await proto.get_rules()
+
+    try:
+        info = await proto.get_info()
+        players = await proto.get_players()
+        # rules = await proto.get_rules()
+    except TimeoutError as e:
+        raise FailedQueryError("Query timed out") from e
+
     return Info(
         title=info.name,
         address=f"{query.host}:{port}" if query.port > 0 else host,
