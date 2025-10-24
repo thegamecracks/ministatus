@@ -72,11 +72,12 @@ $ export MIST_PASSWORD=abc123
 $ ministatus db encrypt
 Successfully encrypted!
 # Alteneratively use -p/--pasword:
-$ ministatus -p abc123 db decrypt
+$ ministatus -p abc123 db encrypt
 Database is already encrypted 😴
 # Or type the password interactively:
 $ unset MIST_PASSWORD
 $ ministatus config
+Database Password:
 There are no settings defined 🙁
 ```
 
