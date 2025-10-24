@@ -6,7 +6,8 @@ import discord
 from discord import Interaction, SelectOption
 from discord.ui import Select
 
-from ministatus.db import Status, StatusAlert, connect_client
+from ministatus.bot.db import connect_discord_database_client
+from ministatus.db import Status, StatusAlert
 
 from .book import Book, Page, RenderArgs, get_enabled_text
 
@@ -75,13 +76,15 @@ class CreateStatusAlertModal(discord.ui.Modal, title="Create Status Alert"):
         assert interaction.guild is not None
         assert isinstance(self.channel.component, discord.ui.ChannelSelect)
 
+        channel = self.channel.component.values[0]
         alert = StatusAlert(
             status_id=self.status.status_id,
-            channel_id=self.channel.component.values[0].id,
+            channel_id=channel.id,
         )
 
-        async with connect_client() as client:
-            alert = await client.create_status_alert(alert)
+        async with connect_discord_database_client(interaction.client) as ddc:
+            await ddc.add_channel(channel)
+            alert = await ddc.client.create_status_alert(alert)
 
         self.status.alerts.append(alert)
         await self.callback(interaction, alert)

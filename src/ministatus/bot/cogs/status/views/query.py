@@ -6,7 +6,8 @@ import discord
 from discord import Interaction, SelectOption
 from discord.ui import Select
 
-from ministatus.db import Status, StatusQuery, StatusQueryType, connect_client
+from ministatus.bot.db import connect_discord_database_client
+from ministatus.db import Status, StatusQuery, StatusQueryType
 
 from .book import Book, Page, RenderArgs, get_enabled_text
 
@@ -102,8 +103,8 @@ class CreateStatusQueryModal(discord.ui.Modal, title="Create Status Query"):
             priority=int(self.priority.value),
         )
 
-        async with connect_client() as client:
-            query = await client.create_status_query(query)
+        async with connect_discord_database_client(interaction.client) as ddc:
+            query = await ddc.client.create_status_query(query)
 
         self.status.queries.append(query)
         await self.callback(interaction, query)
