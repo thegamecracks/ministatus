@@ -30,6 +30,8 @@ class DiscordDatabaseClient:
         await self.client.add_discord_user(user_id=user.id)
 
     async def add_user_or_member(self, user: discord.User | discord.Member) -> None:
+        import discord
+
         if isinstance(user, discord.Member):
             await self.add_member(user)
         else:
