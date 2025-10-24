@@ -153,7 +153,7 @@ async def resolve_host(query: StatusQuery) -> tuple[str, int]:
         with suppress(NoAnswer, Timeout):
             answers = await _resolve(host_srv, SRV)
             record = cast(SRVRecord, answers[0])
-            return str(record.target).rstrip("."), port
+            return str(record.target).rstrip("."), record.port
 
     if ipv6_allowed:
         with suppress(NoAnswer, Timeout):
