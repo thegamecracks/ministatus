@@ -239,7 +239,13 @@ async def record_info(status: Status, info: Info) -> None:
     await prune_history(status)
     async with connect() as conn:
         await conn.execute(
-            "UPDATE status SET title = COALESCE($1, title) WHERE status_id = $4"
+            "UPDATE status SET title = COALESCE($1, title), "
+            "address = COALESCE($2, address), thumbnail = COALESCE($3, thumbnail) "
+            "WHERE status_id = $4",
+            info.title,
+            info.address,
+            info.thumbnail,
+            status.status_id,
         )
 
         status_history_id = await conn.fetchval(
