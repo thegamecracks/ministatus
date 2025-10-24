@@ -301,7 +301,8 @@ class StatusDisplayView(discord.ui.LayoutView):
 
         latest = history[-1] if history else None
         online = get_online_message(latest)
-        last_updated = latest and discord.utils.format_dt(latest.created_at, "R")
+        now = datetime.datetime.now(datetime.timezone.utc)
+        last_updated = discord.utils.format_dt(now, "R")
         players = (
             sorted(latest.players, key=lambda p: p.name.lower())
             if latest is not None
