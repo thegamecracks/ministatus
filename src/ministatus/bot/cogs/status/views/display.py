@@ -178,6 +178,7 @@ class _StatusDisplayRow(discord.ui.ActionRow):
 
     @discord.ui.button(label="Delete", style=discord.ButtonStyle.danger, emoji="🗑️")
     async def delete(self, interaction: Interaction, button: Button) -> None:
+        interaction = cast("Interaction[Bot]", interaction)
         async with connect() as conn:
             await conn.execute(
                 "DELETE FROM status_display WHERE message_id = $1",
@@ -189,6 +190,13 @@ class _StatusDisplayRow(discord.ui.ActionRow):
         await interaction.response.defer()
         await interaction.delete_original_response()
         self.view.stop()
+
+        # Also try to clean up the display, if Discord permits us
+        async with connect_discord_database_client(interaction.client) as ddc:
+            message = await ddc.get_message(message_id=self.page.display.message_id)
+
+        if message is not None:
+            await message.delete(delay=0)
 
     async def _set_enabled_at(self, enabled_at: datetime.datetime | None) -> None:
         async with connect() as conn:

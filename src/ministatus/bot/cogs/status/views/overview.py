@@ -188,6 +188,7 @@ class _StatusModifyRow(discord.ui.ActionRow):
 
     @discord.ui.button(label="Delete", style=discord.ButtonStyle.danger, emoji="🗑️")
     async def delete(self, interaction: Interaction, button: Button) -> None:
+        # TODO: delete status display messages too?
         async with connect() as conn:
             await conn.execute(
                 "DELETE FROM status WHERE status_id = $1",
