@@ -144,9 +144,11 @@ async def resolve_host(query: StatusQuery) -> tuple[str, int]:
         return host, port
 
     host_srv = None
+    port_srv_offset = 0
     ipv6_allowed = False  # TODO: check which games work over IPv6
     if type == StatusQueryType.ARMA_3:
         host_srv = f"_arma3._udp.{host}"
+        port_srv_offset = 1
 
     # See also https://github.com/py-mine/mcstatus/blob/v12.0.6/mcstatus/dns.py
     # NOTE: there could be multiple DNS records, but we're always returning the first
@@ -156,7 +158,7 @@ async def resolve_host(query: StatusQuery) -> tuple[str, int]:
         with suppress(NoAnswer, Timeout):
             answers = await _resolve(host_srv, SRV)
             record = cast(SRVRecord, answers[0])
-            return str(record.target).rstrip("."), record.port
+            return str(record.target).rstrip("."), record.port + port_srv_offset
 
     if ipv6_allowed:
         with suppress(NoAnswer, Timeout):
