@@ -106,6 +106,8 @@ def _connect(
             conn = asqlite._connect_pragmas(db, **kwargs)
         return conn
 
+    kwargs.setdefault("detect_types", sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)
+
     return asqlite._ContextManagerMixin(
         queue,
         factory,
