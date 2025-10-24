@@ -63,12 +63,10 @@ async def query_status(bot: Bot, status: Status) -> None:
     for query in status.queries:
         info = await maybe_query(query)
         if info is not None:
+            await record_info(status, info)
             break
     else:
         await record_offline(status)
-        return
-
-    await record_info(status, info)
 
     for display in status.displays:
         await update_display(bot, message_id=display.message_id)
