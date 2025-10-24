@@ -33,9 +33,10 @@ class StatusModifyDisplayRow(discord.ui.ActionRow):
     async def displays(self, interaction: Interaction, select: Select) -> None:
         value = select.values[0]
         if value == "create":
-            # TODO: create display modal
+            # TODO: create display context menu
             await interaction.response.send_message(
-                "This option is not implemented. Sorry!",
+                "Displays must be created from a message by using the "
+                "context menu command, **Create Status Display**.",
                 ephemeral=True,
             )
         else:

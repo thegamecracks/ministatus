@@ -1,16 +1,18 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Callable, cast
 
 import discord
 from discord import Interaction, SelectOption
 from discord.ui import Select
 
-from ministatus.db import StatusAlert
+from ministatus.db import Status, StatusAlert, connect_client
 
 from .book import Book, Page, RenderArgs, get_enabled_text
 
 if TYPE_CHECKING:
+    from ministatus.bot.bot import Bot
+
     from .overview import StatusModify
 
 
@@ -32,16 +34,53 @@ class StatusModifyAlertRow(discord.ui.ActionRow):
     async def alerts(self, interaction: Interaction, select: Select) -> None:
         value = select.values[0]
         if value == "create":
-            # TODO: create alert modal
-            await interaction.response.send_message(
-                "This option is not implemented. Sorry!",
-                ephemeral=True,
-            )
+            modal = CreateStatusAlertModal(self.page.status, self._create_callback)
+            await interaction.response.send_modal(modal)
         else:
             alert = discord.utils.get(self.page.status.alerts, channel_id=int(value))
             assert alert is not None
             self.page.book.push(StatusAlertPage(self.page.book, alert))
             await self.page.book.edit(interaction)
+
+    async def _create_callback(
+        self,
+        interaction: Interaction[Bot],
+        alert: StatusAlert,
+    ) -> None:
+        self.page.status.alerts.append(alert)
+        self.page.book.push(StatusAlertPage(self.page.book, alert))
+        await self.page.book.edit(interaction)
+
+
+class CreateStatusAlertModal(discord.ui.Modal, title="Create Status Alert"):
+    channel = discord.ui.ChannelSelect(
+        channel_types=[discord.ChannelType.text],
+        placeholder="The channel to send alerts to",
+    )
+
+    def __init__(
+        self,
+        status: Status,
+        callback: Callable[[Interaction[Bot], StatusAlert], Any],
+    ) -> None:
+        super().__init__()
+        self.status = status
+        self.callback = callback
+
+    async def on_submit(self, interaction: Interaction) -> None:
+        interaction = cast("Interaction[Bot]", interaction)
+        assert interaction.guild is not None
+
+        alert = StatusAlert(
+            status_id=self.status.status_id,
+            channel_id=self.channel.values[0].id,
+        )
+
+        async with connect_client() as client:
+            alert = await client.create_status_alert(alert)
+
+        self.status.alerts.append(alert)
+        await self.callback(interaction, alert)
 
 
 class StatusAlertPage(Page):
