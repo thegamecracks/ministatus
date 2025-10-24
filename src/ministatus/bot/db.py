@@ -52,6 +52,7 @@ class DiscordDatabaseClient:
 
     async def add_message(self, message: discord.Message) -> None:
         await self.add_channel(message.channel)
+        await self.add_user_or_member(message.author)
         await self.client.add_discord_message(
             message_id=message.id,
             channel_id=message.channel.id,
