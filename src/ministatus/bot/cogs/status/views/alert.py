@@ -84,6 +84,7 @@ class CreateStatusAlertModal(discord.ui.Modal, title="Create Status Alert"):
         alert = StatusAlert(
             status_id=self.status.status_id,
             channel_id=channel.id,
+            enabled_at=interaction.created_at,
         )
 
         async with connect_discord_database_client(interaction.client) as ddc:

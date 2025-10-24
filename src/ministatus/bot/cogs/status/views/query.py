@@ -105,6 +105,7 @@ class CreateStatusQueryModal(discord.ui.Modal, title="Create Status Query"):
             port=int(self.port.value),
             type=StatusQueryType(self.type.component.values[0]),
             priority=int(self.priority.value),
+            enabled_at=interaction.created_at,
         )
 
         async with connect_discord_database_client(interaction.client) as ddc:

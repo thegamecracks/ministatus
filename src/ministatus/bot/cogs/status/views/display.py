@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import datetime
-from typing import TYPE_CHECKING, Callable, Self, cast
+from typing import TYPE_CHECKING, Any, Callable, Self, cast
 
 import discord
 from discord import Interaction, SelectOption
@@ -106,6 +106,7 @@ class CreateStatusDisplayModal(discord.ui.Modal, title="Create Status Display"):
             status_id=self.status.status_id,
             accent_colour=discord.Color.from_str(self.accent_colour.value).value,
             graph_colour=discord.Color.from_str(self.graph_colour.value).value,
+            enabled_at=interaction.created_at,
         )
 
         async with connect_discord_database_client(interaction.client) as ddc:
