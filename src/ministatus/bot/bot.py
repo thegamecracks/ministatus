@@ -27,6 +27,9 @@ class Bot(commands.Bot):
             await self.load_extension(extension)
         await self._maybe_load_jishaku()
 
+        invite_link = self.get_standard_invite()
+        log.info("Invite link:\n%s", invite_link)
+
     async def _maybe_load_jishaku(self) -> None:
         try:
             version = importlib.metadata.version("jishaku")
@@ -35,6 +38,20 @@ class Bot(commands.Bot):
         else:
             await self.load_extension("jishaku")
             log.info("Loaded jishaku extension (v%s)", version)
+
+    def get_standard_invite(self) -> str:
+        assert self.application is not None
+        return discord.utils.oauth_url(
+            self.application.id,
+            scopes=("bot",),
+            permissions=discord.Permissions(
+                read_messages=True,
+                send_messages=True,
+                send_messages_in_threads=True,
+                embed_links=True,
+                attach_files=True,
+            ),
+        )
 
 
 class Context(commands.Context[Bot]): ...
