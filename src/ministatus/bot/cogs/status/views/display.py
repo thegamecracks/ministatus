@@ -269,9 +269,9 @@ class StatusDisplayView(discord.ui.LayoutView):
 
             history = await fetch_status_history(
                 ddc.client.conn,
-                status_ids=[self.message_id],
+                status_ids=[status.status_id],
             )
-            history = history.get(self.message_id, [])
+            history = history.get(status.status_id, [])
 
         args = await self.render(status, display, history)
         await message.edit(view=self, **args.get_message_kwargs())
