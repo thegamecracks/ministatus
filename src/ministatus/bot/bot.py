@@ -1,13 +1,10 @@
 import importlib.metadata
 import logging
-from contextlib import asynccontextmanager
-from typing import AsyncIterator
 
 import discord
 from discord.ext import commands
 
 from ministatus.bot.cogs import list_extensions
-from ministatus.db import DatabaseClient, SQLiteConnection, connect, connect_client
 
 log = logging.getLogger(__name__)
 
@@ -23,24 +20,6 @@ class Bot(commands.Bot):
             ),
             strip_after_prefix=True,
         )
-
-    @asynccontextmanager
-    async def acquire_db_conn(
-        self,
-        *,
-        transaction: bool = True,
-    ) -> AsyncIterator[SQLiteConnection]:
-        async with connect(transaction=transaction) as conn:
-            yield conn
-
-    @asynccontextmanager
-    async def acquire_db_client(
-        self,
-        *,
-        transaction: bool = True,
-    ) -> AsyncIterator[DatabaseClient]:
-        async with connect_client(transaction=transaction) as client:
-            yield client
 
     async def setup_hook(self) -> None:
         for extension in list_extensions():
