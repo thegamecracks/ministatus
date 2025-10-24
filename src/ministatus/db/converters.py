@@ -19,8 +19,9 @@ def adapt_datetime_epoch(val: datetime.datetime) -> int:
     return int(val.timestamp())
 
 
+# Can't set multiple adapters for one type, so just use timestamp for datetimes
 sqlite3.register_adapter(datetime.date, adapt_date_iso)
-sqlite3.register_adapter(datetime.datetime, adapt_datetime_iso)
+# sqlite3.register_adapter(datetime.datetime, adapt_datetime_iso)
 sqlite3.register_adapter(datetime.datetime, adapt_datetime_epoch)
 
 
