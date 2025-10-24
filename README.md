@@ -1,8 +1,9 @@
 # ministatus
 
-![Terminal demonstration](https://github.com/user-attachments/assets/17f4ce1f-a40c-4244-9e80-132f2bc7cfdc)
-
 A Discord bot for managing game server status embeds.
+
+![Terminal demonstration](https://github.com/user-attachments/assets/17f4ce1f-a40c-4244-9e80-132f2bc7cfdc)
+![Command demonstration](https://github.com/user-attachments/assets/c382fc35-ab9e-4ae6-9874-6e52e3dd8c94)
 
 ## Setup
 
