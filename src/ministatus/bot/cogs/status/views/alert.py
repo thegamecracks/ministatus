@@ -48,7 +48,6 @@ class StatusModifyAlertRow(discord.ui.ActionRow):
         interaction: Interaction[Bot],
         alert: StatusAlert,
     ) -> None:
-        self.page.status.alerts.append(alert)
         self.page.book.push(StatusAlertPage(self.page.book, alert))
         await self.page.book.edit(interaction)
 

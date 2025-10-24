@@ -48,7 +48,6 @@ class StatusModifyQueryRow(discord.ui.ActionRow):
         interaction: Interaction[Bot],
         query: StatusQuery,
     ) -> None:
-        self.page.status.queries.append(query)
         self.page.book.push(StatusQueryPage(self.page.book, query))
         await self.page.book.edit(interaction)
 
