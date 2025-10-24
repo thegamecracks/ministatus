@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import datetime
+from contextlib import suppress
 from enum import StrEnum
 from typing import Annotated
 
-from dns.name import from_text
-from pydantic import AfterValidator, BaseModel, Field, IPvAnyAddress
+from pydantic import AfterValidator, BaseModel, Field
 
 
 def is_snowflake(value: int) -> int:
@@ -20,12 +20,35 @@ def is_snowflake(value: int) -> int:
     return value
 
 
+def parse_host(value: str) -> str:
+    value = value.strip()
+    if not value:
+        raise ValueError("value cannot be empty")
+
+    from ipaddress import IPv4Address, IPv6Address
+
+    with suppress(ValueError):
+        return IPv4Address(value) and value
+
+    with suppress(ValueError):
+        return IPv6Address(value) and value
+
+    from dns.name import from_text
+
+    with suppress(ValueError):
+        name = from_text(value)
+        if len(name.labels) < 3:
+            raise ValueError("value cannot be a top-level domain only")
+        elif name.labels[-2].decode().isdecimal():  # Incomplete IP address?
+            raise ValueError("top-level domain cannot be a number")
+
+        return name.to_text(omit_final_dot=True)
+
+    raise ValueError("value is not a valid IP address or domain name")
+
+
 Color = Annotated[int, Field(ge=0, le=0xFFFFFF)]
-DNSName = Annotated[
-    str,
-    AfterValidator(from_text),
-    AfterValidator(lambda name: name.to_text(omit_final_dot=True)),
-]
+Host = Annotated[str, AfterValidator(parse_host)]
 Snowflake = Annotated[int, AfterValidator(is_snowflake)]
 
 
@@ -84,7 +107,7 @@ class StatusDisplay(BaseModel):
 
 class StatusQuery(BaseModel):
     status_id: int
-    host: IPvAnyAddress | DNSName
+    host: Host
     port: int = Field(ge=0, lt=65536)
     type: StatusQueryType
     priority: int = Field(ge=0)
