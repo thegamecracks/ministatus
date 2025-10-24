@@ -104,8 +104,7 @@ class BookControls(discord.ui.ActionRow):
         self.clear_items()
         if len(book.pages) > 1:
             self.add_item(self.back)
-        else:
-            self.add_item(self.close)
+        self.add_item(self.close)
 
     @discord.ui.button(label="Back", emoji="⬅️")
     async def back(self, interaction: Interaction, button: discord.ui.Button) -> None:
