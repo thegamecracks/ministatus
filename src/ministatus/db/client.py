@@ -220,7 +220,9 @@ class DatabaseClient:
         return StatusDisplay.model_validate(dict(row))
 
     async def create_status_query(self, query: StatusQuery) -> StatusQuery:
-        if query.status_id < 1:
+        if query.status_query_id > 0:
+            raise ValueError("Cannot create status query with explicit status_query_id")
+        elif query.status_id < 1:
             raise ValueError("Cannot create status query without status_id")
 
         row = await self.conn.fetchrow(

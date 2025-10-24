@@ -208,6 +208,7 @@ async def fetch_status_queries(
     status_queries = collections.defaultdict(list)
     for row in queries:
         query = StatusQuery(
+            status_query_id=row["status_query_id"],
             status_id=row["status_id"],
             host=row["host"],
             port=row["port"],

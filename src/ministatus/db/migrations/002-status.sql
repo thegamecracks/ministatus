@@ -54,7 +54,8 @@ CREATE TABLE status_history_player (
 
 -- Methods to query server statuses
 CREATE TABLE status_query (
-    status_id INTEGER
+    status_query_id INTEGER PRIMARY KEY,
+    status_id INTEGER NOT NULL
         REFERENCES status (status_id) ON DELETE CASCADE,
     host TEXT NOT NULL,
     port INTEGER NOT NULL CHECK (port BETWEEN 0 AND 65535), -- port 0 means SRV lookup
@@ -65,7 +66,7 @@ CREATE TABLE status_query (
     extra JSONB, -- Extra data relevant to query type
     failed_at TIMESTAMP, -- Time since last successful query
 
-    PRIMARY KEY (status_id, host, port)
+    CONSTRAINT unique_status_host_port UNIQUE (status_id, host, port)
 );
 
 -- Cascading foreign key indexes

@@ -100,6 +100,7 @@ class CreateStatusQueryModal(discord.ui.Modal, title="Create Status Query"):
         assert isinstance(self.type.component, discord.ui.Select)
 
         query = StatusQuery(
+            status_query_id=0,
             status_id=self.status.status_id,
             host=self.host.value,
             port=int(self.port.value),
@@ -180,11 +181,8 @@ class _StatusQueryRow(discord.ui.ActionRow):
     async def delete(self, interaction: Interaction, button: Button) -> None:
         async with connect() as conn:
             await conn.execute(
-                "DELETE FROM status_query "
-                "WHERE status_id = $1 AND host = $2 AND port = $3",
-                self.page.query.status_id,
-                self.page.query.host,
-                self.page.query.port,
+                "DELETE FROM status_query WHERE status_query_id = $1",
+                self.page.query.status_query_id,
             )
 
         # HACK: we can't easily propagate deletion up, so let's just terminate the view.
@@ -196,10 +194,7 @@ class _StatusQueryRow(discord.ui.ActionRow):
     async def _set_enabled_at(self, enabled_at: datetime.datetime | None) -> None:
         async with connect() as conn:
             await conn.execute(
-                "UPDATE status_query SET enabled_at = $1 "
-                "WHERE status_id = $2 AND host = $3 AND port = $4",
+                "UPDATE status_query SET enabled_at = $1 WHERE status_query_id = $2",
                 enabled_at,
-                self.page.query.status_id,
-                self.page.query.host,
-                self.page.query.port,
+                self.page.query.status_query_id,
             )

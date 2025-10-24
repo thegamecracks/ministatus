@@ -106,6 +106,7 @@ class StatusDisplay(BaseModel):
 
 
 class StatusQuery(BaseModel):
+    status_query_id: int
     status_id: int
     host: Host
     port: int = Field(ge=0, lt=65536)
