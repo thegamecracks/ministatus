@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any
 
 from ministatus.db.connection import SQLiteConnection
 from ministatus.db.models import (
@@ -134,35 +134,40 @@ class DatabaseClient:
             "SELECT * FROM discord_user WHERE user_id = $1",
             user_id,
         )
-        return cast(DiscordUser | None, row)
+        if row is not None:
+            return DiscordUser.model_validate(dict(row))
 
     async def get_discord_guild(self, *, guild_id: int) -> DiscordGuild | None:
         row = await self.conn.fetchrow(
             "SELECT * FROM discord_guild WHERE guild_id = $1",
             guild_id,
         )
-        return cast(DiscordGuild | None, row)
+        if row is not None:
+            return DiscordGuild.model_validate(dict(row))
 
     async def get_discord_channel(self, *, channel_id: int) -> DiscordChannel | None:
         row = await self.conn.fetchrow(
             "SELECT * FROM discord_channel WHERE channel_id = $1",
             channel_id,
         )
-        return cast(DiscordChannel | None, row)
+        if row is not None:
+            return DiscordChannel.model_validate(dict(row))
 
     async def get_discord_message(self, *, message_id: int) -> DiscordMessage | None:
         row = await self.conn.fetchrow(
             "SELECT * FROM discord_message WHERE message_id = $1",
             message_id,
         )
-        return cast(DiscordMessage | None, row)
+        if row is not None:
+            return DiscordMessage.model_validate(dict(row))
 
     async def get_discord_member(self, *, user_id: int) -> DiscordMember | None:
         row = await self.conn.fetchrow(
             "SELECT * FROM discord_member WHERE user_id = $1",
             user_id,
         )
-        return cast(DiscordMember | None, row)
+        if row is not None:
+            return DiscordMember.model_validate(dict(row))
 
     async def create_status(self, status: Status) -> Status:
         if status.status_id > 0:
