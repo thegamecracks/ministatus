@@ -33,6 +33,8 @@ from .models import (
     Status as Status,
     StatusAlert as StatusAlert,
     StatusDisplay as StatusDisplay,
+    StatusHistory as StatusHistory,
+    StatusHistoryPlayer as StatusHistoryPlayer,
     StatusQuery as StatusQuery,
     StatusQueryType as StatusQueryType,
     DiscordUser as DiscordUser,
@@ -43,6 +45,9 @@ from .status import (
     fetch_status_alerts as fetch_status_alerts,
     fetch_status_displays as fetch_status_displays,
     fetch_status_queries as fetch_status_queries,
+    fetch_status_display_by_id as fetch_status_display_by_id,
+    fetch_status_history as fetch_status_history,
+    fetch_status_history_players as fetch_status_history_players,
 )
 
 if TYPE_CHECKING:

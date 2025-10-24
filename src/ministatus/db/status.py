@@ -4,7 +4,14 @@ import collections
 import textwrap
 from typing import TYPE_CHECKING, Collection
 
-from ministatus.db.models import Status, StatusAlert, StatusDisplay, StatusQuery
+from ministatus.db.models import (
+    Status,
+    StatusAlert,
+    StatusDisplay,
+    StatusHistory,
+    StatusHistoryPlayer,
+    StatusQuery,
+)
 
 if TYPE_CHECKING:
     from ministatus.db.connection import SQLiteConnection
@@ -221,3 +228,83 @@ async def fetch_status_queries(
         status_queries[row["status_id"]].append(query)
 
     return status_queries
+
+
+async def fetch_status_display_by_id(
+    conn: SQLiteConnection,
+    *,
+    message_id: int,
+) -> StatusDisplay | None:
+    row = await conn.fetchrow(
+        "SELECT * FROM status_display WHERE message_id = $1",
+        message_id,
+    )
+    if row is None:
+        return
+
+    return StatusDisplay(
+        message_id=row["message_id"],
+        status_id=row["status_id"],
+        enabled_at=row["enabled_at"],
+        accent_colour=row["accent_colour"],
+        graph_colour=row["graph_colour"],
+    )
+
+
+async def fetch_status_history(
+    conn: SQLiteConnection,
+    *,
+    status_ids: Collection[int],
+) -> dict[int, list[StatusHistory]]:
+    assert len(status_ids) > 0
+
+    sid = ", ".join("?" * len(status_ids))
+    history_rows = await conn.fetch(
+        f"SELECT * FROM status_history WHERE status_id IN ({sid}) "
+        f"ORDER BY status_id, created_at",
+        *status_ids,
+    )
+
+    history_ids = {row["status_history_id"] for row in history_rows}
+    history_players = await fetch_status_history_players(conn, history_ids=history_ids)
+
+    history_models = collections.defaultdict(list)
+    for row in history_rows:
+        players = history_players[row["status_history_id"]]
+        model = StatusHistory(
+            status_history_id=row["status_history_id"],
+            created_at=row["created_at"],
+            status_id=row["status_id"],
+            online=row["online"],
+            max_players=row["max_players"],
+            players=players,
+        )
+        history_models[model.status_id].append(model)
+
+    return history_models
+
+
+async def fetch_status_history_players(
+    conn: SQLiteConnection,
+    *,
+    history_ids: Collection[int],
+) -> dict[int, list[StatusHistoryPlayer]]:
+    assert len(history_ids) > 0
+
+    hid = ", ".join("?" * len(history_ids))
+    players = await conn.fetch(
+        f"SELECT * FROM status_history_player WHERE status_history_id IN ({hid}) "
+        f"ORDER BY status_history_player_id",
+        *history_ids,
+    )
+
+    history_players = collections.defaultdict(list)
+    for p in players:
+        p = StatusHistoryPlayer(
+            status_history_player_id=p["status_history_player_id"],
+            status_history_id=p["status_history_id"],
+            player_name=p["player_name"],
+        )
+        history_players[p.status_history_id].append(p)
+
+    return history_players

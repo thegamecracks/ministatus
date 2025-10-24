@@ -105,6 +105,23 @@ class StatusDisplay(BaseModel):
     graph_colour: Color = 0xFFFFFF
 
 
+class StatusHistory(BaseModel):
+    status_history_id: int
+    created_at: datetime.datetime
+    status_id: int
+    online: bool
+
+    max_players: int
+
+    players: list[StatusHistoryPlayer]
+
+
+class StatusHistoryPlayer(BaseModel):
+    status_history_player_id: int
+    status_history_id: int
+    player_name: str
+
+
 class StatusQuery(BaseModel):
     status_query_id: int
     status_id: int
