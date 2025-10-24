@@ -8,7 +8,7 @@ from discord.ext import commands, tasks
 
 from ministatus.bot.bot import Bot
 from ministatus.bot.db import connect_discord_database_client
-from ministatus.db import Status, connect, fetch_statuses
+from ministatus.db import connect, fetch_statuses
 
 from .views import StatusManageView
 
