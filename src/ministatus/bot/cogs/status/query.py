@@ -92,13 +92,13 @@ async def maybe_query(query: StatusQuery) -> Info | None:
 
 async def send_query(query: StatusQuery) -> Info | None:
     if query.type == StatusQueryType.ARMA_3:
-        await query_source(query)
+        return await query_source(query)
     elif query.type == StatusQueryType.ARMA_REFORGER:
-        await query_source(query)
+        return await query_source(query)
     elif query.type == StatusQueryType.SOURCE:
-        await query_source(query)
+        return await query_source(query)
     elif query.type == StatusQueryType.PROJECT_ZOMBOID:
-        await query_source(query)  # Wait, it's all source? Always has been
+        return await query_source(query)  # Wait, it's all source? Always has been
     else:
         assert_never(query.type)
 
