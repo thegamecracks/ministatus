@@ -41,7 +41,9 @@ CREATE TABLE status_history (
     created_at TIMESTAMP NOT NULL,
     status_id INTEGER NOT NULL
         REFERENCES status (status_id) ON DELETE CASCADE,
-    online BOOLEAN NOT NULL
+    online BOOLEAN NOT NULL,
+
+    max_players INTEGER NOT NULL DEFAULT 0 CHECK (max_players >= 0)
 );
 
 -- Players online at a given status datapoint
