@@ -35,6 +35,7 @@ from .models import (
     StatusAlert as StatusAlert,
     StatusDisplay as StatusDisplay,
     StatusQuery as StatusQuery,
+    StatusQueryType as StatusQueryType,
     DiscordUser as DiscordUser,
 )
 from .secret import Secret as Secret
