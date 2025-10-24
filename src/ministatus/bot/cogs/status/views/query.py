@@ -65,9 +65,12 @@ class CreateStatusQueryModal(discord.ui.Modal, title="Create Status Query"):
         min_length=1,
         max_length=5,
     )
-    type = discord.ui.Select(
-        options=[SelectOption(label=t) for t in StatusQueryType],
-        placeholder="The game hosted by the server, or the query protocol to use",
+    type = discord.ui.Label(
+        text="Query Type",
+        component=discord.ui.Select(
+            options=[SelectOption(label=t) for t in StatusQueryType],
+            placeholder="The game query protocol to use",
+        ),
     )
     priority = discord.ui.TextInput(
         label="Priority",
@@ -89,12 +92,13 @@ class CreateStatusQueryModal(discord.ui.Modal, title="Create Status Query"):
     async def on_submit(self, interaction: Interaction) -> None:
         interaction = cast("Interaction[Bot]", interaction)
         assert interaction.guild is not None
+        assert isinstance(self.type.component, discord.ui.Select)
 
         query = StatusQuery(
             status_id=self.status.status_id,
             host=self.host.value,
             port=int(self.port.value),
-            type=StatusQueryType(self.type.values[0]),
+            type=StatusQueryType(self.type.component.values[0]),
             priority=int(self.priority.value),
         )
 

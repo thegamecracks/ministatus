@@ -53,9 +53,12 @@ class StatusModifyAlertRow(discord.ui.ActionRow):
 
 
 class CreateStatusAlertModal(discord.ui.Modal, title="Create Status Alert"):
-    channel = discord.ui.ChannelSelect(
-        channel_types=[discord.ChannelType.text],
-        placeholder="The channel to send alerts to",
+    channel = discord.ui.Label(
+        text="Alert Channel",
+        component=discord.ui.ChannelSelect(
+            channel_types=[discord.ChannelType.text],
+            placeholder="The channel to send alerts to",
+        ),
     )
 
     def __init__(
@@ -70,10 +73,11 @@ class CreateStatusAlertModal(discord.ui.Modal, title="Create Status Alert"):
     async def on_submit(self, interaction: Interaction) -> None:
         interaction = cast("Interaction[Bot]", interaction)
         assert interaction.guild is not None
+        assert isinstance(self.channel.component, discord.ui.ChannelSelect)
 
         alert = StatusAlert(
             status_id=self.status.status_id,
-            channel_id=self.channel.values[0].id,
+            channel_id=self.channel.component.values[0].id,
         )
 
         async with connect_client() as client:
