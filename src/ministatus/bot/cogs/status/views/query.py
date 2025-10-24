@@ -125,10 +125,10 @@ class StatusQueryPage(Page):
 
         lines = [
             f"{get_enabled_text(query.enabled_at)}",
-            f"**Host:** #{query.host}",
-            f"**Port:** #{query.port}",
-            f"**Type:** #{query.type}",
-            f"**Priority:** #{query.priority}",
+            f"**Host:** {query.host}",
+            f"**Port:** {query.port}",
+            f"**Type:** {query.type}",
+            f"**Priority:** {query.priority}",
         ]
 
         if query.failed_at is not None:
