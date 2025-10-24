@@ -192,7 +192,7 @@ async def set_query_failed(query: StatusQuery) -> bool:
     async with connect() as conn:
         failed_at = await conn.fetchval(
             "UPDATE status_query SET failed_at = COALESCE(failed_at, $1) "
-            'WHERE status_query_id = $2 RETURNING "failed_at [TIMESTAMP]"',
+            "WHERE status_query_id = $2 RETURNING failed_at",
             now,
             query.status_query_id,
         )
