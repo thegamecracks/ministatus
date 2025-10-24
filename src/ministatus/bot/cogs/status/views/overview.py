@@ -60,7 +60,7 @@ class StatusOverviewSelect(discord.ui.ActionRow):
         )
         self.on_select.options = options
 
-    @discord.ui.select()
+    @discord.ui.select(placeholder="Select a server status")
     async def on_select(self, interaction: Interaction[Bot], select: Select) -> None:
         value = select.values[0]
         if value == "create":
