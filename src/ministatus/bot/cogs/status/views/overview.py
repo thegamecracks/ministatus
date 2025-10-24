@@ -50,6 +50,7 @@ class StatusOverviewSelect(discord.ui.ActionRow):
         options = [
             SelectOption(
                 label=status.label,
+                emoji="🟢" if status.enabled_at else "🔴",
                 description="Enabled" if status.enabled_at else "Disabled",
                 value=str(status.status_id),
             )
