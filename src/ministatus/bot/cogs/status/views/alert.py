@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, cast
+from typing import TYPE_CHECKING, Any, Callable, Self, cast
 
 import discord
 from discord import Interaction, SelectOption
@@ -22,16 +22,20 @@ class StatusModifyAlertRow(discord.ui.ActionRow):
         super().__init__()
         self.page = page
 
+    async def render(self) -> Self:
+        alerts = self.page.status.alerts
         alert_options = [
             SelectOption(label=f"Alert {i}", emoji="🔔", value=str(alert.channel_id))
-            for i, alert in enumerate(self.page.status.alerts, start=1)
+            for i, alert in enumerate(alerts, start=1)
         ]
         alert_options.append(
             SelectOption(label="Create alert...", value="create", emoji="✳️")
         )
         self.alerts.options = alert_options
+        self.alerts.placeholder = f"Alerts ({len(alerts)})"
+        return self
 
-    @discord.ui.select(placeholder="Alerts")
+    @discord.ui.select()
     async def alerts(self, interaction: Interaction, select: Select) -> None:
         value = select.values[0]
         if value == "create":

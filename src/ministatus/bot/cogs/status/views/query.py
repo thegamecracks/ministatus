@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, cast
+from typing import TYPE_CHECKING, Any, Callable, Self, cast
 
 import discord
 from discord import Interaction, SelectOption
@@ -22,16 +22,20 @@ class StatusModifyQueryRow(discord.ui.ActionRow):
         super().__init__()
         self.page = page
 
+    async def render(self) -> Self:
+        queries = self.page.status.queries
         query_options = [
             SelectOption(label=f"Query {i}", emoji="🔔", value=str(i - 1))
-            for i, query in enumerate(self.page.status.queries, start=1)
+            for i, query in enumerate(queries, start=1)
         ]
         query_options.append(
             SelectOption(label="Create query...", value="create", emoji="✳️")
         )
         self.queries.options = query_options
+        self.queries.placeholder = f"Queries ({len(queries)})"
+        return self
 
-    @discord.ui.select(placeholder="Queries")
+    @discord.ui.select()
     async def queries(self, interaction: Interaction, select: Select) -> None:
         value = select.values[0]
         if value == "create":

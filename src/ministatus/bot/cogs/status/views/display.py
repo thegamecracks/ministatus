@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Self
 
 import discord
 from discord import Interaction, SelectOption
@@ -20,16 +20,20 @@ class StatusModifyDisplayRow(discord.ui.ActionRow):
         super().__init__()
         self.page = page
 
+    async def render(self) -> Self:
+        displays = self.page.status.displays
         display_options = [
             SelectOption(label=f"Display {i}", emoji="🖥️", value=str(display.message_id))
-            for i, display in enumerate(self.page.status.displays, start=1)
+            for i, display in enumerate(displays, start=1)
         ]
         display_options.append(
             SelectOption(label="Create display...", value="create", emoji="✳️")
         )
         self.displays.options = display_options
+        self.displays.placeholder = f"Displays ({len(displays)})"
+        return self
 
-    @discord.ui.select(placeholder="Displays")
+    @discord.ui.select()
     async def displays(self, interaction: Interaction, select: Select) -> None:
         value = select.values[0]
         if value == "create":

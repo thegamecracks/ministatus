@@ -146,8 +146,8 @@ class StatusModify(Page):
         else:
             self.add_item(summary)
 
-        self.add_item(StatusModifyAlertRow(self))
-        self.add_item(StatusModifyDisplayRow(self))
-        self.add_item(StatusModifyQueryRow(self))
+        self.add_item(await StatusModifyAlertRow(self).render())
+        self.add_item(await StatusModifyDisplayRow(self).render())
+        self.add_item(await StatusModifyQueryRow(self).render())
 
         return rendered
