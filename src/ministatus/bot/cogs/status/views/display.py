@@ -1,18 +1,20 @@
 from __future__ import annotations
 
 import datetime
-from typing import TYPE_CHECKING, Self
+from typing import TYPE_CHECKING, Callable, Self, cast
 
 import discord
 from discord import Interaction, SelectOption
 from discord.ui import Button, Select
 
 from ministatus.bot.db import connect_discord_database_client
-from ministatus.db import StatusDisplay, connect
+from ministatus.db import Status, StatusDisplay, connect
 
 from .book import Book, Page, RenderArgs, get_enabled_text
 
 if TYPE_CHECKING:
+    from ministatus.bot.bot import Bot
+
     from .overview import StatusModify
 
 
@@ -38,12 +40,8 @@ class StatusModifyDisplayRow(discord.ui.ActionRow):
     async def displays(self, interaction: Interaction, select: Select) -> None:
         value = select.values[0]
         if value == "create":
-            # TODO: create display context menu
-            await interaction.response.send_message(
-                "Displays must be created from a message by using the "
-                "context menu command, **Create Status Display**.",
-                ephemeral=True,
-            )
+            modal = CreateStatusDisplayModal(self.page.status, self._create_callback)
+            await interaction.response.send_modal(modal)
         else:
             display = discord.utils.get(
                 self.page.status.displays, message_id=int(value)
@@ -51,6 +49,71 @@ class StatusModifyDisplayRow(discord.ui.ActionRow):
             assert display is not None
             self.page.book.push(StatusDisplayPage(self.page.book, display))
             await self.page.book.edit(interaction)
+
+    async def _create_callback(
+        self,
+        interaction: Interaction[Bot],
+        alert: StatusDisplay,
+    ) -> None:
+        self.page.book.push(StatusDisplayPage(self.page.book, alert))
+        await self.page.book.edit(interaction)
+
+
+class CreateStatusDisplayModal(discord.ui.Modal, title="Create Status Display"):
+    channel = discord.ui.Label(
+        text="Display Channel",
+        component=discord.ui.ChannelSelect(
+            channel_types=[discord.ChannelType.text],
+            placeholder="The channel to send the display to",
+        ),
+    )
+    accent_colour = discord.ui.TextInput(
+        label="Accent Colour",
+        default="#FFFFFF",
+        placeholder="The accent colour of the display",
+        min_length=7,
+        max_length=7,
+    )
+    graph_colour = discord.ui.TextInput(
+        label="Graph Colour",
+        default="#FFFFFF",
+        placeholder="The graph colour of the display",
+        min_length=7,
+        max_length=7,
+    )
+
+    def __init__(
+        self,
+        status: Status,
+        callback: Callable[[Interaction[Bot], StatusDisplay], Any],
+    ) -> None:
+        super().__init__()
+        self.status = status
+        self.callback = callback
+
+    async def on_submit(self, interaction: Interaction) -> None:
+        interaction = cast("Interaction[Bot]", interaction)
+        assert interaction.guild is not None
+        assert isinstance(self.channel.component, discord.ui.ChannelSelect)
+
+        channel = self.channel.component.values[0]
+        channel = channel.resolve() or await channel.fetch()
+        assert not isinstance(channel, (discord.ForumChannel, discord.CategoryChannel))
+        message = await channel.send(view=PlaceholderView(interaction.user))
+
+        display = StatusDisplay(
+            message_id=message.id,
+            status_id=self.status.status_id,
+            accent_colour=discord.Color.from_str(self.accent_colour.value).value,
+            graph_colour=discord.Color.from_str(self.graph_colour.value).value,
+        )
+
+        async with connect_discord_database_client(interaction.client) as ddc:
+            await ddc.add_message(message)
+            display = await ddc.client.create_status_display(display)
+
+        self.status.displays.append(display)
+        await self.callback(interaction, display)
 
 
 class StatusDisplayPage(Page):
@@ -133,3 +196,18 @@ class _StatusDisplayRow(discord.ui.ActionRow):
                 enabled_at,
                 self.page.display.message_id,
             )
+
+
+class PlaceholderView(discord.ui.LayoutView):
+    container = discord.ui.Container()
+
+    def __init__(self, user: discord.Member | discord.User) -> None:
+        super().__init__()
+        self.container.add_item(discord.ui.TextDisplay("## Mini Status"))
+        self.container.add_item(discord.ui.Separator())
+        self.container.add_item(
+            discord.ui.TextDisplay(
+                f"Hey there! I'm a placeholder message sent by {user.mention}.\n"
+                f"This message isn't doing anything, for now..."
+            )
+        )
