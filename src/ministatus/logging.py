@@ -189,10 +189,10 @@ class JSONFormatter(logging.Formatter):
         data["created"] = created.isoformat()
         data["message"] = record.getMessage()
 
-        if record.exc_info is not None:
+        if record.exc_info:
             data["exc_info"] = self.formatException(record.exc_info)
 
-        if record.stack_info is not None:
+        if record.stack_info:
             data["stack_info"] = self.formatStack(record.stack_info)
 
         return data
