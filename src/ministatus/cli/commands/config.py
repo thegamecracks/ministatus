@@ -42,7 +42,7 @@ async def list_settings(conn: SQLiteConnection) -> None:
     client = DatabaseClient(conn)
     rows = await client.list_settings()
     if not rows:
-        return click.echo("There are no settings defined 🙁")
+        return click.echo("There are no settings defined 🙁", err=True)
 
     click.echo("Settings:")
     for name, value in rows:
@@ -57,7 +57,7 @@ async def get_setting(conn: SQLiteConnection, name: str) -> None:
 
     value = await client.get_setting(name, sentinel)
     if value is sentinel:
-        return click.secho(f"{name!r} not found", fg="yellow")
+        return click.secho(f"{name!r} not found", err=True, fg="yellow")
 
     if isinstance(value, Secret):
         value = value.get_secret_value()
@@ -74,7 +74,7 @@ async def delete_setting(conn: SQLiteConnection, name: str) -> None:
     client = DatabaseClient(conn)
     found = await client.delete_setting(name)
     if not found:
-        return click.secho(f"{name!r} not found", fg="yellow")
+        return click.secho(f"{name!r} not found", err=True, fg="yellow")
 
 
 def parse_value(value: str) -> float | int | str | None:
