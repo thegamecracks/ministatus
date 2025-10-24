@@ -4,7 +4,7 @@ import sys
 import click
 
 from ministatus.appdirs import DB_PATH
-from ministatus.cli.commands.markers import mark_async
+from ministatus.cli.commands.markers import mark_async, mark_db
 from ministatus.db import connect
 
 
@@ -53,6 +53,7 @@ def imports() -> None:
     ),
 )
 @mark_async()
+@mark_db()
 async def wipe() -> None:
     """Delete the current database."""
     async with connect(transaction=False) as conn:
