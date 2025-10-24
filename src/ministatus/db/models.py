@@ -119,7 +119,7 @@ class StatusHistory(BaseModel):
 class StatusHistoryPlayer(BaseModel):
     status_history_player_id: int
     status_history_id: int
-    player_name: str
+    name: str
 
 
 class StatusQuery(BaseModel):

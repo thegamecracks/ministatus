@@ -51,7 +51,7 @@ CREATE TABLE status_history_player (
     status_history_player_id INTEGER PRIMARY KEY,
     status_history_id INTEGER NOT NULL
         REFERENCES status_history (status_history_id) ON DELETE CASCADE,
-    player_name TEXT NOT NULL
+    name TEXT NOT NULL
 );
 
 -- Methods to query server statuses

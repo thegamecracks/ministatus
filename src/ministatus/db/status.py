@@ -303,7 +303,7 @@ async def fetch_status_history_players(
         p = StatusHistoryPlayer(
             status_history_player_id=p["status_history_player_id"],
             status_history_id=p["status_history_id"],
-            player_name=p["player_name"],
+            name=p["name"],
         )
         history_players[p.status_history_id].append(p)
 
