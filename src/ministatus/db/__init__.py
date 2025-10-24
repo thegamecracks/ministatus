@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 import sqlite3
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any, AsyncIterator, Callable
@@ -48,8 +47,6 @@ from .status import (
 
 if TYPE_CHECKING:
     import asqlite
-
-log = logging.getLogger(__name__)
 
 
 @asynccontextmanager

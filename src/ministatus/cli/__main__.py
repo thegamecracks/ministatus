@@ -1,13 +1,9 @@
-import logging
-
 import click
 
 from ministatus import __version__, state
 from ministatus.cli.commands import add_commands
 from ministatus.db import Secret
 from ministatus.logging import setup_logging
-
-log = logging.getLogger(__name__)
 
 
 CONTEXT_SETTINGS = dict(
