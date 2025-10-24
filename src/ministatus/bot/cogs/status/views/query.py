@@ -1,13 +1,14 @@
 from __future__ import annotations
 
+import datetime
 from typing import TYPE_CHECKING, Any, Callable, Self, cast
 
 import discord
 from discord import Interaction, SelectOption
-from discord.ui import Select
+from discord.ui import Button, Select
 
 from ministatus.bot.db import connect_discord_database_client
-from ministatus.db import Status, StatusQuery, StatusQueryType
+from ministatus.db import Status, StatusQuery, StatusQueryType, connect
 
 from .book import Book, Page, RenderArgs, get_enabled_text
 
@@ -139,5 +140,65 @@ class StatusQueryPage(Page):
             lines.append(f"**Failing since:** {dt}")
 
         self.add_item(discord.ui.TextDisplay("\n".join(lines)))
+        self.add_item(await _StatusQueryRow(self).render())
 
         return RenderArgs()
+
+
+class _StatusQueryRow(discord.ui.ActionRow):
+    def __init__(self, page: StatusQueryPage) -> None:
+        super().__init__()
+        self.page = page
+
+    async def render(self) -> Self:
+        self.clear_items()
+
+        if self.page.query.enabled_at:
+            self.add_item(self.disable)
+        else:
+            self.add_item(self.enable)
+
+        self.add_item(self.delete)
+        return self
+
+    @discord.ui.button(label="Disable", style=discord.ButtonStyle.primary, emoji="🔴")
+    async def disable(self, interaction: Interaction, button: Button) -> None:
+        enabled_at = None
+        await self._set_enabled_at(enabled_at)
+        self.page.query.enabled_at = enabled_at
+        await self.page.book.edit(interaction)
+
+    @discord.ui.button(label="Enable", style=discord.ButtonStyle.primary, emoji="🟢")
+    async def enable(self, interaction: Interaction, button: Button) -> None:
+        enabled_at = datetime.datetime.now(datetime.timezone.utc)
+        await self._set_enabled_at(enabled_at)
+        self.page.query.enabled_at = enabled_at
+        await self.page.book.edit(interaction)
+
+    @discord.ui.button(label="Delete", style=discord.ButtonStyle.danger, emoji="🗑️")
+    async def delete(self, interaction: Interaction, button: Button) -> None:
+        async with connect() as conn:
+            await conn.execute(
+                "DELETE FROM status_query "
+                "WHERE status_id = $1 AND host = $2 AND port = $3",
+                self.page.query.status_id,
+                self.page.query.host,
+                self.page.query.port,
+            )
+
+        # HACK: we can't easily propagate deletion up, so let's just terminate the view.
+        assert self.view is not None
+        await interaction.response.defer()
+        await interaction.delete_original_response()
+        self.view.stop()
+
+    async def _set_enabled_at(self, enabled_at: datetime.datetime | None) -> None:
+        async with connect() as conn:
+            await conn.execute(
+                "UPDATE status_query SET enabled_at = $1 "
+                "WHERE status_id = $2 AND host = $3 AND port = $4",
+                enabled_at,
+                self.page.query.status_id,
+                self.page.query.host,
+                self.page.query.port,
+            )
