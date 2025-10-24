@@ -340,7 +340,7 @@ async def update_display(bot: Bot, *, message_id: int) -> None:
     if view is not None:
         return await view.update()
 
-    log.debug("Creating view for display %d", message_id)
+    log.debug("Creating view for display #%d", message_id)
     view = StatusDisplayView(bot, message_id)
     await view.update()
     display_cache[message_id] = view
