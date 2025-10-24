@@ -17,6 +17,5 @@ async def start() -> None:
 
     from ministatus.bot.bot import Bot
 
-    # TODO: invalidate token on login failure?
     bot = Bot()
     await bot.start(token.get_secret_value())

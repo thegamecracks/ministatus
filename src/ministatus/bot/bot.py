@@ -1,6 +1,7 @@
 import importlib.metadata
 import logging
 
+import click
 import discord
 from discord.ext import commands
 
@@ -21,6 +22,16 @@ class Bot(commands.Bot):
             ),
             strip_after_prefix=True,
         )
+
+    async def login(self, token: str) -> None:
+        try:
+            return await super().login(token)
+        except discord.LoginFailure as e:
+            log.critical("Discord refused our login! Invalidating token from config.")
+            async with connect_client() as client:
+                await client.delete_setting("token")
+
+            raise click.Abort from e
 
     async def setup_hook(self) -> None:
         assert self.application is not None
