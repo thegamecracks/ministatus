@@ -55,6 +55,7 @@ class StatusDisplayPage(Page):
         self.display = display
 
     async def render(self) -> RenderArgs:
+        self.clear_items()
         display = self.display
 
         async with connect_discord_database_client(self.book.bot) as ddc:

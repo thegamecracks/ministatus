@@ -125,6 +125,7 @@ class StatusModify(Page):
         self.status = status
 
     async def render(self) -> RenderArgs:
+        self.clear_items()
         rendered = RenderArgs()
         status = self.status
 

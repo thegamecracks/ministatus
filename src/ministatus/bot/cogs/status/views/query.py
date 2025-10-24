@@ -117,6 +117,7 @@ class StatusQueryPage(Page):
         self.query = query
 
     async def render(self) -> RenderArgs:
+        self.clear_items()
         query = self.query
 
         self.add_item(discord.ui.TextDisplay(f"## Query {query.host}"))

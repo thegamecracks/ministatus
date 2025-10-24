@@ -97,6 +97,7 @@ class StatusAlertPage(Page):
         self.alert = alert
 
     async def render(self) -> RenderArgs:
+        self.clear_items()
         alert = self.alert
         channel = self.book.guild.get_channel_or_thread(alert.channel_id)
         mention = channel.mention if channel is not None else "<deleted channel>"
