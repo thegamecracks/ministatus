@@ -5,6 +5,7 @@ import discord
 from discord.ext import commands
 
 from ministatus.bot.cogs import list_extensions
+from ministatus.db import connect_client
 
 log = logging.getLogger(__name__)
 
@@ -22,6 +23,10 @@ class Bot(commands.Bot):
         )
 
     async def setup_hook(self) -> None:
+        assert self.application is not None
+        async with connect_client() as client:
+            await client.set_setting("appid", self.application.id)
+
         for extension in list_extensions():
             log.info(f"Loading extension {extension}")
             await self.load_extension(extension)
@@ -39,10 +44,13 @@ class Bot(commands.Bot):
             await self.load_extension("jishaku")
             log.info("Loaded jishaku extension (v%s)", version)
 
-    def get_standard_invite(self) -> str:
-        assert self.application is not None
+    def get_standard_invite(self, application_id: int | None = None) -> str:
+        if application_id is None:
+            assert self.application is not None
+            application_id = self.application.id
+
         return discord.utils.oauth_url(
-            self.application.id,
+            application_id,
             scopes=("bot",),
             permissions=discord.Permissions(
                 read_messages=True,
