@@ -22,12 +22,13 @@ project into a virtual environment:
 Or use one of [pipx] or [uv] to manage the virtual environment for you:
 
 ```sh
-/ministatus $ pipx install .
-/ministatus $ ministatus
+$ pipx install git+https://github.com/thegamecracks/ministatus
+$ ministatus
 # Or:
-/ministatus $ uv tool install .
-/ministatus $ ministatus
+$ uv tool install git+https://github.com/thegamecracks/ministatus
+$ ministatus
 # Or:
+/ $ git clone https://github.com/thegamecracks/ministatus && cd ministatus
 /ministatus $ uv run -m ministatus
 ```
 
