@@ -40,23 +40,16 @@ def setup_logging(*, verbose: int) -> None:
     assert __package__ is not None
 
     if verbose <= 0:
-        # Write our debug messages only to JSONL
         root_level = logging.INFO
-        pkg_level = logging.DEBUG
-        stream_level = logging.INFO
+        pkg_level = logging.NOTSET
     elif verbose <= 1:
-        # Also write our debug messages to stderr
         root_level = logging.INFO
         pkg_level = logging.DEBUG
-        stream_level = logging.DEBUG
     else:
-        # Write everyone's debug messages to both handlers
         root_level = logging.DEBUG
         pkg_level = logging.NOTSET
-        stream_level = logging.NOTSET
 
     stream = create_stream_handler()
-    stream.setLevel(stream_level)
     jsonl = create_jsonl_handler()
 
     root = logging.getLogger()
