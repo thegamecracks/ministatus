@@ -276,7 +276,8 @@ async def fetch_status_history(
     *,
     status_ids: Collection[int],
 ) -> dict[int, list[StatusHistory]]:
-    assert len(status_ids) > 0
+    if not status_ids:
+        return {}
 
     sid = ", ".join("?" * len(status_ids))
     history_rows = await conn.fetch(
@@ -309,7 +310,8 @@ async def fetch_status_history_players(
     *,
     history_ids: Collection[int],
 ) -> dict[int, list[StatusHistoryPlayer]]:
-    assert len(history_ids) > 0
+    if not history_ids:
+        return {}
 
     hid = ", ".join("?" * len(history_ids))
     players = await conn.fetch(
