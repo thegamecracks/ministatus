@@ -74,8 +74,9 @@ async def query_status(bot: Bot, status: Status) -> None:
 
 async def maybe_query(query: StatusQuery) -> Info | None:
     try:
-        return await send_query(query)
-    except FailedQueryError:
+        info = await send_query(query)
+    except FailedQueryError as e:
+        log.debug("Query #%d failed: %s", query.status_query_id, e)
         expired = await set_query_failed(query)
         if not expired:
             return
@@ -84,6 +85,9 @@ async def maybe_query(query: StatusQuery) -> Info | None:
     except InvalidQueryError as e:
         await set_query_failed(query)
         return await disable_query(query, str(e))
+    else:
+        await set_query_success(query)
+        return info
 
 
 async def send_query(query: StatusQuery) -> Info | None:
@@ -97,8 +101,6 @@ async def send_query(query: StatusQuery) -> Info | None:
         await query_source(query)  # Wait, it's all source? Always has been
     else:
         assert_never(query.type)
-
-    await set_query_success(query)
 
 
 async def query_source(query: StatusQuery) -> Info:
@@ -158,17 +160,20 @@ async def resolve_host(query: StatusQuery) -> tuple[str, int]:
         with suppress(NoAnswer, Timeout):
             answers = await _resolve(host_srv, SRV)
             record = cast(SRVRecord, answers[0])
+            log.debug("Resolved query #%d with SRV record", query.status_query_id)
             return str(record.target).rstrip("."), record.port + port_srv_offset
 
     if ipv6_allowed:
         with suppress(NoAnswer, Timeout):
             answers = await _resolve(host, AAAA)
             record = cast(AAAARecord, answers[0])
+            log.debug("Resolved query #%d with AAAA record", query.status_query_id)
             return str(record.address), port
 
     with suppress(NoAnswer, Timeout):
         answers = await _resolve(host, A)
         record = cast(ARecord, answers[0])
+        log.debug("Resolved query #%d with A record", query.status_query_id)
         return str(record.address), port
 
     raise InvalidQueryError("DNS name does not exist")
@@ -226,6 +231,7 @@ async def disable_query(query: StatusQuery, reason: str) -> None:
 
 
 async def record_offline(status: Status) -> None:
+    log.debug("Recording status #%d as offline", status.status_id)
     await prune_history(status)
     async with connect() as conn:
         await conn.execute(
@@ -238,6 +244,7 @@ async def record_offline(status: Status) -> None:
 
 
 async def record_info(status: Status, info: Info) -> None:
+    log.debug("Recording status #%d as online", status.status_id)
     await prune_history(status)
     async with connect() as conn:
         await conn.execute(
