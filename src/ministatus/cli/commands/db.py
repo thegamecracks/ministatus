@@ -1,6 +1,7 @@
 import sqlite3
 import sys
 from contextlib import closing
+from typing import IO
 
 import click
 
@@ -138,12 +139,13 @@ def decrypt(password: Secret[str] | None) -> None:
 
 
 @db.command()
+@click.argument("dest", default="-", type=click.File("w", "utf-8"))
 @mark_db()
-def dump() -> None:
+def dump(dest: IO[str]) -> None:
     """Print an SQL source dump of the database."""
     with connect_sync(transaction=False) as conn:
         for line in conn.iterdump():
-            click.echo(line)
+            click.echo(line, file=dest)
 
 
 @db.command()
