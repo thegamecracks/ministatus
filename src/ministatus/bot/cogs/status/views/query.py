@@ -66,8 +66,8 @@ class CreateStatusQueryModal(Modal, title="Create Status Query"):
         max_length=255,
     )
     port = discord.ui.TextInput(
-        label="Port",
-        placeholder="The server port",
+        label="Query Port",
+        placeholder="The server's query port",
         min_length=1,
         max_length=5,
     )
