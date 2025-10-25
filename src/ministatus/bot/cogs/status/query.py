@@ -118,7 +118,7 @@ async def query_source(query: StatusQuery) -> Info:
 
     return Info(
         title=info.name,
-        address=f"{query.host}:{port}" if query.port > 0 else host,
+        address=f"{query.host}:{port}" if query.port > 0 else query.host,
         thumbnail=None,
         max_players=info.max_players,
         players=[Player(name=p.name) for p in players],
