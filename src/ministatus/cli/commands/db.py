@@ -6,10 +6,12 @@ import click
 
 from ministatus import state
 from ministatus.appdirs import DB_PATH
+from ministatus.cli.commands.markers import mark_db
 from ministatus.db import (
     DatabaseEncryptedError,
     EncryptionUnsupportedError,
     Secret,
+    connect_sync,
     encrypt as db_encrypt,
 )
 
@@ -133,3 +135,12 @@ def decrypt(password: Secret[str] | None) -> None:
             sys.exit(ENCRYPTION_NOT_SUPPORTED)
 
     click.echo(SUCCESSFUL_DECRYPTION)
+
+
+@db.command()
+@mark_db()
+def dump() -> None:
+    """Print an sQL source dump of the database."""
+    with connect_sync(transaction=False) as conn:
+        for line in conn.iterdump():
+            click.echo(line)
