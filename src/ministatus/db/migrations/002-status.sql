@@ -69,9 +69,7 @@ CREATE TABLE status_query (
 
     enabled_at TIMESTAMP,
     extra JSONB, -- Extra data relevant to query type
-    failed_at TIMESTAMP, -- Time since last successful query
-
-    CONSTRAINT unique_status_host_port UNIQUE (status_id, host, port)
+    failed_at TIMESTAMP -- Time since last successful query
 );
 
 -- Cascading foreign key indexes
