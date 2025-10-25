@@ -144,3 +144,9 @@ def dump() -> None:
     with connect_sync(transaction=False) as conn:
         for line in conn.iterdump():
             click.echo(line)
+
+
+@db.command()
+def path() -> None:
+    """Print the filepath to the database."""
+    click.secho(DB_PATH, fg="cyan")
