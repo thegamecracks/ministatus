@@ -237,11 +237,11 @@ class PlaceholderView(discord.ui.LayoutView):
 
 def get_online_message(history: StatusHistory | None) -> str:
     if history is None:
-        return "🟡 Unknown"
+        return "Unknown 🟡"
     elif history.online:
-        return "🟢 Online"
+        return "Online 🟢"
     else:
-        return "🔴 Offline"
+        return "Offline 🔴"
 
 
 class StatusDisplayView(discord.ui.LayoutView):
