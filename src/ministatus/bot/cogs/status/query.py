@@ -146,11 +146,11 @@ async def resolve_host(query: StatusQuery) -> tuple[str, int]:
         return host, port
 
     host_srv = None
-    port_srv_offset = 0
+    port_offset = 0
     ipv6_allowed = False  # TODO: check which games work over IPv6
     if type == StatusQueryType.ARMA_3:
         host_srv = f"_arma3._udp.{host}"
-        port_srv_offset = 1
+        port_offset = 1
 
     # See also https://github.com/py-mine/mcstatus/blob/v12.0.6/mcstatus/dns.py
     # NOTE: there could be multiple DNS records, but we're always returning the first
@@ -159,17 +159,18 @@ async def resolve_host(query: StatusQuery) -> tuple[str, int]:
         # FIXME: how long are no answers cached for SRV queries?
         record = cast(SRVRecord, answers[0])
         log.debug("Resolved query #%d with SRV record", query.status_query_id)
-        return str(record.target).rstrip("."), record.port + port_srv_offset
+        host = str(record.target).rstrip(".")
+        port = record.port
 
     if ipv6_allowed and (answers := await _resolve(host, AAAA)):
         record = cast(AAAARecord, answers[0])
         log.debug("Resolved query #%d with AAAA record", query.status_query_id)
-        return str(record.address), port
+        return str(record.address), port + port_offset
 
     if answers := await _resolve(host, A):
         record = cast(ARecord, answers[0])
         log.debug("Resolved query #%d with A record", query.status_query_id)
-        return str(record.address), port
+        return str(record.address), port + port_offset
 
     raise InvalidQueryError("DNS name does not exist")
 
