@@ -4,7 +4,6 @@ import sys
 import click
 
 from ministatus.appdirs import DB_PATH
-from ministatus.cli.commands.markers import mark_db
 from ministatus.db import connect_sync
 
 
@@ -52,7 +51,6 @@ def imports() -> None:
         fg="red",
     ),
 )
-@mark_db()
 def wipe() -> None:
     """Delete the current database."""
     with connect_sync(transaction=False) as conn:
