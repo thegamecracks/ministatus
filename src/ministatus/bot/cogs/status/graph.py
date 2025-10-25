@@ -14,14 +14,18 @@ def create_player_count_graph(
     *,
     colour: int,
     max_players: int,
-) -> io.BytesIO | None:
+) -> io.BytesIO:
     def format_hour(x: float, pos: float) -> str:
         delta = cast(datetime.timedelta, mdates.num2timedelta(now_num - x))
         hours = round(abs(delta.total_seconds() / 3600))
         return f"{hours}h" if hours != 0 else "now"
 
+    now = discord.utils.utcnow()
     if len(datapoints) < 2:
-        return
+        datapoints = [
+            (now - datetime.timedelta(minutes=1), 0),
+            (now, 0),
+        ]
 
     assert 0 <= colour <= 0xFFFFFF
     colour_hex = f"#{colour:06X}"
@@ -48,7 +52,6 @@ def create_player_count_graph(
     )
 
     # Set xticks to every two hours
-    now = discord.utils.utcnow()
     now_num = cast(float, mdates.date2num(now))
     step = 1 / 12
     start = x_max - step + (now_num - x_max)

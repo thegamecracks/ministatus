@@ -379,11 +379,10 @@ class StatusDisplayView(LayoutView):
             create_player_count_graph,
             [(h.created_at, len(h.players)) for h in history],
             colour=display.graph_colour,
-            max_players=max(h.max_players for h in history),
+            max_players=max((h.max_players for h in history), default=0),
         )
-        if graph is not None:
-            f = discord.File(graph, "graph.png")
-            files.append(f)
+        f = discord.File(graph, "graph.png")
+        files.append(f)
 
         return files
 
