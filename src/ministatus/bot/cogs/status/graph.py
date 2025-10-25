@@ -74,7 +74,7 @@ def create_player_count_graph(
         f,
         format="png",
         bbox_inches="tight",
-        pad_inches=0,
+        pad_inches=0.1,
         dpi=80,
         transparent=True,
     )
