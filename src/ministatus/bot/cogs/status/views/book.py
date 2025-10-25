@@ -49,7 +49,7 @@ class RenderArgs:
     def get_message_kwargs(self) -> dict[str, Any]:
         kwargs = {}
         if self.files:
-            kwargs["files"] = self.files
+            kwargs["attachments"] = self.files
         return kwargs
 
     def update(self, other: Self) -> None:
