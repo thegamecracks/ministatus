@@ -216,7 +216,7 @@ async def disable_query(query: StatusQuery, reason: str) -> None:
     log.warning("Query #%d is invalid: %s", query.status_query_id, reason)
     async with connect() as conn:
         await conn.execute(
-            "UPDATE status_query SET enabled_at = NULL AND failed_at = $1 "
+            "UPDATE status_query SET enabled_at = NULL, failed_at = $1 "
             "WHERE status_query_id = $2",
             datetime.datetime.now(datetime.timezone.utc),
             query.status_query_id,
