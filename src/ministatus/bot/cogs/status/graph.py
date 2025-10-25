@@ -45,7 +45,7 @@ def create_player_count_graph(
 
     # Set limits and fill under the line
     ax.set_xlim(x_min, x_max)  # type: ignore
-    ax.set_ylim(0, max_players + 1)
+    ax.set_ylim(0, max_players or 1)
     ax.fill_between(
         x,  # type: ignore
         y,  # type: ignore
