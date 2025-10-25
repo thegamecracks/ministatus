@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import sqlite3
-from contextlib import asynccontextmanager
-from typing import TYPE_CHECKING, Any, AsyncIterator, Callable
+from contextlib import asynccontextmanager, closing, contextmanager
+from typing import TYPE_CHECKING, Any, AsyncIterator, Iterator
 
 from ministatus import state
 from ministatus.appdirs import DB_PATH
@@ -54,11 +54,13 @@ from .status import (
 if TYPE_CHECKING:
     import asqlite
 
+_real_connect = sqlite3.connect
+
 
 @asynccontextmanager
 async def connect(*, transaction: bool = True) -> AsyncIterator[SQLiteConnection]:
     database = str(DB_PATH)
-    async with _connect(database, preinit=maybe_encrypt) as conn:
+    async with _connect(database) as conn:
         wrapped = SQLiteConnection(conn)
         if transaction:
             async with wrapped.transaction():
@@ -84,12 +86,10 @@ async def run_migrations() -> None:
 def _connect(
     database: str,
     *,
-    preinit: Callable[[sqlite3.Connection], Any],
     timeout: float | None = None,
     **kwargs: Any,
 ) -> asqlite._ContextManagerMixin[sqlite3.Connection, asqlite.Connection]:
     import asyncio
-    import sqlite3
     from unittest.mock import patch
 
     import asqlite
@@ -97,22 +97,14 @@ def _connect(
     loop = asyncio.get_event_loop()
     queue = asqlite._Worker(loop=loop)
     queue.start()
-    _real_connect = sqlite3.connect
 
     def factory(con: sqlite3.Connection) -> asqlite.Connection:
         return asqlite.Connection(con, queue)
 
-    def patched_connect(*args, **kwargs) -> sqlite3.Connection:
-        conn = _real_connect(*args, **kwargs)
-        preinit(conn)
-        return conn
-
     def new_connect(db: str, **kwargs: Any) -> sqlite3.Connection:
-        with patch("sqlite3.connect", patched_connect):
+        with patch("sqlite3.connect", _connect_and_encrypt):
             conn = asqlite._connect_pragmas(db, **kwargs)
         return conn
-
-    kwargs.setdefault("detect_types", sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)
 
     return asqlite._ContextManagerMixin(
         queue,
@@ -124,9 +116,29 @@ def _connect(
     )
 
 
-def maybe_encrypt(conn: sqlite3.Connection) -> None:
-    if state.DB_PASSWORD is not None:
-        encrypt(conn, state.DB_PASSWORD)
+@contextmanager
+def connect_sync(*, transaction: bool = True) -> Iterator[sqlite3.Connection]:
+    with closing(_connect_and_encrypt(DB_PATH)) as conn:
+        if transaction:
+            with conn:
+                yield conn
+        else:
+            yield conn
+
+
+if TYPE_CHECKING:
+    _connect_and_encrypt = sqlite3.connect
+else:
+
+    def _connect_and_encrypt(*args, **kwargs):
+        conn = _real_connect(
+            *args,
+            detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES,
+            **kwargs,
+        )
+        if state.DB_PASSWORD is not None:
+            encrypt(conn, state.DB_PASSWORD)
+        return conn
 
 
 def encrypt(

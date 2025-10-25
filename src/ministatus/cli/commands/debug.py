@@ -4,8 +4,8 @@ import sys
 import click
 
 from ministatus.appdirs import DB_PATH
-from ministatus.cli.commands.markers import mark_async, mark_db
-from ministatus.db import connect
+from ministatus.cli.commands.markers import mark_db
+from ministatus.db import connect_sync
 
 
 @click.group(hidden=True)
@@ -52,11 +52,10 @@ def imports() -> None:
         fg="red",
     ),
 )
-@mark_async()
 @mark_db()
-async def wipe() -> None:
+def wipe() -> None:
     """Delete the current database."""
-    async with connect(transaction=False) as conn:
-        await conn.execute("PRAGMA locking_mode = EXCLUSIVE")
-        await conn.execute("PRAGMA journal_mode = DELETE")
+    with connect_sync(transaction=False) as conn:
+        conn.execute("PRAGMA locking_mode = EXCLUSIVE")
+        conn.execute("PRAGMA journal_mode = DELETE")
     DB_PATH.unlink()
