@@ -11,25 +11,22 @@ This project requires Python 3.11 or newer. You can manually install this
 project into a virtual environment:
 
 ```sh
-/ $ git clone https://github.com/thegamecracks/ministatus
-/ $ cd ministatus
-/ministatus $ python3 -m venv
-/ministatus $ .venv/bin/activate
-(.venv) /ministatus $ pip install .
-(.venv) /ministatus $ ministatus  # or python3 -m ministatus
+$ python3 -m venv
+$ .venv/bin/activate
+(.venv) $ pip install ministatus
+(.venv) $ ministatus  # or python3 -m ministatus
 ```
 
 Or use one of [pipx] or [uv] to manage the virtual environment for you:
 
 ```sh
-$ pipx install git+https://github.com/thegamecracks/ministatus
+$ pipx install ministatus
 $ ministatus
 # Or:
-$ uv tool install git+https://github.com/thegamecracks/ministatus
+$ uv tool install ministatus
 $ ministatus
 # Or:
-/ $ git clone https://github.com/thegamecracks/ministatus && cd ministatus
-/ministatus $ uv run -m ministatus
+$ uvx ministatus
 ```
 
 [pipx]: https://pipx.pypa.io/latest/
