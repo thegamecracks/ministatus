@@ -118,7 +118,15 @@ async def query_source(query: StatusQuery) -> Info:
 
     return Info(
         title=info.name,
-        address=f"{query.host}:{port}" if query.port > 0 else query.host,
+        address=(
+            # fmt: off
+            f"{query.host}:{query.game_port}"
+            if query.game_port
+            else f"{query.host}:{query.query_port}"
+            if query.query_port
+            else query.host
+            # fmt: on
+        ),
         thumbnail=None,
         max_players=info.max_players,
         players=[Player(name=p.name) for p in players],
@@ -129,7 +137,7 @@ async def resolve_host(query: StatusQuery) -> tuple[str, int]:
     from ipaddress import IPv4Address, IPv6Address
 
     host = query.host
-    port = query.port
+    query_port = query.query_port
     type = query.type
 
     ip = None
@@ -140,17 +148,17 @@ async def resolve_host(query: StatusQuery) -> tuple[str, int]:
         with suppress(ValueError):
             ip = IPv6Address(host)
 
-    if ip is not None and port < 1:
-        raise InvalidQueryError("IP address was provided without a port")
+    if ip is not None and query_port < 1:
+        raise InvalidQueryError("IP address was provided without a query port")
     elif ip is not None:
-        return host, port
+        return host, query_port
 
     host_srv = None
-    port_offset = 0
+    srv_offset = 0
     ipv6_allowed = False  # TODO: check which games work over IPv6
     if type == StatusQueryType.ARMA_3:
         host_srv = f"_arma3._udp.{host}"
-        port_offset = 1
+        srv_offset = 1
 
     # See also https://github.com/py-mine/mcstatus/blob/v12.0.6/mcstatus/dns.py
     # NOTE: there could be multiple DNS records, but we're always returning the first
@@ -160,17 +168,17 @@ async def resolve_host(query: StatusQuery) -> tuple[str, int]:
         record = cast(SRVRecord, answers[0])
         log.debug("Resolved query #%d with SRV record", query.status_query_id)
         host = str(record.target).rstrip(".")
-        port = record.port
+        query_port = record.port + srv_offset
 
     if ipv6_allowed and (answers := await _resolve(host, AAAA)):
         record = cast(AAAARecord, answers[0])
         log.debug("Resolved query #%d with AAAA record", query.status_query_id)
-        return str(record.address), port + port_offset
+        return str(record.address), query_port
 
     if answers := await _resolve(host, A):
         record = cast(ARecord, answers[0])
         log.debug("Resolved query #%d with A record", query.status_query_id)
-        return str(record.address), port + port_offset
+        return str(record.address), query_port
 
     raise InvalidQueryError("DNS name does not exist")
 

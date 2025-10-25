@@ -229,11 +229,12 @@ class DatabaseClient:
 
         row = await self.conn.fetchrow(
             "INSERT INTO status_query "
-            "(status_id, host, port, type, priority, enabled_at, extra, failed_at) "
-            "VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *",
+            "(status_id, host, game_port, query_port, type, priority, enabled_at, extra, failed_at) "
+            "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *",
             query.status_id,
             query.host,
-            query.port,
+            query.game_port,
+            query.query_port,
             query.type,
             query.priority,
             query.enabled_at,

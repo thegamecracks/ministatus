@@ -65,7 +65,13 @@ class CreateStatusQueryModal(Modal, title="Create Status Query"):
         min_length=7,
         max_length=255,
     )
-    port = discord.ui.TextInput(
+    game_port = discord.ui.TextInput(
+        label="Game Port",
+        placeholder="The server's game port",
+        min_length=1,
+        max_length=5,
+    )
+    query_port = discord.ui.TextInput(
         label="Query Port",
         placeholder="The server's query port",
         min_length=1,
@@ -104,7 +110,8 @@ class CreateStatusQueryModal(Modal, title="Create Status Query"):
             status_query_id=0,
             status_id=self.status.status_id,
             host=self.host.value,
-            port=int(self.port.value),
+            game_port=int(self.game_port.value),
+            query_port=int(self.query_port.value),
             type=StatusQueryType(self.type.component.values[0]),
             priority=int(self.priority.value),
             enabled_at=interaction.created_at,
@@ -133,7 +140,8 @@ class StatusQueryPage(Page):
         lines = [
             f"{format_enabled_at(query.enabled_at)}",
             f"**Host:** {query.host}",
-            f"**Port:** {query.port}",
+            f"**Game port:** {query.game_port}",
+            f"**Query port:** {query.query_port}",
             f"**Type:** {query.type}",
             f"**Priority:** {query.priority}",
         ]

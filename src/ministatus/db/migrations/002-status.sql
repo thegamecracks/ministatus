@@ -62,7 +62,8 @@ CREATE TABLE status_query (
     status_id INTEGER NOT NULL
         REFERENCES status (status_id) ON DELETE CASCADE,
     host TEXT NOT NULL,
-    port INTEGER NOT NULL CHECK (port BETWEEN 0 AND 65535), -- port 0 means SRV lookup
+    game_port INTEGER NOT NULL CHECK (game_port BETWEEN 0 AND 65535),
+    query_port INTEGER NOT NULL CHECK (query_port BETWEEN 0 AND 65535), -- port 0 means SRV lookup
     type TEXT NOT NULL, -- Type of query to perform (should be an enum)
     priority INTEGER NOT NULL DEFAULT 0, -- Order in which query methods are used (usually one per status)
 

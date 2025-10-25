@@ -128,7 +128,8 @@ class StatusQuery(BaseModel):
     status_query_id: int
     status_id: int
     host: Host
-    port: int = Field(ge=0, lt=65536)
+    game_port: int = Field(ge=0, lt=65536)
+    query_port: int = Field(ge=0, lt=65536)
     type: StatusQueryType
     priority: int = Field(ge=0)
 
