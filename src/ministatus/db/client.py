@@ -207,7 +207,9 @@ class DatabaseClient:
         return StatusAlert.model_validate(dict(row))
 
     async def create_status_display(self, display: StatusDisplay) -> StatusDisplay:
-        if display.status_id < 1:
+        if display.message_id < 1:
+            raise ValueError("Cannot create status display without message_id")
+        elif display.status_id < 1:
             raise ValueError("Cannot create status display without status_id")
 
         row = await self.conn.fetchrow(
