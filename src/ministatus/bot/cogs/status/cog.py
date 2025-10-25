@@ -27,6 +27,11 @@ class StatusCog(
     def __init__(self, bot: Bot) -> None:
         self.bot = bot
 
+        self.query_loop.add_exception_type(
+            discord.DiscordServerError,
+            discord.RateLimited,
+        )
+
     async def cog_load(self) -> None:
         self.query_loop.start()
 

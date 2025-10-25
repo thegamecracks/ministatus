@@ -7,6 +7,7 @@ from contextlib import suppress
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, assert_never, cast
 
+import discord
 from dns.asyncresolver import Resolver
 from dns.exception import Timeout
 from dns.rdatatype import A, AAAA, RdataType, SRV
@@ -50,9 +51,24 @@ async def run_query_jobs(bot: Bot) -> None:
             with_relationships=True,
         )
 
-    async with asyncio.TaskGroup() as tg:
-        for status in statuses:
-            tg.create_task(query_status(bot, status))
+    try:
+        tasks = []
+        async with asyncio.TaskGroup() as tg:
+            for status in statuses:
+                tasks.append(tg.create_task(query_status(bot, status)))
+
+            # Let all tasks run first, and collect any errors to raise afterwards
+            await asyncio.wait(tasks)
+
+        exceptions = [e for t in tasks if (e := t.exception()) is not None]
+        if exceptions:
+            raise ExceptionGroup(f"{len(exceptions)} query job(s) failed", exceptions)
+
+    except* (discord.DiscordServerError, discord.RateLimited) as eg:
+        # Ergh, drop all other exceptions so tasks.loop() can handle it
+        log.warning("One or more status queries failed: %s", exc_info=eg)
+        e = eg.exceptions[0]
+        raise e from None
 
 
 async def query_status(bot: Bot, status: Status) -> None:
@@ -68,7 +84,7 @@ async def query_status(bot: Bot, status: Status) -> None:
         await record_offline(status)
 
     for display in status.displays:
-        await update_display(bot, message_id=display.message_id)
+        await maybe_update_display(bot, message_id=display.message_id)
 
 
 async def maybe_query(query: StatusQuery) -> Info | None:
@@ -283,6 +299,25 @@ async def prune_history(status: Status) -> None:
             "DELETE FROM status_history WHERE status_id = $1 AND created_at < $2",
             status.status_id,
             datetime.datetime.now(datetime.timezone.utc) - HISTORY_EXPIRES_AFTER,
+        )
+
+
+async def maybe_update_display(bot: Bot, *, message_id: int) -> None:
+    try:
+        return await update_display(bot, message_id=message_id)
+    except (discord.Forbidden, discord.NotFound) as e:
+        reason = str(e)
+        await disable_display(message_id, reason)
+
+
+async def disable_display(message_id: int, reason: str) -> None:
+    # TODO: store display failure reason in database
+    log.warning("Display #%d is invalid: %s", message_id, reason)
+    async with connect() as conn:
+        await conn.execute(
+            "UPDATE status_display SET enabled_at = NULL WHERE message_id = $2",
+            datetime.datetime.now(datetime.timezone.utc),
+            message_id,
         )
 
 
