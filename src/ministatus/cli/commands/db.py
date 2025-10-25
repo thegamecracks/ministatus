@@ -140,7 +140,7 @@ def decrypt(password: Secret[str] | None) -> None:
 @db.command()
 @mark_db()
 def dump() -> None:
-    """Print an sQL source dump of the database."""
+    """Print an SQL source dump of the database."""
     with connect_sync(transaction=False) as conn:
         for line in conn.iterdump():
             click.echo(line)
