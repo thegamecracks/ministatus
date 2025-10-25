@@ -1,5 +1,6 @@
 import datetime
 import io
+import math
 from typing import Sequence, cast
 
 import discord
@@ -59,7 +60,8 @@ def create_player_count_graph(
     ax.xaxis.set_major_formatter(format_hour)
 
     # Set yticks
-    ax.yaxis.set_major_locator(ticker.MultipleLocator(5))
+    y_step = math.ceil(max_players / 10) or 5
+    ax.yaxis.set_major_locator(ticker.MultipleLocator(y_step))
 
     # Add grid
     ax.set_axisbelow(True)
