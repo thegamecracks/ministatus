@@ -1,5 +1,11 @@
 # ministatus
 
+[![](https://img.shields.io/pypi/v/ministatus?style=flat-square&logo=pypi)](https://pypi.org/project/ministatus/)
+[![](https://img.shields.io/github/actions/workflow/status/thegamecracks/ministatus/publish.yml?style=flat-square&logo=uv&label=build)](https://docs.astral.sh/uv/)
+[![](https://img.shields.io/github/actions/workflow/status/thegamecracks/ministatus/pyright-lint.yml?style=flat-square&label=pyright)](https://microsoft.github.io/pyright/#/)
+[![](https://img.shields.io/github/actions/workflow/status/thegamecracks/ministatus/ruff-check.yml?style=flat-square&logo=ruff&label=lints)](https://docs.astral.sh/ruff/)
+[![](https://img.shields.io/github/actions/workflow/status/thegamecracks/ministatus/ruff-format.yml?style=flat-square&logo=ruff&label=style)](https://docs.astral.sh/ruff/)
+
 A Discord bot for managing game server status embeds.
 
 ![Terminal demonstration](https://github.com/user-attachments/assets/17f4ce1f-a40c-4244-9e80-132f2bc7cfdc)
