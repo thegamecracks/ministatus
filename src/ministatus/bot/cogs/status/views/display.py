@@ -328,7 +328,7 @@ class StatusDisplayView(LayoutView):
             f"**Address:** {status.address}",
             f"**Status:** {online}",
             f"**Last updated:** {last_updated}",
-            f"**Player count:** {len(players)} / {max_players}",
+            f"**Player count:** {len(players)}/{max_players}",
             # TODO: tailor details to game
         ]
 
