@@ -91,6 +91,7 @@ class Status(BaseModel):
 
 
 class StatusAlert(BaseModel):
+    status_alert_id: int
     status_id: int
     channel_id: Snowflake
     enabled_at: datetime.datetime | None = Field(default=None)

@@ -13,16 +13,17 @@ CREATE TABLE status (
 
 -- Discord channels to send downtime alerts to
 CREATE TABLE status_alert (
-    status_id INTEGER
+    status_alert_id INTEGER PRIMARY KEY,
+    status_id INTEGER NOT NULL
         REFERENCES status (status_id) ON DELETE CASCADE,
-    channel_id INTEGER -- CAUTION: missing constraint on status.guild_id
+    channel_id INTEGER NOT NULL -- CAUTION: missing constraint on status.guild_id
         REFERENCES discord_channel (channel_id) ON DELETE CASCADE,
 
     enabled_at TIMESTAMP,
     send_audit BOOLEAN NOT NULL DEFAULT 0,
     send_downtime BOOLEAN NOT NULL DEFAULT 0,
 
-    PRIMARY KEY (status_id, channel_id)
+    CONSTRAINT unique_status_channel UNIQUE (status_id, channel_id)
 );
 
 -- Discord messages to periodically display status info

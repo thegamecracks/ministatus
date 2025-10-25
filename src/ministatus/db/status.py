@@ -151,6 +151,7 @@ async def fetch_status_alerts(
     status_alerts = collections.defaultdict(list)
     for row in alerts:
         alert = StatusAlert(
+            status_alert_id=row["status_alert_id"],
             status_id=row["status_id"],
             channel_id=row["channel_id"],
             enabled_at=row["enabled_at"],

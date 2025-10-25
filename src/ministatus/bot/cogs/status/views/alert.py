@@ -112,6 +112,7 @@ class CreateStatusAlertModal(Modal, title="Create Status Alert"):
         await check_channel_permissions(channel)
 
         alert = StatusAlert(
+            status_alert_id=0,
             status_id=self.status.status_id,
             channel_id=channel.id,
             enabled_at=interaction.created_at,
@@ -188,9 +189,8 @@ class _StatusAlertRow(discord.ui.ActionRow):
     async def delete(self, interaction: Interaction, button: Button) -> None:
         async with connect() as conn:
             await conn.execute(
-                "DELETE FROM status_alert WHERE status_id = $1 AND channel_id = $2",
-                self.page.alert.status_id,
-                self.page.alert.channel_id,
+                "DELETE FROM status_alert WHERE status_alert_id = $1",
+                self.page.alert.status_alert_id,
             )
 
         # HACK: we can't easily propagate deletion up, so let's just terminate the view.
@@ -202,9 +202,7 @@ class _StatusAlertRow(discord.ui.ActionRow):
     async def _set_enabled_at(self, enabled_at: datetime.datetime | None) -> None:
         async with connect() as conn:
             await conn.execute(
-                "UPDATE status_alert SET enabled_at = $1 "
-                "WHERE status_id = $2 AND channel_id = $3",
+                "UPDATE status_alert SET enabled_at = $1 WHERE status_alert_id = $2",
                 enabled_at,
-                self.page.alert.status_id,
-                self.page.alert.channel_id,
+                self.page.alert.status_alert_id,
             )
