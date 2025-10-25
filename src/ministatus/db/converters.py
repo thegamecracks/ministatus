@@ -33,13 +33,17 @@ def convert_date(val: bytes) -> datetime.date:
 def convert_datetime(val: bytes) -> datetime.datetime:
     """Convert ISO 8601 datetime to datetime.datetime object."""
     dt = datetime.datetime.fromisoformat(val.decode())
-    return dt.astimezone(datetime.timezone.utc)
+    if dt.tzinfo:
+        return dt.astimezone(datetime.timezone.utc)
+    return dt.replace(tzinfo=datetime.timezone.utc)
 
 
 def convert_timestamp(val: bytes) -> datetime.datetime:
     """Convert Unix epoch timestamp to datetime.datetime object."""
     dt = datetime.datetime.fromtimestamp(int(val))
-    return dt.astimezone(datetime.timezone.utc)
+    if dt.tzinfo:
+        return dt.astimezone(datetime.timezone.utc)
+    return dt.replace(tzinfo=datetime.timezone.utc)
 
 
 sqlite3.register_converter("date", convert_date)
