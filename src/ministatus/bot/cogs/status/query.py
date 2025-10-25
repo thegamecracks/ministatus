@@ -155,23 +155,18 @@ async def resolve_host(query: StatusQuery) -> tuple[str, int]:
     # See also https://github.com/py-mine/mcstatus/blob/v12.0.6/mcstatus/dns.py
     # NOTE: there could be multiple DNS records, but we're always returning the first
 
-    if host_srv:
+    if host_srv and (answers := await _resolve(host_srv, SRV)):
         # FIXME: how long are no answers cached for SRV queries?
-        with suppress(NoAnswer, Timeout):
-            answers = await _resolve(host_srv, SRV)
-            record = cast(SRVRecord, answers[0])
-            log.debug("Resolved query #%d with SRV record", query.status_query_id)
-            return str(record.target).rstrip("."), record.port + port_srv_offset
+        record = cast(SRVRecord, answers[0])
+        log.debug("Resolved query #%d with SRV record", query.status_query_id)
+        return str(record.target).rstrip("."), record.port + port_srv_offset
 
-    if ipv6_allowed:
-        with suppress(NoAnswer, Timeout):
-            answers = await _resolve(host, AAAA)
-            record = cast(AAAARecord, answers[0])
-            log.debug("Resolved query #%d with AAAA record", query.status_query_id)
-            return str(record.address), port
+    if ipv6_allowed and (answers := await _resolve(host, AAAA)):
+        record = cast(AAAARecord, answers[0])
+        log.debug("Resolved query #%d with AAAA record", query.status_query_id)
+        return str(record.address), port
 
-    with suppress(NoAnswer, Timeout):
-        answers = await _resolve(host, A)
+    if answers := await _resolve(host, A):
         record = cast(ARecord, answers[0])
         log.debug("Resolved query #%d with A record", query.status_query_id)
         return str(record.address), port
@@ -179,19 +174,17 @@ async def resolve_host(query: StatusQuery) -> tuple[str, int]:
     raise InvalidQueryError("DNS name does not exist")
 
 
-async def _resolve(qname: str, rdtype: RdataType) -> Answer:
+async def _resolve(qname: str, rdtype: RdataType) -> Answer | None:
     try:
         return await _resolver.resolve(qname, rdtype, lifetime=DNS_TIMEOUT)
     except Timeout:
         log.warning("DNS lookup for query #{query.id}timed out after %.2fs")
         raise
-    except NoAnswer:
-        raise  # Let caller handle this
+    except (NoAnswer, NXDOMAIN):
+        return None
     except NoNameservers:
         log.exception("Nameservers unavailable")
         raise
-    except NXDOMAIN as e:
-        raise InvalidQueryError("DNS name does not exist") from e
     except YXDOMAIN as e:
         raise InvalidQueryError("DNS name is too long") from e
 
@@ -220,7 +213,7 @@ async def set_query_success(query: StatusQuery) -> None:
 
 async def disable_query(query: StatusQuery, reason: str) -> None:
     # TODO: store query failure reason in database
-    log.warning("Status query #%d is invalid: %s", query.status_query_id, reason)
+    log.warning("Query #%d is invalid: %s", query.status_query_id, reason)
     async with connect() as conn:
         await conn.execute(
             "UPDATE status_query SET enabled_at = NULL AND failed_at = $1 "
