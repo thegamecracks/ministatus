@@ -18,6 +18,7 @@ from dns.resolver import Answer, Cache, NoAnswer, NoNameservers, NXDOMAIN, YXDOM
 
 from ministatus.db import (
     Status,
+    StatusDisplay,
     StatusQuery,
     StatusQueryType,
     connect,
@@ -84,7 +85,7 @@ async def query_status(bot: Bot, status: Status) -> None:
         await record_offline(status)
 
     for display in status.displays:
-        await maybe_update_display(bot, message_id=display.message_id)
+        await maybe_update_display(bot, display)
 
 
 async def maybe_query(query: StatusQuery) -> Info | None:
@@ -302,22 +303,48 @@ async def prune_history(status: Status) -> None:
         )
 
 
-async def maybe_update_display(bot: Bot, *, message_id: int) -> None:
+async def maybe_update_display(bot: Bot, display: StatusDisplay) -> None:
     try:
-        return await update_display(bot, message_id=message_id)
+        await update_display(bot, message_id=display.message_id)
     except (discord.Forbidden, discord.NotFound) as e:
+        await set_display_failed(display)
         reason = str(e)
-        await disable_display(message_id, reason)
+        await disable_display(display, reason)
+    except Exception:
+        await set_display_failed(display)
+        raise
+    else:
+        await set_display_success(display)
 
 
-async def disable_display(message_id: int, reason: str) -> None:
+async def set_display_failed(display: StatusDisplay) -> None:
+    # TODO: send alerts
+    now = datetime.datetime.now(datetime.timezone.utc)
+    async with connect() as conn:
+        await conn.execute(
+            "UPDATE status_display SET failed_at = COALESCE(failed_at, $1) "
+            "WHERE message_id = $2 RETURNING failed_at",
+            now,
+            display.message_id,
+        )
+
+
+async def set_display_success(display: StatusDisplay) -> None:
+    async with connect() as conn:
+        await conn.execute(
+            "UPDATE status_display SET failed_at = NULL WHERE message_id = $1",
+            display.message_id,
+        )
+
+
+async def disable_display(display: StatusDisplay, reason: str) -> None:
     # TODO: store display failure reason in database
-    log.warning("Display #%d is invalid: %s", message_id, reason)
+    log.warning("Display #%d is invalid: %s", display.message_id, reason)
     async with connect() as conn:
         await conn.execute(
             "UPDATE status_display SET enabled_at = NULL WHERE message_id = $2",
             datetime.datetime.now(datetime.timezone.utc),
-            message_id,
+            display.message_id,
         )
 
 
