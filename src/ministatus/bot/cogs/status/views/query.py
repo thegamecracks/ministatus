@@ -8,6 +8,7 @@ from discord import Interaction, SelectOption
 from discord.ui import Button, Select
 
 from ministatus.bot.db import connect_discord_database_client
+from ministatus.bot.views import Modal
 from ministatus.db import Status, StatusQuery, StatusQueryType, connect
 
 from .book import Book, Page, RenderArgs, get_enabled_text
@@ -57,7 +58,7 @@ class StatusModifyQueryRow(discord.ui.ActionRow):
         await self.page.book.edit(interaction)
 
 
-class CreateStatusQueryModal(discord.ui.Modal, title="Create Status Query"):
+class CreateStatusQueryModal(Modal, title="Create Status Query"):
     host = discord.ui.TextInput(
         label="Host",
         placeholder="The server's IP address or hostname",

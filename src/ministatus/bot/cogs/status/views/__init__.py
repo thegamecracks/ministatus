@@ -5,7 +5,6 @@ from .alert import (
 from .book import (
     Book as Book,
     BookControls as BookControls,
-    CancellableView as CancellableView,
     Page as Page,
     RenderArgs as RenderArgs,
     get_enabled_text as get_enabled_text,

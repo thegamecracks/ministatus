@@ -7,6 +7,7 @@ import discord
 from discord import Interaction, SelectOption
 from discord.ui import Button, Select
 
+from ministatus.bot.views import Modal
 from ministatus.db import Status, connect, connect_client
 
 from .book import Book, Page, RenderArgs, get_enabled_text
@@ -84,7 +85,7 @@ class StatusOverviewSelect(discord.ui.ActionRow):
         await self.parent.book.edit(interaction)
 
 
-class CreateStatusModal(discord.ui.Modal, title="Create Status"):
+class CreateStatusModal(Modal, title="Create Status"):
     label = discord.ui.TextInput(
         label="Label",
         placeholder="A useful label for your new status",

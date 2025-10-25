@@ -12,7 +12,9 @@ from discord import Interaction, SelectOption
 from discord.ui import Button, Select
 
 from ministatus.bot.cogs.status.graph import create_player_count_graph
+from ministatus.bot.cogs.status.permissions import check_channel_permissions
 from ministatus.bot.db import connect_discord_database_client
+from ministatus.bot.views import LayoutView, Modal
 from ministatus.db import (
     Status,
     StatusDisplay,
@@ -78,7 +80,7 @@ class StatusModifyDisplayRow(discord.ui.ActionRow):
         await self.page.book.edit(interaction)
 
 
-class CreateStatusDisplayModal(discord.ui.Modal, title="Create Status Display"):
+class CreateStatusDisplayModal(Modal, title="Create Status Display"):
     channel = discord.ui.Label(
         text="Display Channel",
         component=discord.ui.ChannelSelect(
@@ -117,6 +119,8 @@ class CreateStatusDisplayModal(discord.ui.Modal, title="Create Status Display"):
 
         channel = self.channel.component.values[0]
         channel = channel.resolve() or await channel.fetch()
+        await check_channel_permissions(channel)
+
         assert not isinstance(channel, (discord.ForumChannel, discord.CategoryChannel))
         message = await channel.send(view=PlaceholderView(interaction.user))
 
@@ -226,7 +230,7 @@ class _StatusDisplayRow(discord.ui.ActionRow):
             )
 
 
-class PlaceholderView(discord.ui.LayoutView):
+class PlaceholderView(LayoutView):
     container = discord.ui.Container()
 
     def __init__(self, user: discord.Member | discord.User) -> None:
@@ -250,7 +254,7 @@ def get_online_message(history: StatusHistory | None) -> str:
         return "Offline 🔴"
 
 
-class StatusDisplayView(discord.ui.LayoutView):
+class StatusDisplayView(LayoutView):
     container = discord.ui.Container()
 
     def __init__(self, bot: Bot, message_id: int) -> None:

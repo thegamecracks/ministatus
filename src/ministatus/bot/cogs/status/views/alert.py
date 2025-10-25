@@ -7,7 +7,9 @@ import discord
 from discord import Interaction, SelectOption
 from discord.ui import Button, Select
 
+from ministatus.bot.cogs.status.permissions import check_channel_permissions
 from ministatus.bot.db import connect_discord_database_client
+from ministatus.bot.views import Modal
 from ministatus.db import Status, StatusAlert, connect
 
 from .book import Book, Page, RenderArgs, get_enabled_text
@@ -57,7 +59,7 @@ class StatusModifyAlertRow(discord.ui.ActionRow):
         await self.page.book.edit(interaction)
 
 
-class CreateStatusAlertModal(discord.ui.Modal, title="Create Status Alert"):
+class CreateStatusAlertModal(Modal, title="Create Status Alert"):
     channel = discord.ui.Label(
         text="Alert Channel",
         component=discord.ui.ChannelSelect(
@@ -81,6 +83,9 @@ class CreateStatusAlertModal(discord.ui.Modal, title="Create Status Alert"):
         assert isinstance(self.channel.component, discord.ui.ChannelSelect)
 
         channel = self.channel.component.values[0]
+        channel = channel.resolve() or await channel.fetch()
+        await check_channel_permissions(channel)
+
         alert = StatusAlert(
             status_id=self.status.status_id,
             channel_id=channel.id,
