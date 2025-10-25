@@ -101,8 +101,6 @@ async def fetch_statuses(
         alerts = status_alerts.get(status_id, [])
         displays = status_displays.get(status_id, [])
         queries = status_queries.get(status_id, [])
-        if enabled and (not displays or not queries):
-            continue  # Would be nice to filter this in SQL
 
         status = Status(
             status_id=status_id,

@@ -56,8 +56,7 @@ async def run_query_jobs(bot: Bot) -> None:
 
 
 async def query_status(bot: Bot, status: Status) -> None:
-    # NOTE: Redundant check in fetch_statuses()
-    if not status.displays or not status.queries:
+    if not status.queries:
         return
 
     for query in status.queries:
