@@ -25,7 +25,7 @@ from ministatus.db import (
     fetch_status_history,
 )
 
-from .book import Book, Page, RenderArgs, get_enabled_text
+from .book import Book, Page, RenderArgs, format_enabled_at
 
 if TYPE_CHECKING:
     from ministatus.bot.bot import Bot
@@ -159,7 +159,7 @@ class StatusDisplayPage(Page):
         self.add_item(discord.ui.Separator())
         self.add_item(
             discord.ui.TextDisplay(
-                f"{get_enabled_text(display.enabled_at)}\n"
+                f"{format_enabled_at(display.enabled_at)}\n"
                 f"**Accent colour:** #{display.accent_colour:06X}\n"
                 f"**Graph colour:** #{display.graph_colour:06X}\n"
             )

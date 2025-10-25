@@ -156,6 +156,8 @@ async def fetch_status_alerts(
             status_id=row["status_id"],
             channel_id=row["channel_id"],
             enabled_at=row["enabled_at"],
+            send_audit=row["send_audit"],
+            send_downtime=row["send_downtime"],
         )
         status_alerts[row["status_id"]].append(alert)
 

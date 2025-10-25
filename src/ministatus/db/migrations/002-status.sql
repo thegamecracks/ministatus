@@ -19,6 +19,8 @@ CREATE TABLE status_alert (
         REFERENCES discord_channel (channel_id) ON DELETE CASCADE,
 
     enabled_at TIMESTAMP,
+    send_audit BOOLEAN NOT NULL DEFAULT 0,
+    send_downtime BOOLEAN NOT NULL DEFAULT 0,
 
     PRIMARY KEY (status_id, channel_id)
 );

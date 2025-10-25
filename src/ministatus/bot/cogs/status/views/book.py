@@ -96,7 +96,11 @@ class Page(discord.ui.Container, ABC):
     async def render(self) -> RenderArgs: ...
 
 
-def get_enabled_text(enabled_at: datetime.datetime | None) -> str:
+def format_enabled(enabled: bool) -> str:
+    return "enabled" if enabled else "disabled"
+
+
+def format_enabled_at(enabled_at: datetime.datetime | None) -> str:
     if enabled_at is None:
         return "**Disabled**"
     date = discord.utils.format_dt(enabled_at, "F")

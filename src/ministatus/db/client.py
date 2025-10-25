@@ -193,11 +193,13 @@ class DatabaseClient:
 
         row = await self.conn.fetchrow(
             "INSERT INTO status_alert "
-            "(status_id, channel_id, enabled_at) "
-            "VALUES ($1, $2, $3) RETURNING *",
+            "(status_id, channel_id, enabled_at, send_audit, send_downtime) "
+            "VALUES ($1, $2, $3, $4, $5) RETURNING *",
             alert.status_id,
             alert.channel_id,
             alert.enabled_at,
+            alert.send_audit,
+            alert.send_downtime,
         )
         assert row is not None
         return StatusAlert.model_validate(dict(row))

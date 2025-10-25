@@ -12,7 +12,7 @@ from ministatus.bot.db import connect_discord_database_client
 from ministatus.bot.views import Modal
 from ministatus.db import Status, StatusAlert, connect
 
-from .book import Book, Page, RenderArgs, get_enabled_text
+from .book import Book, Page, RenderArgs, format_enabled, format_enabled_at
 
 if TYPE_CHECKING:
     from ministatus.bot.bot import Bot
@@ -67,6 +67,29 @@ class CreateStatusAlertModal(Modal, title="Create Status Alert"):
             placeholder="The channel to send alerts to",
         ),
     )
+    send_downtime = discord.ui.Label(
+        text="Enable downtime messages?",
+        description=(
+            "Sends a message whenever the server cannot be reached through any "
+            "enabled query method."
+        ),
+        component=discord.ui.Select(
+            options=[
+                discord.SelectOption(label="Yes", emoji="🟢", value="1", default=True),
+                discord.SelectOption(label="No", emoji="🔴", value="0"),
+            ],
+        ),
+    )
+    send_audit = discord.ui.Label(
+        text="Enable audit messages?",
+        description="Sends a message for misconfiguration errors. Should be private.",
+        component=discord.ui.Select(
+            options=[
+                discord.SelectOption(label="Yes", emoji="🟢", value="1"),
+                discord.SelectOption(label="No", emoji="🔴", value="0", default=True),
+            ],
+        ),
+    )
 
     def __init__(
         self,
@@ -81,6 +104,8 @@ class CreateStatusAlertModal(Modal, title="Create Status Alert"):
         interaction = cast("Interaction[Bot]", interaction)
         assert interaction.guild is not None
         assert isinstance(self.channel.component, discord.ui.ChannelSelect)
+        assert isinstance(self.send_downtime.component, discord.ui.Select)
+        assert isinstance(self.send_audit.component, discord.ui.Select)
 
         channel = self.channel.component.values[0]
         channel = channel.resolve() or await channel.fetch()
@@ -90,6 +115,8 @@ class CreateStatusAlertModal(Modal, title="Create Status Alert"):
             status_id=self.status.status_id,
             channel_id=channel.id,
             enabled_at=interaction.created_at,
+            send_audit=self.send_audit.component.values[0] == "1",
+            send_downtime=self.send_downtime.component.values[0] == "1",
         )
 
         async with connect_discord_database_client(interaction.client) as ddc:
@@ -114,7 +141,14 @@ class StatusAlertPage(Page):
 
         self.add_item(discord.ui.TextDisplay(f"## Alert {mention}"))
         self.add_item(discord.ui.Separator())
-        self.add_item(discord.ui.TextDisplay(get_enabled_text(alert.enabled_at)))
+
+        content = [
+            format_enabled_at(alert.enabled_at),
+            f"Downtime messages {format_enabled(alert.send_downtime)}",
+            f"Error messages {format_enabled(alert.send_audit)}",
+        ]
+        self.add_item(discord.ui.TextDisplay("\n".join(content)))
+
         self.add_item(await _StatusAlertRow(self).render())
 
         return RenderArgs()

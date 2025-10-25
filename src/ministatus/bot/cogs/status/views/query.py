@@ -11,7 +11,7 @@ from ministatus.bot.db import connect_discord_database_client
 from ministatus.bot.views import Modal
 from ministatus.db import Status, StatusQuery, StatusQueryType, connect
 
-from .book import Book, Page, RenderArgs, get_enabled_text
+from .book import Book, Page, RenderArgs, format_enabled_at
 
 if TYPE_CHECKING:
     from ministatus.bot.bot import Bot
@@ -131,7 +131,7 @@ class StatusQueryPage(Page):
         self.add_item(discord.ui.Separator())
 
         lines = [
-            f"{get_enabled_text(query.enabled_at)}",
+            f"{format_enabled_at(query.enabled_at)}",
             f"**Host:** {query.host}",
             f"**Port:** {query.port}",
             f"**Type:** {query.type}",

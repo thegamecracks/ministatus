@@ -7,7 +7,8 @@ from .book import (
     BookControls as BookControls,
     Page as Page,
     RenderArgs as RenderArgs,
-    get_enabled_text as get_enabled_text,
+    format_enabled as format_enabled,
+    format_enabled_at as format_enabled_at,
 )
 from .display import (
     StatusModifyDisplayRow as StatusModifyDisplayRow,
