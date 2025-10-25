@@ -342,7 +342,11 @@ class StatusDisplayView(LayoutView):
             self.container.add_item(discord.ui.TextDisplay("\n".join(content)))
             self.container.add_item(discord.ui.Separator())
 
-        self.container.add_item(discord.ui.File("attachment://graph.png"))
+        self.container.add_item(
+            discord.ui.MediaGallery(
+                discord.MediaGalleryItem("attachment://graph.png"),
+            )
+        )
 
         self.add_item(self.container)
 
