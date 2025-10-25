@@ -1,13 +1,17 @@
 from __future__ import annotations
 
+import asyncio
 import datetime
 import logging
+import math
+import time
 from typing import TYPE_CHECKING, Any, Callable, Self, cast
 
 import discord
 from discord import Interaction, SelectOption
 from discord.ui import Button, Select
 
+from ministatus.bot.cogs.status.graph import create_player_count_graph
 from ministatus.bot.db import connect_discord_database_client
 from ministatus.db import (
     Status,
@@ -25,6 +29,8 @@ if TYPE_CHECKING:
     from ministatus.bot.bot import Bot
 
     from .overview import StatusModify
+
+DISPLAY_UPDATE_ATTACHMENTS_INTERVAL = 600
 
 log = logging.getLogger(__name__)
 
@@ -252,6 +258,8 @@ class StatusDisplayView(discord.ui.LayoutView):
         self.bot = bot
         self.message_id = message_id
 
+        self._last_attachment_refresh = -math.inf
+
     async def update(self) -> None:
         async with connect_discord_database_client(self.bot) as ddc:
             message = await ddc.get_message(message_id=self.message_id)
@@ -288,15 +296,17 @@ class StatusDisplayView(discord.ui.LayoutView):
 
         rendered = RenderArgs()
 
-        if status.thumbnail:
-            f = discord.File(status.thumbnail, "thumbnail.png")
-            rendered.files.append(f)
-            frame = discord.ui.Section(accessory=discord.ui.Thumbnail(f))
-        else:
-            frame = self.container
-
         title = status.title or status.label
-        self.container.add_item(discord.ui.TextDisplay(f"## {title}"))
+        title = discord.ui.TextDisplay(f"## {title}")
+
+        if status.thumbnail:
+            thumbnail = discord.ui.Thumbnail("attachment://thumbnail.png")
+            frame = discord.ui.Section(accessory=thumbnail)
+            frame.add_item(title)
+            self.container.add_item(frame)
+        else:
+            self.container.add_item(title)
+
         self.container.add_item(discord.ui.Separator())
 
         latest = history[-1] if history else None
@@ -318,7 +328,7 @@ class StatusDisplayView(discord.ui.LayoutView):
             # TODO: tailor details to game
         ]
 
-        frame.add_item(discord.ui.TextDisplay("\n".join(content)))
+        self.container.add_item(discord.ui.TextDisplay("\n".join(content)))
         self.container.add_item(discord.ui.Separator())
 
         if players:
@@ -328,11 +338,46 @@ class StatusDisplayView(discord.ui.LayoutView):
             self.container.add_item(discord.ui.TextDisplay("\n".join(content)))
             self.container.add_item(discord.ui.Separator())
 
-        # TODO: add graph
+        self.container.add_item(discord.ui.File("attachment://graph.png"))
 
         self.add_item(self.container)
 
+        files = await self._maybe_refresh_attachments(status, display, history)
+        rendered.files.extend(files)
+
         return rendered
+
+    async def _maybe_refresh_attachments(
+        self,
+        status: Status,
+        display: StatusDisplay,
+        history: list[StatusHistory],
+    ) -> list[discord.File]:
+        # NOTE: A status can have multiple displays, each of which independently
+        #       generates its own images. Perhaps this should be shared?
+        interval = DISPLAY_UPDATE_ATTACHMENTS_INTERVAL
+        now = time.perf_counter()
+        if now - self._last_attachment_refresh < interval:
+            return []
+
+        self._last_attachment_refresh = now
+        files = []
+
+        if status.thumbnail:
+            f = discord.File(status.thumbnail, "thumbnail.png")
+            files.append(f)
+
+        graph = await asyncio.to_thread(
+            create_player_count_graph,
+            [(h.created_at, len(h.players)) for h in history],
+            colour=display.graph_colour,
+            max_players=max(h.max_players for h in history),
+        )
+        if graph is not None:
+            f = discord.File(graph, "graph.png")
+            files.append(f)
+
+        return files
 
 
 async def update_display(bot: Bot, *, message_id: int) -> None:
