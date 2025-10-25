@@ -12,7 +12,14 @@ from ministatus.bot.db import connect_discord_database_client
 from ministatus.bot.views import Modal
 from ministatus.db import Status, StatusAlert, connect
 
-from .book import Book, Page, RenderArgs, format_enabled, format_enabled_at
+from .book import (
+    Book,
+    Page,
+    RenderArgs,
+    format_enabled,
+    format_enabled_at,
+    format_failed_at,
+)
 
 if TYPE_CHECKING:
     from ministatus.bot.bot import Bot
@@ -147,6 +154,7 @@ class StatusAlertPage(Page):
             format_enabled_at(alert.enabled_at),
             f"Downtime messages {format_enabled(alert.send_downtime)}",
             f"Error messages {format_enabled(alert.send_audit)}",
+            format_failed_at(alert.failed_at),
         ]
         self.add_item(discord.ui.TextDisplay("\n".join(content)))
 

@@ -110,6 +110,7 @@ async def fetch_statuses(
             address=row["address"],
             thumbnail=row["thumbnail"],
             enabled_at=row["enabled_at"],
+            failed_at=row["failed_at"],
             alerts=alerts,
             displays=displays,
             queries=queries,
@@ -155,6 +156,7 @@ async def fetch_status_alerts(
             status_id=row["status_id"],
             channel_id=row["channel_id"],
             enabled_at=row["enabled_at"],
+            failed_at=row["failed_at"],
             send_audit=row["send_audit"],
             send_downtime=row["send_downtime"],
         )
@@ -189,6 +191,7 @@ async def fetch_status_displays(
             message_id=row["message_id"],
             status_id=row["status_id"],
             enabled_at=row["enabled_at"],
+            failed_at=row["failed_at"],
             accent_colour=row["accent_colour"],
             graph_colour=row["graph_colour"],
         )
@@ -224,8 +227,8 @@ async def fetch_status_queries(
             type=row["type"],
             priority=row["priority"],
             enabled_at=row["enabled_at"],
-            extra=row["extra"],
             failed_at=row["failed_at"],
+            extra=row["extra"],
         )
         status_queries[row["status_id"]].append(query)
 
@@ -249,6 +252,7 @@ async def fetch_status_by_id(
         address=row["address"],
         thumbnail=row["thumbnail"],
         enabled_at=row["enabled_at"],
+        failed_at=row["failed_at"],
     )
 
 
@@ -268,6 +272,7 @@ async def fetch_status_display_by_id(
         message_id=row["message_id"],
         status_id=row["status_id"],
         enabled_at=row["enabled_at"],
+        failed_at=row["failed_at"],
         accent_colour=row["accent_colour"],
         graph_colour=row["graph_colour"],
     )

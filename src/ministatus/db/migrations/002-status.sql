@@ -8,7 +8,8 @@ CREATE TABLE status (
     address TEXT,   -- Cached address for players to connect
     thumbnail BLOB, -- Cached server thumbnail
 
-    enabled_at TIMESTAMP
+    enabled_at TIMESTAMP,
+    failed_at TIMESTAMP
 );
 
 -- Discord channels to send downtime alerts to
@@ -20,6 +21,7 @@ CREATE TABLE status_alert (
         REFERENCES discord_channel (channel_id) ON DELETE CASCADE,
 
     enabled_at TIMESTAMP,
+    failed_at TIMESTAMP,
     send_audit BOOLEAN NOT NULL DEFAULT 0,
     send_downtime BOOLEAN NOT NULL DEFAULT 0,
 
@@ -34,6 +36,7 @@ CREATE TABLE status_display (
         REFERENCES status (status_id) ON DELETE CASCADE,
 
     enabled_at TIMESTAMP,
+    failed_at TIMESTAMP,
     accent_colour INTEGER NOT NULL DEFAULT 0xFFFFFF CHECK (accent_colour BETWEEN 0 AND 0xFFFFFF),
     graph_colour INTEGER NOT NULL DEFAULT 0xFFFFFF CHECK (graph_colour BETWEEN 0 AND 0xFFFFFF)
 );
@@ -69,8 +72,8 @@ CREATE TABLE status_query (
     priority INTEGER NOT NULL DEFAULT 0, -- Order in which query methods are used (usually one per status)
 
     enabled_at TIMESTAMP,
-    extra JSONB, -- Extra data relevant to query type
-    failed_at TIMESTAMP -- Time since last successful query
+    failed_at TIMESTAMP,
+    extra JSONB -- Extra data relevant to query type
 );
 
 -- Cascading foreign key indexes

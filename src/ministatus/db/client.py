@@ -175,14 +175,15 @@ class DatabaseClient:
 
         row = await self.conn.fetchrow(
             "INSERT INTO status "
-            "(guild_id, label, title, address, thumbnail, enabled_at) "
-            "VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
+            "(guild_id, label, title, address, thumbnail, enabled_at, failed_at) "
+            "VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *",
             status.guild_id,
             status.label,
             status.title,
             status.address,
             status.thumbnail,
             status.enabled_at,
+            status.failed_at,
         )
         assert row is not None
         return Status.model_validate(dict(row))
@@ -195,11 +196,12 @@ class DatabaseClient:
 
         row = await self.conn.fetchrow(
             "INSERT INTO status_alert "
-            "(status_id, channel_id, enabled_at, send_audit, send_downtime) "
-            "VALUES ($1, $2, $3, $4, $5) RETURNING *",
+            "(status_id, channel_id, enabled_at, failed_at, send_audit, send_downtime) "
+            "VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
             alert.status_id,
             alert.channel_id,
             alert.enabled_at,
+            alert.failed_at,
             alert.send_audit,
             alert.send_downtime,
         )
@@ -214,11 +216,12 @@ class DatabaseClient:
 
         row = await self.conn.fetchrow(
             "INSERT INTO status_display "
-            "(message_id, status_id, enabled_at, accent_colour, graph_colour) "
-            "VALUES ($1, $2, $3, $4, $5) RETURNING *",
+            "(message_id, status_id, enabled_at, failed_at, accent_colour, graph_colour) "
+            "VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
             display.message_id,
             display.status_id,
             display.enabled_at,
+            display.failed_at,
             display.accent_colour,
             display.graph_colour,
         )
@@ -233,7 +236,7 @@ class DatabaseClient:
 
         row = await self.conn.fetchrow(
             "INSERT INTO status_query "
-            "(status_id, host, game_port, query_port, type, priority, enabled_at, extra, failed_at) "
+            "(status_id, host, game_port, query_port, type, priority, enabled_at, failed_at, extra) "
             "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *",
             query.status_id,
             query.host,
@@ -242,8 +245,8 @@ class DatabaseClient:
             query.type,
             query.priority,
             query.enabled_at,
-            query.extra,
             query.failed_at,
+            query.extra,
         )
         assert row is not None
         return StatusQuery.model_validate(dict(row))

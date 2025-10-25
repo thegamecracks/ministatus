@@ -106,3 +106,11 @@ def format_enabled_at(enabled_at: datetime.datetime | None) -> str:
     date = discord.utils.format_dt(enabled_at, "F")
     rel = discord.utils.format_dt(enabled_at, "R")
     return f"**Enabled on:** {date} ({rel})"
+
+
+def format_failed_at(failed_at: datetime.datetime | None) -> str:
+    if failed_at is None:
+        return ""
+    date = discord.utils.format_dt(failed_at, "F")
+    rel = discord.utils.format_dt(failed_at, "R")
+    return f"**Failed since:** {date} ({rel})"

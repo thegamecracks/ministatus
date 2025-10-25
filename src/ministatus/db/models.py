@@ -84,6 +84,7 @@ class Status(BaseModel):
     address: str | None = Field(default=None)
     thumbnail: bytes | None = Field(default=None)
     enabled_at: datetime.datetime | None = Field(default=None)
+    failed_at: datetime.datetime | None = Field(default=None)
 
     alerts: list[StatusAlert] = Field(default_factory=list)
     displays: list[StatusDisplay] = Field(default_factory=list)
@@ -95,6 +96,7 @@ class StatusAlert(BaseModel):
     status_id: int
     channel_id: Snowflake
     enabled_at: datetime.datetime | None = Field(default=None)
+    failed_at: datetime.datetime | None = Field(default=None)
     send_audit: bool = Field(default=False)
     send_downtime: bool = Field(default=False)
 
@@ -104,6 +106,7 @@ class StatusDisplay(BaseModel):
     status_id: int
 
     enabled_at: datetime.datetime | None = Field(default=None)
+    failed_at: datetime.datetime | None = Field(default=None)
     accent_colour: Color = 0xFFFFFF
     graph_colour: Color = 0xFFFFFF
 
@@ -135,8 +138,8 @@ class StatusQuery(BaseModel):
     priority: int = Field(ge=0)
 
     enabled_at: datetime.datetime | None = Field(default=None)
-    extra: str = ""
     failed_at: datetime.datetime | None = Field(default=None)
+    extra: str = ""
 
 
 class StatusQueryType(StrEnum):

@@ -10,7 +10,7 @@ from discord.ui import Button, Select
 from ministatus.bot.views import Modal
 from ministatus.db import Status, connect, connect_client
 
-from .book import Book, Page, RenderArgs, format_enabled_at
+from .book import Book, Page, RenderArgs, format_enabled_at, format_failed_at
 from .alert import StatusModifyAlertRow
 from .display import StatusModifyDisplayRow
 from .query import StatusModifyQueryRow
@@ -136,11 +136,13 @@ class StatusModify(Page):
         self.add_item(discord.ui.TextDisplay(f"## {status.label}"))
         self.add_item(discord.ui.Separator())
 
-        summary = discord.ui.TextDisplay(
-            f"{format_enabled_at(status.enabled_at)}\n"
-            f"**Server name:** {status.title}\n"
-            f"**Address:** {status.address}\n"
-        )
+        content = [
+            format_enabled_at(status.enabled_at),
+            f"**Server name:** {status.title}",
+            f"**Address:** {status.address}",
+            format_failed_at(status.failed_at),
+        ]
+        summary = discord.ui.TextDisplay("\n".join(content))
 
         if status.thumbnail is not None:
             rendered.files.append(discord.File(status.thumbnail, "thumbnail.png"))
