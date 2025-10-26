@@ -33,6 +33,12 @@ class Record(Protocol):
 
 class Connection(Protocol):
     async def execute(self, query: str, /, *args: object) -> Any: ...
+    async def executemany(
+        self,
+        query: str,
+        args: Iterable[Iterable[object]],
+        /,
+    ) -> Any: ...
     async def executescript(self, query: str, /) -> Any: ...
     async def fetch(self, query: str, /, *args: object) -> Sequence[Record]: ...
     async def fetchrow(self, query: str, /, *args: object) -> Record | None: ...
@@ -47,6 +53,16 @@ class SQLiteConnection(Connection):
     async def execute(self, query: str, /, *args: object) -> None:
         # log.debug("SQL execute: %s", query)
         async with self.conn.execute(query, args):
+            return
+
+    async def executemany(
+        self,
+        query: str,
+        args: Iterable[Iterable[object]],
+        /,
+    ) -> None:
+        # log.debug("SQL executemany: %s", query)
+        async with self.conn.executemany(query, args):
             return
 
     async def executescript(self, query: str) -> None:

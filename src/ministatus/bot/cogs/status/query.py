@@ -287,13 +287,11 @@ async def record_info(status: Status, info: Info) -> None:
             info.max_players,
         )
 
-        for player in info.players:
-            await conn.execute(
-                "INSERT INTO status_history_player (status_history_id, name) "
-                "VALUES ($1, $2)",
-                status_history_id,
-                player.name,
-            )
+        await conn.executemany(
+            "INSERT INTO status_history_player (status_history_id, name) "
+            "VALUES ($1, $2)",
+            ((status_history_id, player.name) for player in info.players),
+        )
 
 
 async def prune_history(status: Status) -> None:
