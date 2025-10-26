@@ -266,14 +266,15 @@ class StatusDisplayView(LayoutView):
 
     async def update(self) -> None:
         async with connect_discord_database_client(self.bot) as ddc:
-            message = await ddc.get_message(message_id=self.message_id)
-
-            if message is None:
-                reason = f"Cannot retrieve message {self.message_id}"
-                return await disable_display(self.message_id, reason)
-
             display = await ddc.client.get_status_display(message_id=self.message_id)
-            assert display is not None
+            if display is None:
+                return log.warning(
+                    "Ignoring update for status display #%d which does not exist",
+                    self.message_id,
+                )
+
+            message = await ddc.get_message(message_id=self.message_id)
+            assert message is not None
 
             status = await ddc.client.get_status(status_id=display.status_id)
             assert status is not None
@@ -406,13 +407,3 @@ async def update_display(bot: Bot, *, message_id: int) -> None:
     view = StatusDisplayView(bot, message_id)
     await view.update()
     display_cache[message_id] = view
-
-
-async def disable_display(message_id: int, reason: str) -> None:
-    # TODO: store display failure reason in database
-    log.warning("Status display #%d is invalid: %s", message_id, reason)
-    async with connect() as conn:
-        await conn.execute(
-            "UPDATE status_display SET enabled_at = NULL WHERE message_id = $1",
-            message_id,
-        )

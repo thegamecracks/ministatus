@@ -26,6 +26,7 @@ from ministatus.db import (
     connect_client,
 )
 
+from .alert import disable_display, disable_query
 from .views import update_display
 
 if TYPE_CHECKING:
@@ -80,7 +81,7 @@ async def query_status(bot: Bot, status: Status) -> None:
         return
 
     for query in status.queries:
-        info = await maybe_query(query)
+        info = await maybe_query(bot, query)
         if info is not None:
             await record_info(status, info)
             break
@@ -91,7 +92,7 @@ async def query_status(bot: Bot, status: Status) -> None:
         await maybe_update_display(bot, display)
 
 
-async def maybe_query(query: StatusQuery) -> Info | None:
+async def maybe_query(bot: Bot, query: StatusQuery) -> Info | None:
     try:
         info = await send_query(query)
     except FailedQueryError as e:
@@ -100,10 +101,10 @@ async def maybe_query(query: StatusQuery) -> Info | None:
         if not expired:
             return
         reason = "Offline for extended period of time"
-        return await disable_query(query, reason)
+        return await disable_query(bot, query, reason)
     except InvalidQueryError as e:
         await set_query_failed(query)
-        return await disable_query(query, str(e))
+        return await disable_query(bot, query, str(e))
     else:
         await set_query_success(query)
         return info
@@ -239,18 +240,6 @@ async def set_query_success(query: StatusQuery) -> None:
         )
 
 
-async def disable_query(query: StatusQuery, reason: str) -> None:
-    # TODO: store query failure reason in database
-    log.warning("Query #%d is invalid: %s", query.status_query_id, reason)
-    async with connect() as conn:
-        await conn.execute(
-            "UPDATE status_query SET enabled_at = NULL, failed_at = $1 "
-            "WHERE status_query_id = $2",
-            utcnow(),
-            query.status_query_id,
-        )
-
-
 async def record_offline(status: Status) -> None:
     log.debug("Recording status #%d as offline", status.status_id)
     await prune_history(status)
@@ -310,7 +299,7 @@ async def maybe_update_display(bot: Bot, display: StatusDisplay) -> None:
     except (discord.Forbidden, discord.NotFound) as e:
         await set_display_failed(display)
         reason = str(e)
-        await disable_display(display, reason)
+        await disable_display(bot, display, reason)
     except Exception:
         await set_display_failed(display)
         raise
@@ -334,17 +323,6 @@ async def set_display_success(display: StatusDisplay) -> None:
     async with connect() as conn:
         await conn.execute(
             "UPDATE status_display SET failed_at = NULL WHERE message_id = $1",
-            display.message_id,
-        )
-
-
-async def disable_display(display: StatusDisplay, reason: str) -> None:
-    # TODO: store display failure reason in database
-    log.warning("Display #%d is invalid: %s", display.message_id, reason)
-    async with connect() as conn:
-        await conn.execute(
-            "UPDATE status_display SET enabled_at = NULL WHERE message_id = $2",
-            utcnow(),
             display.message_id,
         )
 

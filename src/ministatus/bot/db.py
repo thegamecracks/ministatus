@@ -1,9 +1,16 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
-from typing import TYPE_CHECKING, AsyncIterator, Protocol, runtime_checkable
+from typing import (
+    TYPE_CHECKING,
+    AsyncIterator,
+    Literal,
+    Protocol,
+    cast,
+    runtime_checkable,
+)
 
-from ministatus.db import DatabaseClient, connect_client
+from ministatus.db import DatabaseClient, StatusAlert, connect_client
 
 if TYPE_CHECKING:
     import discord
@@ -94,6 +101,42 @@ class DiscordDatabaseClient:
             return channel.get_partial_message(message_id)  # type: ignore
         except AttributeError:
             return
+
+    async def get_bulk_status_alert_channels(
+        self,
+        status_id: int,
+        *,
+        type: Literal["audit", "downtime"] | None = None,
+    ) -> list[tuple[StatusAlert, discord.abc.MessageableChannel]]:
+        alerts = await self.client.get_bulk_status_alerts(status_id)
+        alerts = alerts[status_id]
+        alerts = [  # FIXME: should filter this in SQL
+            a
+            for a in alerts
+            if type is None
+            or type == "audit"
+            and a.send_audit
+            or type == "downtime"
+            and a.send_downtime
+        ]
+
+        alert_ids = [a.channel_id for a in alerts]
+        aid = ", ".join("?" * len(alert_ids))
+        channels = await self.client.conn.fetch(
+            f"SELECT channel_id, guild_id FROM discord_channel "
+            f"WHERE channel_id IN ({aid})",
+            *alert_ids,
+        )
+        channels = {
+            c["channel_id"]: self._resolve_channel(
+                channel_id=c["channel_id"],
+                guild_id=c["guild_id"],
+            )
+            for c in channels
+        }
+        channels = cast("dict[int, discord.abc.MessageableChannel]", channels)
+
+        return [(alert, channels[alert.channel_id]) for alert in alerts]
 
     def _resolve_channel(self, *, channel_id: int, guild_id: int | None):
         guild = self.bot.get_guild(guild_id) if guild_id is not None else None
