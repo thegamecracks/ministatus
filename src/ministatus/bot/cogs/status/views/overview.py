@@ -113,7 +113,7 @@ class CreateStatusModal(Modal, title="Create Status"):
             status_id=0,
             guild_id=interaction.guild.id,
             label=label,
-            # enabled_at=interaction.created_at,  # Require user to toggle on
+            enabled_at=interaction.created_at,
         )
 
         async with connect_client() as client:
