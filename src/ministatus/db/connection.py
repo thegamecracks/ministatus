@@ -82,7 +82,7 @@ class SQLiteConnection(Connection):
 
     async def fetchval(self, query: str, /, *args: object) -> Any:
         # log.debug("SQL fetchval: %s", query)
-        row = await self.fetchrow(query, *args)
+        row = await self.conn.fetchone(query, args)
         if row is not None:
             return row[0]
 
