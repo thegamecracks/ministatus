@@ -129,8 +129,6 @@ $ ministatus config token
 xyz
 ```
 
-TODO: create server status
-
 ## License
 
 This project is written under the [MIT License].
