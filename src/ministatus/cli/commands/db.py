@@ -197,6 +197,10 @@ def dump(
         return any(name.startswith(p) or f"ON {p}" in obj for p in patterns)
 
     with connect_sync(transaction=False) as conn:
+        if schema:
+            version = conn.execute("PRAGMA user_version").fetchone()[0]
+            click.echo(f"PRAGMA user_version = {version};", file=dest)
+
         for obj in conn.iterdump():
             if is_obj_included(obj):
                 click.echo(obj, file=dest)
