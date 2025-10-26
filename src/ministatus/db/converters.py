@@ -41,9 +41,7 @@ def convert_datetime(val: bytes) -> datetime.datetime:
 def convert_timestamp(val: bytes) -> datetime.datetime:
     """Convert Unix epoch timestamp to datetime.datetime object."""
     dt = datetime.datetime.fromtimestamp(int(val))
-    if dt.tzinfo:
-        return dt.astimezone(datetime.timezone.utc)
-    return dt.replace(tzinfo=datetime.timezone.utc)
+    return dt.astimezone(datetime.timezone.utc)
 
 
 sqlite3.register_converter("date", convert_date)
