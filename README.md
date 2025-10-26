@@ -75,7 +75,7 @@ Enable database encryption (see notes below):
 $ export MIST_PASSWORD=abc123
 $ ministatus db encrypt
 Successfully encrypted!
-# Alteneratively use -p/--pasword:
+# Alteneratively use -p/--password:
 $ ministatus -p abc123 db encrypt
 Database is already encrypted 😴
 # Or type the password interactively:
