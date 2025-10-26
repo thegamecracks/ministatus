@@ -4,8 +4,9 @@ import asyncio
 import datetime
 import logging
 import math
+import textwrap
 import time
-from typing import TYPE_CHECKING, Any, Callable, Self, cast
+from typing import TYPE_CHECKING, Any, Callable, Iterable, Iterator, Self, cast
 
 import discord
 from discord import Interaction, SelectOption
@@ -19,6 +20,7 @@ from ministatus.db import (
     Status,
     StatusDisplay,
     StatusHistory,
+    StatusHistoryPlayer,
     connect,
     fetch_status_by_id,
     fetch_status_display_by_id,
@@ -335,12 +337,8 @@ class StatusDisplayView(LayoutView):
         self.container.add_item(discord.ui.TextDisplay("\n".join(content)))
         self.container.add_item(discord.ui.Separator())
 
-        if players:
-            content = []
-            for chunk in discord.utils.as_chunks(players, 5):
-                content.append(", ".join([p.name for p in chunk]))
-            self.container.add_item(discord.ui.TextDisplay("\n".join(content)))
-            self.container.add_item(discord.ui.Separator())
+        for item in self._render_players(players):
+            self.container.add_item(item)
 
         self.container.add_item(
             discord.ui.MediaGallery(
@@ -354,6 +352,21 @@ class StatusDisplayView(LayoutView):
         rendered.files.extend(files)
 
         return rendered
+
+    def _render_players(
+        self,
+        players: Iterable[StatusHistoryPlayer],
+    ) -> Iterator[discord.ui.Item]:
+        if not players:
+            return
+
+        lines = textwrap.wrap(", ".join([p.name for p in players]), 72)
+        for chunk in discord.utils.as_chunks(lines, 3):
+            content = "\n".join(chunk).removesuffix(",")
+            content = discord.utils.escape_markdown(content, ignore_links=False)
+            yield discord.ui.TextDisplay(content)
+
+        yield discord.ui.Separator()
 
     async def _maybe_refresh_attachments(
         self,
