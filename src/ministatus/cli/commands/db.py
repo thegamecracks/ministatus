@@ -1,3 +1,4 @@
+import re
 import sqlite3
 import sys
 from contextlib import closing
@@ -40,6 +41,9 @@ SUCCESSFUL_ENCRYPTION = click.style(
 WRONG_PASSWORD = click.style(
     "Database could not be decrypted. Wrong password?",
     fg="red",
+)
+IDENTIFIER_PATTERN = (
+    r'^CREATE(?:\s+[A-Z]+)+\s+("[^"]+?"|\S+)|^INSERT INTO ("[^"]+?"|\S+)'
 )
 
 
@@ -139,13 +143,63 @@ def decrypt(password: Secret[str] | None) -> None:
 
 
 @db.command()
+@click.option("--inserts/--no-inserts", default=True, help="Output insert statements")
+@click.option("--schema/--no-schema", default=True, help="Output database schema")
+@click.option(
+    "-i",
+    "--include",
+    help="Include only objects with the given prefix",
+    multiple=True,
+)
+@click.option(
+    "-e",
+    "--exclude",
+    help="Exclude objects with the given prefix",
+    multiple=True,
+)
 @click.argument("dest", default="-", type=click.File("w", "utf-8"))
 @mark_db()
-def dump(dest: IO[str]) -> None:
+def dump(
+    inserts: bool,
+    schema: bool,
+    include: tuple[str, ...],
+    exclude: tuple[str, ...],
+    dest: IO[str],
+) -> None:
     """Print an SQL source dump of the database."""
+
+    def is_obj_included(obj: str) -> bool:
+        # Try to find the identifier name used in the object.
+        # This isn't perfect, but should be good enough for our schema.
+        m = re.match(IDENTIFIER_PATTERN, obj)
+        if m is None:
+            return True  # Probably a statement like BEGIN TRANSACTION
+
+        if not inserts and m[0].startswith("INSERT"):
+            return False
+
+        if not schema and m[0].startswith("CREATE"):
+            return False
+
+        name = m[2] or m[1]
+        name = name.strip('"')
+
+        if include and not any_pattern_matches(obj, name, include):
+            return False
+
+        if exclude and any_pattern_matches(obj, name, exclude):
+            return False
+
+        return True
+
+    def any_pattern_matches(obj: str, name: str, patterns: tuple[str, ...]) -> bool:
+        # Try to match the name directly, or an index/trigger referencing the name
+        return any(name.startswith(p) or f"ON {p}" in obj for p in patterns)
+
     with connect_sync(transaction=False) as conn:
-        for line in conn.iterdump():
-            click.echo(line, file=dest)
+        for obj in conn.iterdump():
+            if is_obj_included(obj):
+                click.echo(obj, file=dest)
 
 
 @db.command()
