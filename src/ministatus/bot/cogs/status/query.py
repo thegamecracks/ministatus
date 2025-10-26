@@ -34,7 +34,7 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 DNS_TIMEOUT = 3
-HISTORY_EXPIRES_AFTER = datetime.timedelta(days=1)
+HISTORY_EXPIRES_AFTER = datetime.timedelta(days=1)  # TODO: customize history window
 QUERY_DEAD_AFTER = datetime.timedelta(days=7)
 QUERY_TIMEOUT = 3
 

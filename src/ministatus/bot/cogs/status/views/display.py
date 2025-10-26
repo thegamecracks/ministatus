@@ -15,7 +15,7 @@ from discord.ui import Button, Select
 from ministatus.bot.cogs.status.graph import create_player_count_graph
 from ministatus.bot.cogs.status.permissions import check_channel_permissions
 from ministatus.bot.db import connect_discord_database_client
-from ministatus.bot.dt import utcnow
+from ministatus.bot.dt import past, utcnow
 from ministatus.bot.views import LayoutView, Modal
 from ministatus.db import (
     Status,
@@ -284,6 +284,7 @@ class StatusDisplayView(LayoutView):
 
             history = await fetch_status_history(
                 ddc.client.conn,
+                after=past(days=1),  # TODO: customize history window
                 status_ids=[status.status_id],
             )
             history = history.get(status.status_id, [])

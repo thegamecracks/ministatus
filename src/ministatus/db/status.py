@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import collections
+import datetime
 import textwrap
 from typing import TYPE_CHECKING, Collection
 
@@ -281,6 +282,7 @@ async def fetch_status_display_by_id(
 async def fetch_status_history(
     conn: SQLiteConnection,
     *,
+    after: datetime.datetime,
     status_ids: Collection[int],
 ) -> dict[int, list[StatusHistory]]:
     if not status_ids:
@@ -289,8 +291,9 @@ async def fetch_status_history(
     sid = ", ".join("?" * len(status_ids))
     history_rows = await conn.fetch(
         f"SELECT * FROM status_history WHERE status_id IN ({sid}) "
-        f"ORDER BY status_id, created_at",
+        f"AND created_at >= ? ORDER BY status_id, created_at",
         *status_ids,
+        after,
     )
 
     history_ids = {row["status_history_id"] for row in history_rows}
