@@ -147,14 +147,6 @@ class StatusQueryPage(Page):
             format_failed_at(query.failed_at),
         ]
 
-        if query.failed_at is not None:
-            dt = discord.utils.format_dt(query.failed_at, "F")
-            rel = discord.utils.format_dt(query.failed_at, "R")
-            if query.enabled_at:
-                lines.append(f"**Failing since:** {dt} ({rel})")
-            else:
-                lines.append(f"**Failed since:** {dt} ({rel})")
-
         self.add_item(discord.ui.TextDisplay("\n".join(lines)))
         self.add_item(await _StatusQueryRow(self).render())
 
