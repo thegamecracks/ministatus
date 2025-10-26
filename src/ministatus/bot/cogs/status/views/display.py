@@ -15,6 +15,7 @@ from discord.ui import Button, Select
 from ministatus.bot.cogs.status.graph import create_player_count_graph
 from ministatus.bot.cogs.status.permissions import check_channel_permissions
 from ministatus.bot.db import connect_discord_database_client
+from ministatus.bot.dt import utcnow
 from ministatus.bot.views import LayoutView, Modal
 from ministatus.db import (
     Status,
@@ -196,7 +197,7 @@ class _StatusDisplayRow(discord.ui.ActionRow):
 
     @discord.ui.button(label="Enable", style=discord.ButtonStyle.primary, emoji="🟢")
     async def enable(self, interaction: Interaction, button: Button) -> None:
-        enabled_at = datetime.datetime.now(datetime.timezone.utc)
+        enabled_at = utcnow()
         await self._set_enabled_at(enabled_at)
         self.page.display.enabled_at = enabled_at
         await self.page.book.edit(interaction)
@@ -317,7 +318,7 @@ class StatusDisplayView(LayoutView):
 
         latest = history[-1] if history else None
         online = get_online_message(latest)
-        now = datetime.datetime.now(datetime.timezone.utc)
+        now = utcnow()
         last_updated = discord.utils.format_dt(now, "R")
         players = (
             sorted(latest.players, key=lambda p: p.name.lower())

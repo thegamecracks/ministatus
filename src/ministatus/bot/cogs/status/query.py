@@ -16,6 +16,7 @@ from dns.rdtypes.IN.AAAA import AAAA as AAAARecord
 from dns.rdtypes.IN.SRV import SRV as SRVRecord
 from dns.resolver import Answer, Cache, NoAnswer, NoNameservers, NXDOMAIN, YXDOMAIN
 
+from ministatus.bot.dt import past, utcnow
 from ministatus.db import (
     Status,
     StatusDisplay,
@@ -219,7 +220,7 @@ async def _resolve(qname: str, rdtype: RdataType) -> Answer | None:
 
 async def set_query_failed(query: StatusQuery) -> bool:
     # TODO: send alerts
-    now = datetime.datetime.now(datetime.timezone.utc)
+    now = utcnow()
     async with connect() as conn:
         failed_at = await conn.fetchval(
             "UPDATE status_query SET failed_at = COALESCE(failed_at, $1) "
@@ -246,7 +247,7 @@ async def disable_query(query: StatusQuery, reason: str) -> None:
         await conn.execute(
             "UPDATE status_query SET enabled_at = NULL, failed_at = $1 "
             "WHERE status_query_id = $2",
-            datetime.datetime.now(datetime.timezone.utc),
+            utcnow(),
             query.status_query_id,
         )
 
@@ -258,7 +259,7 @@ async def record_offline(status: Status) -> None:
         await conn.execute(
             "INSERT INTO status_history (created_at, status_id, online) "
             "VALUES ($1, $2, $3) RETURNING status_history_id",
-            datetime.datetime.now(datetime.timezone.utc),
+            utcnow(),
             status.status_id,
             False,
         )
@@ -281,7 +282,7 @@ async def record_info(status: Status, info: Info) -> None:
         status_history_id = await conn.fetchval(
             "INSERT INTO status_history (created_at, status_id, online, max_players) "
             "VALUES ($1, $2, $3, $4) RETURNING status_history_id",
-            datetime.datetime.now(datetime.timezone.utc),
+            utcnow(),
             status.status_id,
             True,
             info.max_players,
@@ -302,7 +303,7 @@ async def prune_history(status: Status) -> None:
         await conn.execute(
             "DELETE FROM status_history WHERE status_id = $1 AND created_at < $2",
             status.status_id,
-            datetime.datetime.now(datetime.timezone.utc) - HISTORY_EXPIRES_AFTER,
+            past(HISTORY_EXPIRES_AFTER),
         )
 
 
@@ -322,7 +323,7 @@ async def maybe_update_display(bot: Bot, display: StatusDisplay) -> None:
 
 async def set_display_failed(display: StatusDisplay) -> None:
     # TODO: send alerts
-    now = datetime.datetime.now(datetime.timezone.utc)
+    now = utcnow()
     async with connect() as conn:
         await conn.execute(
             "UPDATE status_display SET failed_at = COALESCE(failed_at, $1) "
@@ -346,7 +347,7 @@ async def disable_display(display: StatusDisplay, reason: str) -> None:
     async with connect() as conn:
         await conn.execute(
             "UPDATE status_display SET enabled_at = NULL WHERE message_id = $2",
-            datetime.datetime.now(datetime.timezone.utc),
+            utcnow(),
             display.message_id,
         )
 

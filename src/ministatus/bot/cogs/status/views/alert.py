@@ -9,6 +9,7 @@ from discord.ui import Button, Select
 
 from ministatus.bot.cogs.status.permissions import check_channel_permissions
 from ministatus.bot.db import connect_discord_database_client
+from ministatus.bot.dt import utcnow
 from ministatus.bot.views import Modal
 from ministatus.db import Status, StatusAlert, connect
 
@@ -188,7 +189,7 @@ class _StatusAlertRow(discord.ui.ActionRow):
 
     @discord.ui.button(label="Enable", style=discord.ButtonStyle.primary, emoji="🟢")
     async def enable(self, interaction: Interaction, button: Button) -> None:
-        enabled_at = datetime.datetime.now(datetime.timezone.utc)
+        enabled_at = utcnow()
         await self._set_enabled_at(enabled_at)
         self.page.alert.enabled_at = enabled_at
         await self.page.book.edit(interaction)

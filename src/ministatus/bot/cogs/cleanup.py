@@ -5,6 +5,7 @@ import discord
 from discord.ext import commands, tasks
 
 from ministatus.bot.bot import Bot
+from ministatus.bot.dt import utcnow
 from ministatus.db import connect
 
 log = logging.getLogger(__name__)
@@ -68,7 +69,7 @@ class Cleanup(commands.Cog):
 
     @tasks.loop(time=datetime.time(0, 0, tzinfo=datetime.timezone.utc))
     async def cleanup_loop(self) -> None:
-        now = datetime.datetime.now(datetime.timezone.utc)
+        now = utcnow()
         if now.weekday() != 6:
             return
 
