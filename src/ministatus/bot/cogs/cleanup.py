@@ -27,14 +27,33 @@ class Cleanup(commands.Cog):
     async def remove_guild_channel(self, channel: discord.abc.GuildChannel) -> None:
         async with connect() as conn:
             await conn.execute(
-                "DELETE FROM discord_channel WHERE channel_id = $1", channel.id
+                "DELETE FROM discord_channel WHERE channel_id = $1",
+                channel.id,
             )
 
     @commands.Cog.listener("on_raw_thread_delete")
     async def remove_thread(self, payload: discord.RawThreadDeleteEvent) -> None:
         async with connect() as conn:
             await conn.execute(
-                "DELETE FROM discord_channel WHERE channel_id = $1", payload.thread_id
+                "DELETE FROM discord_channel WHERE channel_id = $1",
+                payload.thread_id,
+            )
+
+    @commands.Cog.listener("on_raw_message_delete")
+    async def remove_message(self, payload: discord.RawMessageDeleteEvent):
+        async with connect() as conn:
+            await conn.execute(
+                "DELETE FROM discord_message WHERE message_id = $1",
+                payload.message_id,
+            )
+
+    @commands.Cog.listener("on_raw_bulk_message_delete")
+    async def bulk_remove_messages(self, payload: discord.RawBulkMessageDeleteEvent):
+        mid = ", ".join("?" * len(payload.message_ids))
+        async with connect() as conn:
+            await conn.execute(
+                f"DELETE FROM message WHERE id IN ({mid})",
+                *payload.message_ids,
             )
 
     # NOTE: members intent required
