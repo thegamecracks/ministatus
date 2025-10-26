@@ -44,7 +44,7 @@ class Bot(commands.Bot):
         await self._maybe_load_jishaku()
 
         invite_link = self.get_standard_invite()
-        log.info("Invite link:\n%s", invite_link)
+        log.info("Invite link:\n    %s", invite_link)
 
     async def _maybe_load_jishaku(self) -> None:
         try:
