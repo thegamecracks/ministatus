@@ -56,8 +56,8 @@ Commands:
   appdirs  Show directories and important files used by this application.
   config   Get or set a configuration setting.
   db       Manage the application database.
+  invite   Print the bot's invite link.
   start    Start the Discord bot in the current process.
-  status   Manage server statuses.
 ```
 
 View where files are saved:
