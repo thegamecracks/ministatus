@@ -77,6 +77,9 @@ class Cleanup(commands.Cog):
     async def cleanup_guilds(self) -> None:
         # NOTE: this is incompatible with sharding
         guild_ids = {guild.id for guild in self.bot.guilds}
+        if not guild_ids:
+            return  # cache might be empty, don't do antyhing
+
         async with connect() as conn:
             rows = await conn.fetch("SELECT guild_id FROM discord_guild")
             rows = {row[0] for row in rows}
