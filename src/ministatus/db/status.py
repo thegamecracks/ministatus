@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import collections
 import datetime
-import textwrap
 from typing import TYPE_CHECKING, Collection
 
 from ministatus.db.models import (
@@ -16,34 +15,6 @@ from ministatus.db.models import (
 
 if TYPE_CHECKING:
     from ministatus.db.connection import SQLiteConnection
-
-
-GET_STATUS_ALERTS = textwrap.dedent(
-    """
-    SELECT * FROM status_alert
-    WHERE status_id IN ({sid})
-    AND {enabled}
-    AND channel_id IN (
-        SELECT channel_id FROM discord_channel
-        WHERE guild_id IN ({gid})
-    )
-    """
-).strip()
-
-GET_STATUS_DISPLAYS = textwrap.dedent(
-    """
-    SELECT * FROM status_display
-    WHERE status_id IN ({sid})
-    AND {enabled}
-    AND message_id IN (
-        SELECT message_id FROM discord_message
-        WHERE channel_id IN (
-            SELECT channel_id FROM discord_channel
-            WHERE guild_id IN ({gid})
-        )
-    )
-    """
-).strip()
 
 
 async def fetch_statuses(
@@ -71,7 +42,6 @@ async def fetch_statuses(
             conn,
             enabled=enabled or None,  # don't pass enabled=False down
             status_ids=status_ids,
-            guild_ids=guild_ids,
         )
         if with_relationships
         else {}
@@ -81,7 +51,6 @@ async def fetch_statuses(
             conn,
             enabled=enabled or None,
             status_ids=status_ids,
-            guild_ids=guild_ids,
         )
         if with_relationships
         else {}
@@ -135,19 +104,14 @@ async def fetch_status_alerts(
     *,
     enabled: bool | None = None,
     status_ids: Collection[int],
-    guild_ids: Collection[int],
 ) -> dict[int, list[StatusAlert]]:
     assert len(status_ids) > 0
-    assert len(guild_ids) > 0
 
+    enabled_expr = get_enabled_condition(enabled)
+    sid = ", ".join("?" * len(status_ids))
     alerts = await conn.fetch(
-        GET_STATUS_ALERTS.format(
-            enabled=get_enabled_condition(enabled),
-            sid=", ".join("?" * len(status_ids)),
-            gid=", ".join("?" * len(guild_ids)),
-        ),
+        f"SELECT * FROM status_alert WHERE status_id IN ({sid}) AND {enabled_expr}",
         *status_ids,
-        *guild_ids,
     )
 
     status_alerts = collections.defaultdict(list)
@@ -171,19 +135,14 @@ async def fetch_status_displays(
     *,
     enabled: bool | None = None,
     status_ids: Collection[int],
-    guild_ids: Collection[int],
 ) -> dict[int, list[StatusDisplay]]:
     assert len(status_ids) > 0
-    assert len(guild_ids) > 0
 
+    enabled_expr = get_enabled_condition(enabled)
+    sid = ", ".join("?" * len(status_ids))
     displays = await conn.fetch(
-        GET_STATUS_DISPLAYS.format(
-            enabled=get_enabled_condition(enabled),
-            sid=", ".join("?" * len(status_ids)),
-            gid=", ".join("?" * len(guild_ids)),
-        ),
+        f"SELECT * FROM status_display WHERE status_id IN ({sid}) AND {enabled_expr}",
         *status_ids,
-        *guild_ids,
     )
 
     status_displays = collections.defaultdict(list)
