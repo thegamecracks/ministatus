@@ -69,7 +69,7 @@ class Cleanup(commands.Cog):
                 )
 
         if len(rows) > 0:
-            log.info("%d guilds cleaned up", rows)
+            log.info("%d guilds cleaned up", len(rows))
 
     # NOTE: Discord users are not removed by any event
     # NOTE: rows can still accumulate during bot downtime
