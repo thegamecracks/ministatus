@@ -106,9 +106,13 @@ class DiscordDatabaseClient:
         self,
         status_id: int,
         *,
-        type: Literal["audit", "downtime"] | None = None,
+        only_enabled: bool,
+        type: Literal["audit", "downtime"] | None,
     ) -> list[tuple[StatusAlert, discord.abc.MessageableChannel]]:
-        alerts = await self.client.get_bulk_status_alerts(status_id)
+        alerts = await self.client.get_bulk_status_alerts(
+            status_id,
+            only_enabled=only_enabled,
+        )
         alerts = alerts[status_id]
         alerts = [  # FIXME: should filter this in SQL
             a

@@ -65,6 +65,7 @@ async def send_alert_disabled_alert(
     async with connect_discord_database_client(bot) as ddc:
         alert_channels = await ddc.get_bulk_status_alert_channels(
             status_id,
+            only_enabled=True,
             type="audit",
         )
 
@@ -82,6 +83,7 @@ async def send_alert_disabled_display(
         message = await ddc.get_message(message_id=display.message_id)
         alert_channels = await ddc.get_bulk_status_alert_channels(
             status_id,
+            only_enabled=True,
             type="audit",
         )
 
@@ -99,6 +101,7 @@ async def send_alert_disabled_query(
     async with connect_discord_database_client(bot) as ddc:
         alert_channels = await ddc.get_bulk_status_alert_channels(
             status_id,
+            only_enabled=True,
             type="audit",
         )
 
