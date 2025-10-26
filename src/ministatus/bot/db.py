@@ -70,10 +70,32 @@ class DiscordDatabaseClient:
 
     async def get_channel(self, *, channel_id: int):
         channel = await self.client.get_discord_channel(channel_id=channel_id)
-        if channel is None:
+        if channel is not None:
+            return self._resolve_channel(
+                channel_id=channel.channel_id,
+                guild_id=channel.guild_id,
+            )
+
+    async def get_message(self, *, message_id: int) -> discord.PartialMessage | None:
+        row = await self.client.conn.fetchrow(
+            "SELECT m.message_id, m.channel_id, c.guild_id FROM discord_message m "
+            "JOIN discord_channel c USING (channel_id) "
+            "WHERE message_id = $1",
+            message_id,
+        )
+        if row is None:
             return
 
-        guild_id = channel.guild_id
+        message_id, channel_id, guild_id = row
+        channel = self._resolve_channel(channel_id=channel_id, guild_id=guild_id)
+
+        # NOTE: Not all channel types support get_partial_message()
+        try:
+            return channel.get_partial_message(message_id)  # type: ignore
+        except AttributeError:
+            return
+
+    def _resolve_channel(self, *, channel_id: int, guild_id: int | None):
         guild = self.bot.get_guild(guild_id) if guild_id is not None else None
         channel = (
             guild.get_channel_or_thread(channel_id)
@@ -85,21 +107,6 @@ class DiscordDatabaseClient:
             channel = self.bot.get_partial_messageable(channel_id, guild_id=guild_id)
 
         return channel
-
-    async def get_message(self, *, message_id: int) -> discord.PartialMessage | None:
-        message = await self.client.get_discord_message(message_id=message_id)
-        if message is None:
-            return
-
-        channel_id = message.channel_id
-        channel = await self.get_channel(channel_id=channel_id)
-        assert channel is not None
-
-        # NOTE: Not all channel types support get_partial_message()
-        try:
-            return channel.get_partial_message(message_id)  # type: ignore
-        except AttributeError:
-            return
 
 
 @runtime_checkable
