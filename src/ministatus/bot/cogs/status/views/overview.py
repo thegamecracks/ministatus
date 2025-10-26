@@ -7,6 +7,7 @@ import discord
 from discord import Interaction, SelectOption
 from discord.ui import Button, Select
 
+from ministatus.bot.db import connect_discord_database_client
 from ministatus.bot.dt import utcnow
 from ministatus.bot.views import Modal
 from ministatus.db import Status, connect, connect_client
@@ -193,18 +194,31 @@ class _StatusModifyRow(discord.ui.ActionRow):
 
     @discord.ui.button(label="Delete", style=discord.ButtonStyle.danger, emoji="🗑️")
     async def delete(self, interaction: Interaction, button: Button) -> None:
-        # TODO: delete status display messages too?
-        async with connect() as conn:
-            await conn.execute(
-                "DELETE FROM status WHERE status_id = $1",
-                self.page.status.status_id,
-            )
+        bot = cast("Bot", interaction.client)
+        status_id = self.page.status.status_id
+
+        async with connect_discord_database_client(bot) as ddc:
+            conn = ddc.client.conn
+            messages = [
+                row["message_id"]
+                for row in await conn.fetch(
+                    "SELECT message_id FROM status_display WHERE status_id = $1",
+                    status_id,
+                )
+            ]
+            # FIXME: lazy N+1 query
+            messages = [await ddc.get_message(message_id=m) for m in messages]
+            messages = [m for m in messages if m is not None]
+            await conn.execute("DELETE FROM status WHERE status_id = $1", status_id)
 
         # HACK: we can't easily propagate deletion up, so let's just terminate the view.
         assert self.view is not None
         await interaction.response.defer()
         await interaction.delete_original_response()
         self.view.stop()
+
+        for m in messages:
+            await m.delete(delay=0)
 
     async def _set_enabled_at(self, enabled_at: datetime.datetime | None) -> None:
         async with connect() as conn:
