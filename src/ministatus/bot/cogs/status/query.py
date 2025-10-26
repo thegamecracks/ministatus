@@ -52,6 +52,9 @@ async def run_query_jobs(bot: Bot) -> None:
             with_relationships=True,
         )
 
+    if not statuses:
+        return
+
     try:
         tasks = []
         async with asyncio.TaskGroup() as tg:
