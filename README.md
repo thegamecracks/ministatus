@@ -8,7 +8,7 @@
 
 A Discord bot for managing game server status embeds.
 
-![Terminal demonstration](https://github.com/user-attachments/assets/17f4ce1f-a40c-4244-9e80-132f2bc7cfdc)
+![Terminal demonstration](https://github.com/user-attachments/assets/2515d62c-0177-40ac-b5b8-5e9c0fbcf7bd)
 ![Command demonstration](https://github.com/user-attachments/assets/c382fc35-ab9e-4ae6-9874-6e52e3dd8c94)
 
 ## Setup
