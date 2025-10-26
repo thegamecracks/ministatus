@@ -8,7 +8,6 @@ from discord.ext import commands, tasks
 
 from ministatus.bot.bot import Bot
 from ministatus.bot.db import connect_discord_database_client
-from ministatus.db import fetch_statuses
 
 from .query import run_query_jobs
 from .views import StatusManageView, display_cache
@@ -49,9 +48,8 @@ class StatusCog(
         guild_id = interaction.guild.id
         async with connect_discord_database_client(self.bot) as ddc:
             await ddc.add_member(interaction.user)
-            statuses = await fetch_statuses(
-                ddc.client.conn,
-                guild_ids=[guild_id],
+            statuses = await ddc.client.get_bulk_statuses_by_guilds(
+                guild_id,
                 with_relationships=True,
             )
 

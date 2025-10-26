@@ -23,9 +23,6 @@ from ministatus.db import (
     StatusHistory,
     StatusHistoryPlayer,
     connect,
-    fetch_status_by_id,
-    fetch_status_display_by_id,
-    fetch_status_history,
 )
 
 from .book import Book, Page, RenderArgs, format_enabled_at, format_failed_at
@@ -275,17 +272,15 @@ class StatusDisplayView(LayoutView):
                 reason = f"Cannot retrieve message {self.message_id}"
                 return await disable_display(self.message_id, reason)
 
-            conn = ddc.client.conn
-            display = await fetch_status_display_by_id(conn, message_id=self.message_id)
+            display = await ddc.client.get_status_display(message_id=self.message_id)
             assert display is not None
 
-            status = await fetch_status_by_id(conn, status_id=display.status_id)
+            status = await ddc.client.get_status(status_id=display.status_id)
             assert status is not None
 
-            history = await fetch_status_history(
-                ddc.client.conn,
+            history = await ddc.client.get_bulk_status_history(
+                status.status_id,
                 after=past(days=1),  # TODO: customize history window
-                status_ids=[status.status_id],
             )
             history = history.get(status.status_id, [])
 

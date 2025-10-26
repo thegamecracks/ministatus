@@ -23,7 +23,7 @@ from ministatus.db import (
     StatusQuery,
     StatusQueryType,
     connect,
-    fetch_statuses,
+    connect_client,
 )
 
 from .views import update_display
@@ -45,10 +45,9 @@ _resolver.cache = Cache()
 async def run_query_jobs(bot: Bot) -> None:
     guild_ids = [guild.id for guild in bot.guilds]
 
-    async with connect() as conn:
-        statuses = await fetch_statuses(
-            conn,
-            guild_ids=guild_ids,
+    async with connect_client() as client:
+        statuses = await client.get_bulk_statuses_by_guilds(
+            *guild_ids,
             only_enabled=True,
             with_relationships=True,
         )

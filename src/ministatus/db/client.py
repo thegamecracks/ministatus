@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import collections
+import datetime
 from typing import Any
 
 from ministatus.db.connection import SQLiteConnection
@@ -12,6 +14,8 @@ from ministatus.db.models import (
     Status,
     StatusAlert,
     StatusDisplay,
+    StatusHistory,
+    StatusHistoryPlayer,
     StatusQuery,
 )
 from ministatus.db.secret import Secret
@@ -250,3 +254,268 @@ class DatabaseClient:
         )
         assert row is not None
         return StatusQuery.model_validate(dict(row))
+
+    async def get_status(self, *, status_id: int) -> Status | None:
+        row = await self.conn.fetchrow(
+            "SELECT * FROM status WHERE status_id = $1",
+            status_id,
+        )
+        if row is not None:
+            return Status(
+                status_id=row["status_id"],
+                guild_id=row["guild_id"],
+                label=row["label"],
+                title=row["title"],
+                address=row["address"],
+                thumbnail=row["thumbnail"],
+                enabled_at=row["enabled_at"],
+                failed_at=row["failed_at"],
+            )
+
+    async def get_status_display(self, *, message_id: int) -> StatusDisplay | None:
+        row = await self.conn.fetchrow(
+            "SELECT * FROM status_display WHERE message_id = $1",
+            message_id,
+        )
+        if row is not None:
+            return StatusDisplay(
+                message_id=row["message_id"],
+                status_id=row["status_id"],
+                enabled_at=row["enabled_at"],
+                failed_at=row["failed_at"],
+                accent_colour=row["accent_colour"],
+                graph_colour=row["graph_colour"],
+            )
+
+    # Composite status queries
+
+    async def get_bulk_statuses(
+        self,
+        *status_ids: int,
+        only_enabled: bool = False,
+        with_relationships: bool = False,
+    ) -> list[Status]:
+        if not status_ids:
+            return []
+
+        enabled_expr = self._get_only_enabled_condition(only_enabled)
+        sid = ", ".join("?" * len(status_ids))
+        statuses = await self.conn.fetch(
+            f"SELECT * FROM status WHERE {enabled_expr} AND guild_id IN ({sid})",
+            *status_ids,
+        )
+
+        if with_relationships:
+            status_alerts = await self.get_bulk_status_alerts(
+                *status_ids, only_enabled=only_enabled
+            )
+            status_displays = await self.get_bulk_status_displays(
+                *status_ids, only_enabled=only_enabled
+            )
+            status_queries = await self.get_bulk_status_queries(
+                *status_ids, only_enabled=only_enabled
+            )
+        else:
+            status_alerts = {}
+            status_displays = {}
+            status_queries = {}
+
+        status_objs = []
+        for row in statuses:
+            status_id = row["status_id"]
+            status = Status(
+                status_id=status_id,
+                guild_id=row["guild_id"],
+                label=row["label"],
+                title=row["title"],
+                address=row["address"],
+                thumbnail=row["thumbnail"],
+                enabled_at=row["enabled_at"],
+                failed_at=row["failed_at"],
+                alerts=status_alerts.get(status_id, []),
+                displays=status_displays.get(status_id, []),
+                queries=status_queries.get(status_id, []),
+            )
+            status_objs.append(status)
+
+        return status_objs
+
+    async def get_bulk_statuses_by_guilds(
+        self,
+        *guild_ids: int,
+        only_enabled: bool = False,
+        with_relationships: bool = False,
+    ) -> list[Status]:
+        if not guild_ids:
+            return []
+
+        enabled_expr = self._get_only_enabled_condition(only_enabled)
+        gid = ", ".join("?" * len(guild_ids))
+        rows = await self.conn.fetch(
+            f"SELECT DISTINCT status_id FROM status WHERE {enabled_expr} "
+            f"AND guild_id IN ({gid})",
+            *guild_ids,
+        )
+        status_ids = [row["status_id"] for row in rows]
+
+        return await self.get_bulk_statuses(
+            *status_ids,
+            only_enabled=only_enabled,
+            with_relationships=with_relationships,
+        )
+
+    @staticmethod
+    def _get_only_enabled_condition(only_enabled: bool) -> str:
+        return "enabled_at IS NOT NULL" if only_enabled else "true"
+
+    async def get_bulk_status_alerts(
+        self,
+        *status_ids: int,
+        only_enabled: bool = False,
+    ) -> dict[int, list[StatusAlert]]:
+        if not status_ids:
+            return {}
+
+        enabled_expr = self._get_only_enabled_condition(only_enabled)
+        sid = ", ".join("?" * len(status_ids))
+        alerts = await self.conn.fetch(
+            f"SELECT * FROM status_alert WHERE status_id IN ({sid}) AND {enabled_expr}",
+            *status_ids,
+        )
+
+        status_alerts = collections.defaultdict(list)
+        for row in alerts:
+            alert = StatusAlert(
+                status_alert_id=row["status_alert_id"],
+                status_id=row["status_id"],
+                channel_id=row["channel_id"],
+                enabled_at=row["enabled_at"],
+                failed_at=row["failed_at"],
+                send_audit=row["send_audit"],
+                send_downtime=row["send_downtime"],
+            )
+            status_alerts[row["status_id"]].append(alert)
+
+        return status_alerts
+
+    async def get_bulk_status_displays(
+        self,
+        *status_ids: int,
+        only_enabled: bool = False,
+    ) -> dict[int, list[StatusDisplay]]:
+        if not status_ids:
+            return {}
+
+        enabled_expr = self._get_only_enabled_condition(only_enabled)
+        sid = ", ".join("?" * len(status_ids))
+        displays = await self.conn.fetch(
+            f"SELECT * FROM status_display WHERE status_id IN ({sid}) AND {enabled_expr}",
+            *status_ids,
+        )
+
+        status_displays = collections.defaultdict(list)
+        for row in displays:
+            display = StatusDisplay(
+                message_id=row["message_id"],
+                status_id=row["status_id"],
+                enabled_at=row["enabled_at"],
+                failed_at=row["failed_at"],
+                accent_colour=row["accent_colour"],
+                graph_colour=row["graph_colour"],
+            )
+            status_displays[row["status_id"]].append(display)
+
+        return status_displays
+
+    async def get_bulk_status_queries(
+        self,
+        *status_ids: int,
+        only_enabled: bool = False,
+    ) -> dict[int, list[StatusQuery]]:
+        if not status_ids:
+            return {}
+
+        enabled_expr = self._get_only_enabled_condition(only_enabled)
+        sid = ", ".join("?" * len(status_ids))
+        queries = await self.conn.fetch(
+            f"SELECT * FROM status_query WHERE status_id IN ({sid}) "
+            f"AND {enabled_expr} ORDER BY priority",
+            *status_ids,
+        )
+
+        status_queries = collections.defaultdict(list)
+        for row in queries:
+            query = StatusQuery(
+                status_query_id=row["status_query_id"],
+                status_id=row["status_id"],
+                host=row["host"],
+                game_port=row["game_port"],
+                query_port=row["query_port"],
+                type=row["type"],
+                priority=row["priority"],
+                enabled_at=row["enabled_at"],
+                failed_at=row["failed_at"],
+                extra=row["extra"],
+            )
+            status_queries[row["status_id"]].append(query)
+
+        return status_queries
+
+    async def get_bulk_status_history(
+        self,
+        *status_ids: int,
+        after: datetime.datetime,
+    ) -> dict[int, list[StatusHistory]]:
+        if not status_ids:
+            return {}
+
+        sid = ", ".join("?" * len(status_ids))
+        history_rows = await self.conn.fetch(
+            f"SELECT * FROM status_history WHERE status_id IN ({sid}) "
+            f"AND created_at >= ? ORDER BY status_id, created_at",
+            *status_ids,
+            after,
+        )
+
+        history_ids = {row["status_history_id"] for row in history_rows}
+        history_players = await self.get_bulk_status_history_players(*history_ids)
+
+        history_models = collections.defaultdict(list)
+        for row in history_rows:
+            players = history_players[row["status_history_id"]]
+            model = StatusHistory(
+                status_history_id=row["status_history_id"],
+                created_at=row["created_at"],
+                status_id=row["status_id"],
+                online=row["online"],
+                max_players=row["max_players"],
+                players=players,
+            )
+            history_models[model.status_id].append(model)
+
+        return history_models
+
+    async def get_bulk_status_history_players(
+        self,
+        *history_ids: int,
+    ) -> dict[int, list[StatusHistoryPlayer]]:
+        if not history_ids:
+            return {}
+
+        hid = ", ".join("?" * len(history_ids))
+        players = await self.conn.fetch(
+            f"SELECT * FROM status_history_player WHERE status_history_id IN ({hid}) "
+            f"ORDER BY status_history_player_id",
+            *history_ids,
+        )
+
+        history_players = collections.defaultdict(list)
+        for p in players:
+            p = StatusHistoryPlayer(
+                status_history_player_id=p["status_history_player_id"],
+                status_history_id=p["status_history_id"],
+                name=p["name"],
+            )
+            history_players[p.status_history_id].append(p)
+
+        return history_players
