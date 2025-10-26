@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import collections
 import datetime
 from typing import Any
 
@@ -383,7 +382,7 @@ class DatabaseClient:
             *status_ids,
         )
 
-        status_alerts = collections.defaultdict(list)
+        status_alerts = {status_id: [] for status_id in status_ids}
         for row in alerts:
             alert = StatusAlert(
                 status_alert_id=row["status_alert_id"],
@@ -413,7 +412,7 @@ class DatabaseClient:
             *status_ids,
         )
 
-        status_displays = collections.defaultdict(list)
+        status_displays = {status_id: [] for status_id in status_ids}
         for row in displays:
             display = StatusDisplay(
                 message_id=row["message_id"],
@@ -443,7 +442,7 @@ class DatabaseClient:
             *status_ids,
         )
 
-        status_queries = collections.defaultdict(list)
+        status_queries = {status_id: [] for status_id in status_ids}
         for row in queries:
             query = StatusQuery(
                 status_query_id=row["status_query_id"],
@@ -480,7 +479,7 @@ class DatabaseClient:
         history_ids = {row["status_history_id"] for row in history_rows}
         history_players = await self.get_bulk_status_history_players(*history_ids)
 
-        history_models = collections.defaultdict(list)
+        history_models = {status_id: [] for status_id in status_ids}
         for row in history_rows:
             players = history_players[row["status_history_id"]]
             model = StatusHistory(
@@ -509,7 +508,7 @@ class DatabaseClient:
             *history_ids,
         )
 
-        history_players = collections.defaultdict(list)
+        history_players = {history_id: [] for history_id in history_ids}
         for p in players:
             p = StatusHistoryPlayer(
                 status_history_player_id=p["status_history_player_id"],
