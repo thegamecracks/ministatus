@@ -16,7 +16,7 @@ def adapt_datetime_iso(val: datetime.datetime) -> str:
 
 def adapt_datetime_epoch(val: datetime.datetime) -> int:
     """Adapt datetime.datetime to Unix timestamp."""
-    return int(val.timestamp())
+    return max(int(val.timestamp()), 0)
 
 
 # Can't set multiple adapters for one type, so just use timestamp for datetimes
@@ -40,7 +40,16 @@ def convert_datetime(val: bytes) -> datetime.datetime:
 
 def convert_timestamp(val: bytes) -> datetime.datetime:
     """Convert Unix epoch timestamp to datetime.datetime object."""
-    dt = datetime.datetime.fromtimestamp(int(val))
+    ts = int(val)
+    dt = datetime.datetime.fromtimestamp(ts)
+
+    if ts < 86400:
+        # The unix epoch probably got inserted into the database somehow...
+        # Calling .astimezone() on this can cause an OSError for systems
+        # with negative timezones, so we're just going to force the UTC
+        # timezone on it. This changes the actual time being represented!
+        return dt.replace(tzinfo=datetime.timezone.utc)
+
     return dt.astimezone(datetime.timezone.utc)
 
 
