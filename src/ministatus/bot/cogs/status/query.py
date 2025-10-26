@@ -48,8 +48,8 @@ async def run_query_jobs(bot: Bot) -> None:
     async with connect() as conn:
         statuses = await fetch_statuses(
             conn,
-            enabled=True,
             guild_ids=guild_ids,
+            only_enabled=True,
             with_relationships=True,
         )
 

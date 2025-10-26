@@ -21,13 +21,13 @@ async def fetch_statuses(
     conn: SQLiteConnection,
     *,
     guild_ids: Collection[int],
-    enabled: bool | None = None,
+    only_enabled: bool = False,
     with_relationships: bool = False,
 ) -> list[Status]:
     if not guild_ids:
         return []
 
-    enabled_expr = get_enabled_condition(enabled)
+    enabled_expr = _get_only_enabled_condition(only_enabled)
     gid = ", ".join("?" * len(guild_ids))
     statuses = await conn.fetch(
         f"SELECT * FROM status WHERE {enabled_expr} AND guild_id IN ({gid})",
@@ -40,8 +40,8 @@ async def fetch_statuses(
     status_alerts = (
         await fetch_status_alerts(
             conn,
-            enabled=enabled or None,  # don't pass enabled=False down
             status_ids=status_ids,
+            only_enabled=only_enabled,
         )
         if with_relationships
         else {}
@@ -49,8 +49,8 @@ async def fetch_statuses(
     status_displays = (
         await fetch_status_displays(
             conn,
-            enabled=enabled or None,
             status_ids=status_ids,
+            only_enabled=only_enabled,
         )
         if with_relationships
         else {}
@@ -58,8 +58,8 @@ async def fetch_statuses(
     status_queries = (
         await fetch_status_queries(
             conn,
-            enabled=enabled or None,
             status_ids=status_ids,
+            only_enabled=only_enabled,
         )
         if with_relationships
         else {}
@@ -90,24 +90,19 @@ async def fetch_statuses(
     return status_objs
 
 
-def get_enabled_condition(enabled: bool | None) -> str:
-    if enabled:
-        return "enabled_at IS NOT NULL"
-    elif enabled is not None:
-        return "enabled_at IS NULL"
-    else:
-        return "true"
+def _get_only_enabled_condition(only_enabled: bool) -> str:
+    return "enabled_at IS NOT NULL" if only_enabled else "true"
 
 
 async def fetch_status_alerts(
     conn: SQLiteConnection,
     *,
-    enabled: bool | None = None,
     status_ids: Collection[int],
+    only_enabled: bool = False,
 ) -> dict[int, list[StatusAlert]]:
     assert len(status_ids) > 0
 
-    enabled_expr = get_enabled_condition(enabled)
+    enabled_expr = _get_only_enabled_condition(only_enabled)
     sid = ", ".join("?" * len(status_ids))
     alerts = await conn.fetch(
         f"SELECT * FROM status_alert WHERE status_id IN ({sid}) AND {enabled_expr}",
@@ -133,12 +128,12 @@ async def fetch_status_alerts(
 async def fetch_status_displays(
     conn: SQLiteConnection,
     *,
-    enabled: bool | None = None,
     status_ids: Collection[int],
+    only_enabled: bool = False,
 ) -> dict[int, list[StatusDisplay]]:
     assert len(status_ids) > 0
 
-    enabled_expr = get_enabled_condition(enabled)
+    enabled_expr = _get_only_enabled_condition(only_enabled)
     sid = ", ".join("?" * len(status_ids))
     displays = await conn.fetch(
         f"SELECT * FROM status_display WHERE status_id IN ({sid}) AND {enabled_expr}",
@@ -163,12 +158,12 @@ async def fetch_status_displays(
 async def fetch_status_queries(
     conn: SQLiteConnection,
     *,
-    enabled: bool | None = None,
     status_ids: Collection[int],
+    only_enabled: bool = False,
 ) -> dict[int, list[StatusQuery]]:
     assert len(status_ids) > 0
 
-    enabled_expr = get_enabled_condition(enabled)
+    enabled_expr = _get_only_enabled_condition(only_enabled)
     sid = ", ".join("?" * len(status_ids))
     queries = await conn.fetch(
         f"SELECT * FROM status_query WHERE status_id IN ({sid}) "
