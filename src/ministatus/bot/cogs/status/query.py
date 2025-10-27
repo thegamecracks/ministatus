@@ -138,19 +138,19 @@ async def query_source(query: StatusQuery) -> Info:
 
     return Info(
         title=info.name,
-        address=(
-            # fmt: off
-            f"{query.host}:{query.game_port}"
-            if query.game_port
-            else f"{query.host}:{query.query_port}"
-            if query.query_port
-            else query.host
-            # fmt: on
-        ),
+        address=_format_address(query),
         thumbnail=None,
         max_players=info.max_players,
         players=[Player(name=p.name) for p in players],
     )
+
+
+def _format_address(query: StatusQuery) -> str:
+    if query.game_port:
+        f"{query.host}:{query.game_port}"
+    elif query.query_port:
+        f"{query.host}:{query.query_port}"
+    return query.host
 
 
 async def resolve_host(query: StatusQuery) -> tuple[str, int]:
