@@ -8,7 +8,7 @@ from ministatus.db import DatabaseClient, Secret, SQLiteConnection, connect
 
 
 @click.command()
-@click.option("--unset", is_flag=True)
+@click.option("--unset", is_flag=True, help="Remove the named setting.")
 @click.argument("name", default="")
 @click.argument("value", default=None)
 @click.pass_context
