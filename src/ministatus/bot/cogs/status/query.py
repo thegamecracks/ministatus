@@ -136,12 +136,15 @@ async def query_source(query: StatusQuery) -> Info:
     except TimeoutError as e:
         raise FailedQueryError("Query timed out") from e
 
+    players = [Player(name=p.name) for p in players]
+
     return Info(
         title=info.name,
         address=_format_address(query),
         thumbnail=None,
         max_players=info.max_players,
-        players=[Player(name=p.name) for p in players],
+        num_players=len(players),
+        players=players,
     )
 
 
@@ -334,6 +337,7 @@ class Info:
     thumbnail: bytes | None
 
     max_players: int
+    num_players: int
     players: list[Player]
 
 

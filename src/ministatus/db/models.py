@@ -118,6 +118,7 @@ class StatusHistory(BaseModel):
     online: bool
 
     max_players: int
+    num_players: int
 
     players: list[StatusHistoryPlayer]
 

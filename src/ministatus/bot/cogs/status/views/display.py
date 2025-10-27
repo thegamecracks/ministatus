@@ -322,13 +322,14 @@ class StatusDisplayView(LayoutView):
             if latest is not None
             else []
         )
+        num_players = latest and latest.num_players
         max_players = latest and latest.max_players
 
         content = [
             f"**Address:** {status.address}",
             f"**Status:** {online}",
             f"**Last updated:** {last_updated}",
-            f"**Player count:** {len(players)}/{max_players}",
+            f"**Player count:** {num_players}/{max_players}",
             # TODO: tailor details to game
         ]
 
