@@ -117,6 +117,19 @@ Token:
 2025-10-23 04:01:22 INFO     discord.gateway Shard ID None has connected to Gateway (Session ID: 9bd2e577bbc4a21be5eed933900d076f).
 ```
 
+To synchronize the bot's application commands with Discord, invite the bot to
+a server and send the message, `@mention sync`, to run the sync command.
+Alternatively, you can synchronize application commands during startup
+by using the `--sync` flag:
+
+```sh
+$ ministatus start --sync
+```
+
+Make sure to **only** synchronize once to avoid being ratelimited by Discord.
+If ministatus is updated with changes to application commands, you may need
+to synchronize them again.
+
 View or change configuration settings:
 
 ```sh
