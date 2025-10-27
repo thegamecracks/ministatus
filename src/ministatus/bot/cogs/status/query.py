@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import base64
 import datetime
 import logging
 from contextlib import suppress
@@ -115,12 +116,46 @@ async def send_query(query: StatusQuery) -> Info | None:
         return await query_source(query)
     elif query.type == StatusQueryType.ARMA_REFORGER:
         return await query_source(query)
+    # NOTE: Bedrock uses the RakNet protocol, but opengsq's implementation
+    #       seems to be broken. Use mcstatus instead, or wait for a hotfix.
+    # elif query.type == StatusQueryType.MINECRAFT_BEDROCK:
+    #     return await query_minecraft_bedrock(query)
+    elif query.type == StatusQueryType.MINECRAFT_JAVA:
+        return await query_minecraft_java(query)
     elif query.type == StatusQueryType.SOURCE:
         return await query_source(query)
     elif query.type == StatusQueryType.PROJECT_ZOMBOID:
         return await query_source(query)  # Wait, it's all source? Always has been
     else:
         assert_never(query.type)
+
+
+async def query_minecraft_java(query: StatusQuery) -> Info:
+    from opengsq import Minecraft
+
+    host, port = await resolve_host(query)
+    proto = Minecraft(host, port, QUERY_TIMEOUT)
+
+    try:
+        status = await proto.get_status()
+    except TimeoutError as e:
+        raise FailedQueryError("Query timed out") from e
+
+    favicon = cast(str, status.get("favicon", ""))
+    if favicon.startswith("data:image/png;base64,"):
+        favicon = favicon.removeprefix("data:image/png;base64,")
+        thumbnail = base64.decodebytes(favicon.encode())
+    else:
+        thumbnail = None
+
+    return Info(
+        title=None,  # TODO: parse MOTD for title
+        address=_format_address(query),
+        thumbnail=thumbnail,
+        max_players=status["players"]["max"],
+        num_players=status["players"]["online"],
+        players=[],
+    )
 
 
 async def query_source(query: StatusQuery) -> Info:
@@ -182,6 +217,8 @@ async def resolve_host(query: StatusQuery) -> tuple[str, int]:
     if type == StatusQueryType.ARMA_3:
         host_srv = f"_arma3._udp.{host}"
         srv_offset = 1
+    elif type == StatusQueryType.MINECRAFT_JAVA:
+        host_srv = f"_minecraft._tcp.{host}"
 
     # See also https://github.com/py-mine/mcstatus/blob/v12.0.6/mcstatus/dns.py
     # NOTE: there could be multiple DNS records, but we're always returning the first
@@ -332,7 +369,7 @@ async def set_display_success(display: StatusDisplay) -> None:
 
 @dataclass(kw_only=True)
 class Info:
-    title: str
+    title: str | None
     address: str
     thumbnail: bytes | None
 

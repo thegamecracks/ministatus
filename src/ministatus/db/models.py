@@ -146,5 +146,7 @@ class StatusQuery(BaseModel):
 class StatusQueryType(StrEnum):
     ARMA_3 = "arma3"
     ARMA_REFORGER = "arma-reforger"
+    # MINECRAFT_BEDROCK = "minecraft-bedrock"
+    MINECRAFT_JAVA = "minecraft-java"
     SOURCE = "source"
     PROJECT_ZOMBOID = "project-zomboid"
