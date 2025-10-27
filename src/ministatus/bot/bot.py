@@ -12,6 +12,8 @@ log = logging.getLogger(__name__)
 
 
 class Bot(commands.Bot):
+    _sync_on_setup = False
+
     def __init__(self) -> None:
         super().__init__(
             command_prefix=commands.when_mentioned,
@@ -33,6 +35,10 @@ class Bot(commands.Bot):
 
             raise click.Abort from e
 
+    async def start(self, *args, sync: bool, **kwargs) -> None:
+        self._sync_on_setup = sync
+        return await super().start(*args, **kwargs)
+
     async def setup_hook(self) -> None:
         assert self.application is not None
         async with connect_client() as client:
@@ -42,6 +48,10 @@ class Bot(commands.Bot):
             log.info(f"Loading extension {extension}")
             await self.load_extension(extension)
         await self._maybe_load_jishaku()
+
+        if self._sync_on_setup:
+            commands = await self.tree.sync()
+            log.info("Synchronized %d application command(s)", len(commands))
 
         invite_link = self.get_standard_invite()
         log.info("Invite link:\n    %s", invite_link)
