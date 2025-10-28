@@ -40,7 +40,7 @@ class StatusModifyQueryRow(discord.ui.ActionRow):
     async def render(self) -> Self:
         queries = self.page.status.queries
         query_options = [
-            SelectOption(label=f"Query {i}", emoji="🔔", value=str(i - 1))
+            SelectOption(label=f"Query {i}", emoji="📡", value=str(i - 1))
             for i, query in enumerate(queries, start=1)
         ]
         query_options.append(
