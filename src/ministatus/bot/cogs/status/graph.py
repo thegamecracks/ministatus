@@ -19,7 +19,12 @@ def create_player_count_graph(
     def format_hour(x: float, pos: float) -> str:
         delta = cast(datetime.timedelta, mdates.num2timedelta(now_num - x))
         hours = round(abs(delta.total_seconds() / 3600))
-        return f"{hours}h" if hours != 0 else "now"
+        days = round(hours / 24)
+        if days > 0:
+            return f"{days}d"
+        elif hours > 0:
+            return f"{hours}h"
+        return "now"
 
     now = discord.utils.utcnow()
     if len(datapoints) < 2:
@@ -45,16 +50,21 @@ def create_player_count_graph(
 
     # Set limits and fill under the line
     ax.set_xlim(x_min, x_max)  # type: ignore
-    ax.set_ylim(0, max_players or 1)
+    ax.set_ylim(0, max(max_players, max(y), 1))
     ax.fill_between(
         x,  # type: ignore
         y,  # type: ignore
         color=colour_hex + "55",
     )
 
-    # Set xticks to every two hours
+    if x_max - x_min <= 3:
+        step = 1 / 12  # every 2 hours
+    elif x_max - x_min <= 10:
+        step = 1  # every day
+    else:
+        step = 3
+
     now_num = cast(float, mdates.date2num(now))
-    step = 1 / 12
     start = x_max - step + (now_num - x_max)
     ax.set_xticks(np.arange(start, x_min, -step))
     ax.xaxis.set_major_formatter(format_hour)
