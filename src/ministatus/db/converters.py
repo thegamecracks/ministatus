@@ -16,7 +16,7 @@ def adapt_datetime_iso(val: datetime.datetime) -> str:
 
 def adapt_datetime_epoch(val: datetime.datetime) -> int:
     """Adapt datetime.datetime to Unix timestamp."""
-    return max(int(val.timestamp()), 0)
+    return max(int(val.timestamp() * 1000), 0)
 
 
 def adapt_timedelta(val: datetime.timedelta) -> int:
@@ -47,7 +47,7 @@ def convert_datetime(val: bytes) -> datetime.datetime:
 
 def convert_timestamp(val: bytes) -> datetime.datetime:
     """Convert Unix epoch timestamp to datetime.datetime object."""
-    ts = int(val)
+    ts = int(val) / 1000
     dt = datetime.datetime.fromtimestamp(ts)
 
     if ts < 86400:
