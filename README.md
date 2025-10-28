@@ -114,6 +114,7 @@ View or change configuration settings:
 $ ministatus config
 Settings:
     appid = 1430326736775544903
+    status-interval = 60
     token = ****
 
 $ ministatus config token xyz
