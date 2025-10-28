@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import datetime
-from typing import TYPE_CHECKING, Any, Callable, Self, assert_never, cast
+from typing import TYPE_CHECKING, Any, Awaitable, Callable, Self, TypeAlias, cast
 
 import discord
 from discord import Interaction, SelectOption
@@ -9,7 +9,7 @@ from discord.ui import Button, Select
 
 from ministatus.bot.db import connect_discord_database_client
 from ministatus.bot.dt import utcnow
-from ministatus.bot.views import Modal
+from ministatus.bot.views import LayoutView, Modal
 from ministatus.db import Status, StatusQuery, StatusQueryType, connect
 
 from .book import Book, Page, RenderArgs, format_enabled_at, format_failed_at
@@ -18,6 +18,18 @@ if TYPE_CHECKING:
     from ministatus.bot.bot import Bot
 
     from .overview import StatusModify
+
+_CreateCallback: TypeAlias = (
+    "Callable[[Interaction[Bot], StatusQuery | None], Awaitable[Any]]"
+)
+
+DEFAULT_PORTS: dict[StatusQueryType, tuple[int, int | bool]] = {
+    StatusQueryType.ARMA_3: (2302, False),
+    StatusQueryType.ARMA_REFORGER: (2001, 17777),
+    StatusQueryType.MINECRAFT_JAVA: (25565, False),
+    StatusQueryType.SOURCE: (27015, 27015),
+    StatusQueryType.PROJECT_ZOMBOID: (16261, False),
+}
 
 
 class StatusModifyQueryRow(discord.ui.ActionRow):
@@ -53,9 +65,10 @@ class StatusModifyQueryRow(discord.ui.ActionRow):
     async def _create_callback(
         self,
         interaction: Interaction[Bot],
-        query: StatusQuery,
+        query: StatusQuery | None,
     ) -> None:
-        self.page.book.push(StatusQueryPage(self.page.book, query))
+        if query is not None:
+            self.page.book.push(StatusQueryPage(self.page.book, query))
         await self.page.book.edit(interaction)
 
 
@@ -77,7 +90,7 @@ class CreateStatusQueryTypeModal(Modal, title="Create Status Query"):
     def __init__(
         self,
         status: Status,
-        callback: Callable[[Interaction[Bot], StatusQuery], Any],
+        callback: _CreateCallback,
     ) -> None:
         super().__init__()
         self.status = status
@@ -85,17 +98,71 @@ class CreateStatusQueryTypeModal(Modal, title="Create Status Query"):
 
     async def on_submit(self, interaction: Interaction) -> None:
         assert isinstance(self.type.component, discord.ui.Select)
+        host = self.host.value
+        type = StatusQueryType(self.type.component.values[0])
+        view = CreateStatusQueryView(self.status, self.callback, host, type)
+        await interaction.response.edit_message(view=view)
+
+
+class CreateStatusQueryView(LayoutView):
+    container = discord.ui.Container()
+
+    def __init__(
+        self,
+        status: Status,
+        callback: _CreateCallback,
+        host: str,
+        type: StatusQueryType,
+    ) -> None:
+        super().__init__()
+        self.status = status
+        self.callback = callback
+        self.host = host
+        self.type = type
+
+        content = [
+            f"Type: {type}",
+            f"Host: {host}",
+        ]
+
+        game_port, query_port = DEFAULT_PORTS.get(type, (None, None))
+        game_port = "<incomplete>" if game_port is not False else "N/A"
+        query_port = "<incomplete>" if query_port is not False else "N/A"
+        content.append(f"Game port: {game_port}")
+        content.append(f"Query port: {query_port}")
+        if type == StatusQueryType.ARMA_REFORGER:
+            line = "❗ For this query to work, the server must have A2S enabled."
+            content.append(line)
+
+        self.container.add_item(discord.ui.TextDisplay("## Create Status Query"))
+        self.container.add_item(discord.ui.Separator())
+        self.container.add_item(discord.ui.TextDisplay("\n".join(content)))
+        self.container.add_item(CreateStatusQueryActionRow())
+
+
+class CreateStatusQueryActionRow(discord.ui.ActionRow[CreateStatusQueryView]):
+    def __init__(self) -> None:
+        super().__init__()
+
+    @discord.ui.button(label="Cancel", emoji="❌")
+    async def cancel(self, interaction: Interaction, button: Button) -> None:
+        interaction = cast("Interaction[Bot]", interaction)
+        assert self.view is not None
+        await self.view.callback(interaction, None)
+
+    @discord.ui.button(label="Continue", style=discord.ButtonStyle.success)
+    async def create(self, interaction: Interaction, button: Button) -> None:
+        assert self.view is not None
         modal = CreateStatusQueryModal(
-            status=self.status,
-            callback=self.callback,
-            host=self.host.value,
-            type=StatusQueryType(self.type.component.values[0]),
+            status=self.view.status,
+            callback=self.view.callback,
+            host=self.view.host,
+            type=self.view.type,
         )
         await interaction.response.send_modal(modal)
 
 
 class CreateStatusQueryModal(Modal, title="Create Status Query"):
-    display = discord.ui.TextDisplay("")
     game_port = discord.ui.TextInput(
         label="Game Port",
         placeholder="The server's game port",
@@ -120,7 +187,7 @@ class CreateStatusQueryModal(Modal, title="Create Status Query"):
         self,
         *,
         status: Status,
-        callback: Callable[[Interaction[Bot], StatusQuery], Any],
+        callback: _CreateCallback,
         host: str,
         type: StatusQueryType,
     ) -> None:
@@ -130,31 +197,14 @@ class CreateStatusQueryModal(Modal, title="Create Status Query"):
         self.host = host
         self.type = type
 
-        content = [
-            f"Type: {type}",
-            f"Host: {host}",
-        ]
+        game_port, query_port = DEFAULT_PORTS.get(type, (None, None))
+        if game_port is not None:
+            self.game_port.default = str(game_port)
 
-        if type == StatusQueryType.ARMA_3:
-            self.game_port.default = "2302"
+        if query_port is False:
             self.remove_item(self.query_port)
-        elif type == StatusQueryType.ARMA_REFORGER:
-            self.game_port.default = "2001"
-            self.query_port.default = "17777"
-            content.append("⚠️ The Arma Reforger server must have A2S enabled.")
-        elif type == StatusQueryType.MINECRAFT_JAVA:
-            self.game_port.default = "25565"
-            self.remove_item(self.query_port)
-        elif type == StatusQueryType.SOURCE:
-            self.game_port.default = "27015"
-            self.query_port.default = "27015"
-        elif type == StatusQueryType.PROJECT_ZOMBOID:
-            self.game_port.default = "16261"
-            self.remove_item(self.query_port)
-        else:
-            assert_never(type)
-
-        self.display.content = "\n".join(content)
+        elif query_port is not None:
+            self.query_port.default = str(query_port)
 
     async def on_submit(self, interaction: Interaction) -> None:
         interaction = cast("Interaction[Bot]", interaction)
