@@ -1,8 +1,13 @@
+import os
 import platformdirs
+
+_appname = "ministatus"
+if _appsuffix := os.getenv("MIST_APPDIR_SUFFIX"):
+    _appname = f"{_appname}-{_appsuffix}"
 
 APP_DIRS = platformdirs.PlatformDirs(
     appauthor="thegamecracks",
-    appname="ministatus",
+    appname=_appname,
     ensure_exists=True,
     opinion=True,
 )

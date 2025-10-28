@@ -35,6 +35,8 @@ LOG_RECORD_ATTRIBUTES = {
     "taskName",
 }
 
+_log = logging.getLogger(__name__)
+
 
 def setup_logging(*, verbose: int) -> None:
     assert __package__ is not None
@@ -66,6 +68,8 @@ def setup_logging(*, verbose: int) -> None:
 
     pkg = logging.getLogger(__package__.partition(".")[0])
     pkg.setLevel(pkg_level)
+
+    _log_app_suffix()
 
 
 def create_stream_handler() -> logging.StreamHandler:
@@ -189,3 +193,10 @@ class JSONFormatter(logging.Formatter):
             data["stack_info"] = self.formatStack(record.stack_info)
 
         return data
+
+
+def _log_app_suffix() -> None:
+    from ministatus.appdirs import _appsuffix
+
+    if _appsuffix:
+        _log.info("Using appdirs suffix %r", _appsuffix)
