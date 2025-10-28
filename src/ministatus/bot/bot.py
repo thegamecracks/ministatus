@@ -59,7 +59,7 @@ class Bot(commands.Bot):
     async def _maybe_load_jishaku(self) -> None:
         try:
             version = importlib.metadata.version("jishaku")
-        except commands.ExtensionNotFound:
+        except importlib.metadata.PackageNotFoundError:
             pass
         else:
             await self.load_extension("jishaku")
