@@ -30,14 +30,14 @@ def add_commands(group: Group) -> None:
 
 
 async def read_token() -> Secret[str]:
+    if token := os.getenv("MIST_TOKEN"):
+        log.info("Reading token from MIST_TOKEN environment variable")
+        return _parse_token(token)
+
     async with connect_client() as client:
         token = await client.get_setting("token")
 
     if token is not None:
-        return _parse_token(token)
-
-    if token := os.getenv("MIST_TOKEN"):
-        log.info("Reading token from MIST_TOKEN environment variable")
         return _parse_token(token)
 
     click.secho("No Discord bot token found in config.", fg="yellow")
