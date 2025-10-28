@@ -142,6 +142,45 @@ $ ministatus config token
 xyz
 ```
 
+## Environment Variables
+
+The following environment variables are supported:
+
+- `MIST_APPDIR_SUFFIX`
+
+  The suffix to append to the application directory, changing where the database
+  and log files are written to. This allows for multiple instances of ministatus
+  to run on the same user, as each instance uses a separate database and can load
+  different Discord bot tokens.
+
+  For example, `MIST_APPDIR_SUFFIX=2` results in data files being stored in the
+  `~/.local/share/ministatus-2` directory on Linux, and
+  `C:\Users\<name>\AppData\Local\thegamecracks\ministatus-2` on Windows.
+
+- `MIST_PASSWORD`
+
+  The password to use for encrypting and decrypting the database.
+  Most commands will abort if the database isn't already encrypted,
+  aside from `ministatus db encrypt` itself and commands that don't
+  require database access like `ministatus appdirs`.
+
+  Alternatively, you can use the `ministatus -p <password> ...` option to provide
+  a password, `ministatus -p "" ...` to always prompt for a password, or simply
+  omit it and let ministatus prompt for the database password when needed.
+  Note that the `-p <password>` form may be logged by your terminal to some
+  history like `.bash_history`.
+
+- `MIST_TOKEN`
+
+  The Discord bot's token. This supersedes any token stored in the database.
+  This token will also not be committed to the database, so omitting this
+  afterwards will use the previously stored token or prompt for a new token.
+
+> [!NOTE]
+> Environment variables defined in a `.env` file are currently not recognized
+> by ministatus. You should set these using `export ABC=123` on Linux,
+> `set ABC=123` on Windows, or another equivalent method.
+
 ## License
 
 This project is written under the [MIT License].
