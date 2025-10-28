@@ -130,9 +130,6 @@ class CreateStatusQueryView(LayoutView):
         query_port = "<incomplete>" if query_port is not False else "N/A"
         content.append(f"Game port: {game_port}")
         content.append(f"Query port: {query_port}")
-        if type == StatusQueryType.ARMA_REFORGER:
-            line = "❗ For this query to work, the server must have A2S enabled."
-            content.append(line)
 
         self.container.add_item(discord.ui.TextDisplay("## Create Status Query"))
         self.container.add_item(discord.ui.Separator())
