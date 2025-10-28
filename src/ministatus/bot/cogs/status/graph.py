@@ -19,7 +19,7 @@ def create_player_count_graph(
     def format_hour(x: float, pos: float) -> str:
         delta = cast(datetime.timedelta, mdates.num2timedelta(now_num - x))
         hours = round(abs(delta.total_seconds() / 3600))
-        days = round(hours / 24)
+        days = int(hours / 24)
         if days > 0:
             return f"{days}d"
         elif hours > 0:
