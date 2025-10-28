@@ -230,6 +230,11 @@ async def resolve_host(query: StatusQuery) -> tuple[str, int]:
         host = str(record.target).rstrip(".")
         query_port = record.port + srv_offset
 
+    if host_srv and query_port < 1:
+        raise InvalidQueryError("Query port not defined and no SRV DNS record found")
+    elif query_port < 1:
+        raise InvalidQueryError("Domain name provided without a query port")
+
     if ipv6_allowed and (answers := await _resolve(host, AAAA)):
         record = cast(AAAARecord, answers[0])
         log.debug("Resolved query #%d with AAAA record", query.status_query_id)
