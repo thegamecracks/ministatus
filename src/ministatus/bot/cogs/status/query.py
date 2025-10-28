@@ -313,12 +313,14 @@ async def record_info(status: Status, info: Info) -> None:
         )
 
         status_history_id = await conn.fetchval(
-            "INSERT INTO status_history (created_at, status_id, online, max_players) "
-            "VALUES ($1, $2, $3, $4) RETURNING status_history_id",
+            "INSERT INTO status_history "
+            "(created_at, status_id, online, max_players, num_players) "
+            "VALUES ($1, $2, $3, $4, $5) RETURNING status_history_id",
             utcnow(),
             status.status_id,
             True,
             info.max_players,
+            info.num_players,
         )
 
         await conn.executemany(
