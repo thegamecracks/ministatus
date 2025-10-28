@@ -103,6 +103,19 @@ class CreateStatusDisplayModal(Modal, title="Create Status Display"):
         min_length=7,
         max_length=7,
     )
+    graph_interval = discord.ui.Label(
+        text="Graph Period",
+        component=discord.ui.Select(
+            options=[
+                discord.SelectOption(label="24 hours", value=str(86400), default=True),
+                discord.SelectOption(label="12 hours", value=str(3600 * 12)),
+                discord.SelectOption(label="6 hours", value=str(3600 * 6)),
+                discord.SelectOption(label="2 hours", value=str(3600 * 2)),
+                discord.SelectOption(label="1 hour", value=str(3600)),
+            ],
+            placeholder="The graph's time period",
+        ),
+    )
 
     def __init__(
         self,
@@ -117,6 +130,7 @@ class CreateStatusDisplayModal(Modal, title="Create Status Display"):
         interaction = cast("Interaction[Bot]", interaction)
         assert interaction.guild is not None
         assert isinstance(self.channel.component, discord.ui.ChannelSelect)
+        assert isinstance(self.graph_interval.component, discord.ui.Select)
 
         channel = self.channel.component.values[0]
         channel = channel.resolve() or await channel.fetch()
@@ -130,6 +144,7 @@ class CreateStatusDisplayModal(Modal, title="Create Status Display"):
             status_id=self.status.status_id,
             accent_colour=discord.Color.from_str(self.accent_colour.value).value,
             graph_colour=discord.Color.from_str(self.graph_colour.value).value,
+            graph_interval=int(self.graph_interval.component.values[0]),
             enabled_at=interaction.created_at,
         )
 
@@ -282,7 +297,7 @@ class StatusDisplayView(LayoutView):
 
             history = await ddc.client.get_bulk_status_history(
                 status.status_id,
-                after=past(days=1),  # TODO: customize history window
+                after=past(seconds=display.graph_interval),
             )
             history = history.get(status.status_id, [])
 

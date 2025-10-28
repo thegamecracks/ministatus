@@ -219,14 +219,15 @@ class DatabaseClient:
 
         row = await self.conn.fetchrow(
             "INSERT INTO status_display "
-            "(message_id, status_id, enabled_at, failed_at, accent_colour, graph_colour) "
-            "VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
+            "(message_id, status_id, enabled_at, failed_at, accent_colour, graph_colour, graph_interval) "
+            "VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *",
             display.message_id,
             display.status_id,
             display.enabled_at,
             display.failed_at,
             display.accent_colour,
             display.graph_colour,
+            display.graph_interval,
         )
         assert row is not None
         return StatusDisplay.model_validate(dict(row))
@@ -284,6 +285,7 @@ class DatabaseClient:
                 failed_at=row["failed_at"],
                 accent_colour=row["accent_colour"],
                 graph_colour=row["graph_colour"],
+                graph_interval=row["graph_interval"],
             )
 
     # Composite status queries
@@ -421,6 +423,7 @@ class DatabaseClient:
                 failed_at=row["failed_at"],
                 accent_colour=row["accent_colour"],
                 graph_colour=row["graph_colour"],
+                graph_interval=row["graph_interval"],
             )
             status_displays[row["status_id"]].append(display)
 

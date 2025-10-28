@@ -109,6 +109,7 @@ class StatusDisplay(BaseModel):
     failed_at: datetime.datetime | None = Field(default=None)
     accent_colour: Color = 0xFFFFFF
     graph_colour: Color = 0xFFFFFF
+    graph_interval: int = 86400
 
 
 class StatusHistory(BaseModel):
