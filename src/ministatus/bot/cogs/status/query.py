@@ -185,9 +185,9 @@ async def query_source(query: StatusQuery) -> Info:
 
 def _format_address(query: StatusQuery) -> str:
     if query.game_port:
-        f"{query.host}:{query.game_port}"
+        return f"{query.host}:{query.game_port}"
     elif query.query_port:
-        f"{query.host}:{query.query_port}"
+        return f"{query.host}:{query.query_port}"
     return query.host
 
 
