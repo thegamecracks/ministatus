@@ -77,7 +77,7 @@ async def fake_history(
     n = int(period.total_seconds() / frequency.total_seconds())
 
     data = [
-        (start + frequency * i, names[: random.randrange(len(names) + 1)])
+        (start + frequency * i, names[: random.randrange(max_players + 1)])
         for i in range(1, n + 1)
     ]
 
