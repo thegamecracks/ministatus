@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import datetime
-from typing import TYPE_CHECKING, Any, Callable, Self, cast
+from typing import TYPE_CHECKING, Any, Callable, Self, assert_never, cast
 
 import discord
 from discord import Interaction, SelectOption
@@ -42,7 +42,7 @@ class StatusModifyQueryRow(discord.ui.ActionRow):
     async def queries(self, interaction: Interaction, select: Select) -> None:
         value = select.values[0]
         if value == "create":
-            modal = CreateStatusQueryModal(self.page.status, self._create_callback)
+            modal = CreateStatusQueryTypeModal(self.page.status, self._create_callback)
             await interaction.response.send_modal(modal)
         else:
             query = self.page.status.queries[int(value)]
@@ -59,25 +59,7 @@ class StatusModifyQueryRow(discord.ui.ActionRow):
         await self.page.book.edit(interaction)
 
 
-class CreateStatusQueryModal(Modal, title="Create Status Query"):
-    host = discord.ui.TextInput(
-        label="Host",
-        placeholder="The server's IP address or hostname",
-        min_length=7,
-        max_length=255,
-    )
-    game_port = discord.ui.TextInput(
-        label="Game Port",
-        placeholder="The server's game port",
-        min_length=1,
-        max_length=5,
-    )
-    query_port = discord.ui.TextInput(
-        label="Query Port",
-        placeholder="The server's query port",
-        min_length=1,
-        max_length=5,
-    )
+class CreateStatusQueryTypeModal(Modal, title="Create Status Query"):
     type = discord.ui.Label(
         text="Query Type",
         component=discord.ui.Select(
@@ -85,12 +67,11 @@ class CreateStatusQueryModal(Modal, title="Create Status Query"):
             placeholder="The game query protocol to use",
         ),
     )
-    priority = discord.ui.TextInput(
-        label="Priority",
-        default="0",
-        placeholder="The priority of this query protocol (0 is highest)",
-        min_length=1,
-        max_length=3,
+    host = discord.ui.TextInput(
+        label="Host",
+        placeholder="The server's IP address or hostname",
+        min_length=7,
+        max_length=255,
     )
 
     def __init__(
@@ -103,17 +84,94 @@ class CreateStatusQueryModal(Modal, title="Create Status Query"):
         self.callback = callback
 
     async def on_submit(self, interaction: Interaction) -> None:
-        interaction = cast("Interaction[Bot]", interaction)
-        assert interaction.guild is not None
         assert isinstance(self.type.component, discord.ui.Select)
+        modal = CreateStatusQueryModal(
+            status=self.status,
+            callback=self.callback,
+            host=self.host.value,
+            type=StatusQueryType(self.type.component.values[0]),
+        )
+        await interaction.response.send_modal(modal)
+
+
+class CreateStatusQueryModal(Modal, title="Create Status Query"):
+    display = discord.ui.TextDisplay("")
+    game_port = discord.ui.TextInput(
+        label="Game Port",
+        placeholder="The server's game port",
+        min_length=1,
+        max_length=5,
+    )
+    query_port = discord.ui.TextInput(
+        label="Query Port",
+        placeholder="The server's query port",
+        min_length=1,
+        max_length=5,
+    )
+    priority = discord.ui.TextInput(
+        label="Priority",
+        default="0",
+        placeholder="The priority of this query protocol (0 is highest)",
+        min_length=1,
+        max_length=3,
+    )
+
+    def __init__(
+        self,
+        *,
+        status: Status,
+        callback: Callable[[Interaction[Bot], StatusQuery], Any],
+        host: str,
+        type: StatusQueryType,
+    ) -> None:
+        super().__init__()
+        self.status = status
+        self.callback = callback
+        self.host = host
+        self.type = type
+
+        content = [
+            f"Type: {type}",
+            f"Host: {host}",
+        ]
+
+        if type == StatusQueryType.ARMA_3:
+            self.game_port.default = "2302"
+            self.remove_item(self.query_port)
+        elif type == StatusQueryType.ARMA_REFORGER:
+            self.game_port.default = "2001"
+            self.query_port.default = "17777"
+            content.append("⚠️ The Arma Reforger server must have A2S enabled.")
+        elif type == StatusQueryType.MINECRAFT_JAVA:
+            self.game_port.default = "25565"
+            self.remove_item(self.query_port)
+        elif type == StatusQueryType.SOURCE:
+            self.game_port.default = "27015"
+            self.query_port.default = "27015"
+        elif type == StatusQueryType.PROJECT_ZOMBOID:
+            self.game_port.default = "16261"
+            self.remove_item(self.query_port)
+        else:
+            assert_never(type)
+
+        self.display.content = "\n".join(content)
+
+    async def on_submit(self, interaction: Interaction) -> None:
+        interaction = cast("Interaction[Bot]", interaction)
+
+        game_port = int(self.game_port.value)
+        if self.type == StatusQueryType.ARMA_3:
+            query_port = game_port + 1
+        else:
+            query_port = int(self.query_port.value or game_port)
 
         query = StatusQuery(
             status_query_id=0,
             status_id=self.status.status_id,
-            host=self.host.value,
-            game_port=int(self.game_port.value),
-            query_port=int(self.query_port.value),
-            type=StatusQueryType(self.type.component.values[0]),
+            host=self.host,
+            game_port=game_port,
+            query_port=query_port,
+            type=self.type,
             priority=int(self.priority.value),
             enabled_at=interaction.created_at,
         )
