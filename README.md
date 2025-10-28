@@ -112,6 +112,7 @@ View or change configuration settings:
 ```sh
 $ ministatus config
 Settings:
+    appid = 1430326736775544903
     token = ****
 
 $ ministatus config token xyz
