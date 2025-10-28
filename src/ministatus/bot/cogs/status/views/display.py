@@ -282,7 +282,7 @@ class StatusDisplayView(LayoutView):
         self.bot = bot
         self.message_id = message_id
 
-        self._last_attachment_refresh = math.inf
+        self._last_attachment_refresh = -math.inf
 
     async def update(self) -> None:
         async with connect_discord_database_client(self.bot) as ddc:
@@ -394,7 +394,7 @@ class StatusDisplayView(LayoutView):
         #       generates its own images. Perhaps this should be shared?
         interval = DISPLAY_UPDATE_ATTACHMENTS_INTERVAL
         now = time.perf_counter()
-        if now - self._last_attachment_refresh > interval:
+        if now - self._last_attachment_refresh < interval:
             return []
 
         self._last_attachment_refresh = now
