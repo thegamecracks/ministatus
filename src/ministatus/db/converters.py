@@ -19,10 +19,17 @@ def adapt_datetime_epoch(val: datetime.datetime) -> int:
     return max(int(val.timestamp()), 0)
 
 
+def adapt_timedelta(val: datetime.timedelta) -> int:
+    """Adapt datetime.timedelta to milliseconds."""
+    # ISO 8601 duration would be nice, but datetime doesn't support it
+    return int(val.total_seconds() * 1000)
+
+
 # Can't set multiple adapters for one type, so just use timestamp for datetimes
 sqlite3.register_adapter(datetime.date, adapt_date_iso)
 # sqlite3.register_adapter(datetime.datetime, adapt_datetime_iso)
 sqlite3.register_adapter(datetime.datetime, adapt_datetime_epoch)
+sqlite3.register_adapter(datetime.timedelta, adapt_timedelta)
 
 
 def convert_date(val: bytes) -> datetime.date:
@@ -53,6 +60,12 @@ def convert_timestamp(val: bytes) -> datetime.datetime:
     return dt.astimezone(datetime.timezone.utc)
 
 
+def convert_interval(val: bytes) -> datetime.timedelta:
+    """Convert milliseconds to datetime.timdelta object."""
+    return datetime.timedelta(seconds=int(val) / 1000)
+
+
 sqlite3.register_converter("date", convert_date)
 sqlite3.register_converter("datetime", convert_datetime)
 sqlite3.register_converter("timestamp", convert_timestamp)
+sqlite3.register_converter("interval", convert_interval)

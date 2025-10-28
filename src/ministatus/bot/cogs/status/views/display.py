@@ -139,12 +139,15 @@ class CreateStatusDisplayModal(Modal, title="Create Status Display"):
         assert not isinstance(channel, (discord.ForumChannel, discord.CategoryChannel))
         message = await channel.send(view=PlaceholderView(interaction.user))
 
+        graph_interval = int(self.graph_interval.component.values[0])
+        graph_interval = datetime.timedelta(seconds=graph_interval)
+
         display = StatusDisplay(
             message_id=message.id,
             status_id=self.status.status_id,
             accent_colour=discord.Color.from_str(self.accent_colour.value).value,
             graph_colour=discord.Color.from_str(self.graph_colour.value).value,
-            graph_interval=int(self.graph_interval.component.values[0]),
+            graph_interval=graph_interval,
             enabled_at=interaction.created_at,
         )
 
@@ -297,7 +300,7 @@ class StatusDisplayView(LayoutView):
 
             history = await ddc.client.get_bulk_status_history(
                 status.status_id,
-                after=past(seconds=display.graph_interval),
+                after=past(display.graph_interval),
             )
             history = history.get(status.status_id, [])
 
