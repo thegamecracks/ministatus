@@ -100,8 +100,7 @@ Start the bot and store your bot token:
 
 ```sh
 $ ministatus start
-2025-10-23 04:01:17 INFO     ministatus.db.migrations Migrating database to v1
-2025-10-23 04:01:17 INFO     ministatus.db.migrations Migrating database to v2
+2025-10-28 22:50:34 INFO     ministatus.db.migrations Migrating database to v3
 No Discord bot token found in config.
 Would you like to enter your token now?
 You can change your token at any time using the 'config' command.
@@ -109,12 +108,15 @@ You can change your token at any time using the 'config' command.
 Your Discord bot token should look something like this:
     MTI0NjgyNjg0MTIzMTMyNzI3NQ.GTIAZm.x2fbSNuYJgpAocvMM53ROlMC23NixWt-0NOjMc
 Token:
-2025-10-23 04:01:21 WARNING  discord.client PyNaCl is not installed, voice will NOT be supported
-2025-10-23 04:01:21 INFO     discord.client logging in using static token
-2025-10-23 04:01:21 INFO     ministatus.bot.bot Loading extension ministatus.bot.cogs.status
-2025-10-23 04:01:21 INFO     ministatus.bot.bot Loaded jishaku extension (v2.6.3)
-2025-10-23 04:01:21 INFO     ministatus.bot.cogs.status.cog Waiting 38.22s before starting query loop...
-2025-10-23 04:01:22 INFO     discord.gateway Shard ID None has connected to Gateway (Session ID: 9bd2e577bbc4a21be5eed933900d076f).
+2025-10-28 22:50:37 INFO     discord.client logging in using static token
+2025-10-28 22:50:37 INFO     ministatus.bot.bot Loading extension ministatus.bot.cogs.cleanup
+2025-10-28 22:50:37 INFO     ministatus.bot.bot Loading extension ministatus.bot.cogs.errors
+2025-10-28 22:50:37 INFO     ministatus.bot.bot Loading extension ministatus.bot.cogs.owner
+2025-10-28 22:50:37 INFO     ministatus.bot.bot Loading extension ministatus.bot.cogs.status
+2025-10-28 22:50:37 INFO     ministatus.bot.bot Invite link:
+    https://discord.com/oauth2/authorize?client_id=...
+2025-10-28 22:50:37 INFO     ministatus.bot.cogs.status.cog Waiting 22.01s before starting query loop...
+2025-10-28 22:50:38 INFO     discord.gateway Shard ID None has connected to Gateway.
 ```
 
 To synchronize the bot's application commands with Discord, invite the bot to
