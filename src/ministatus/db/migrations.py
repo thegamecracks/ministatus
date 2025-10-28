@@ -64,8 +64,13 @@ class Migrator(ABC):
             sys.exit(f"Unrecognized database version: {version}")
             return
 
-        for version, script in migrations.after_version(version):
-            log.info(f"Migrating database to v{version}")
+        migrations = migrations.after_version(version)
+        if not migrations:
+            return
+
+        log.info("Migrating database to v%d", migrations[-1].version)
+        for version, script in migrations:
+            log.debug("Running migration script for v%d", version)
             await self.conn.executescript(script)
 
         await self.set_version(version)
