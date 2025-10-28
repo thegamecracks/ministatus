@@ -60,43 +60,7 @@ Commands:
   start    Start the Discord bot in the current process.
 ```
 
-View where files are saved:
-
-```sh
-$ ministatus appdirs
-user_data_path    = /home/thegamecracks/.local/share/ministatus
-user_log_path     = /home/thegamecracks/.local/state/ministatus/log
-DB_PATH           = /home/thegamecracks/.local/share/ministatus/ministatus.db
-```
-
-Enable database encryption (see notes below):
-
-```sh
-$ export MIST_PASSWORD=abc123
-$ ministatus db encrypt
-Successfully encrypted!
-# Alteneratively use -p/--password:
-$ ministatus -p abc123 db encrypt
-Database is already encrypted 😴
-# Or type the password interactively:
-$ unset MIST_PASSWORD
-$ ministatus config
-Database Password:
-There are no settings defined 🙁
-```
-
-> [!NOTE]
-> This requires [SQLite3MultipleCiphers], [SQLCipher], or an equivalent library
-> with `PRAGMA key` and `PRAGMA rekey` support. This is only possible if you
-> are able to replace the sqlite3.dll or .so shared library used by Python.
->
-> In the case of uv-managed Python installations, they are statically built
-> against SQLite and cannot be replaced with encryption extensions.
-
-[SQLite3MultipleCiphers]: https://github.com/utelle/SQLite3MultipleCiphers
-[SQLCipher]: https://github.com/sqlcipher/sqlcipher
-
-Start the bot and store your bot token:
+To start the bot and store your bot token:
 
 ```sh
 $ ministatus start
@@ -132,6 +96,17 @@ Make sure to **only** synchronize once to avoid being ratelimited by Discord.
 If ministatus is updated with changes to application commands, you may need
 to synchronize them again.
 
+### Other commands
+
+View where files are saved:
+
+```sh
+$ ministatus appdirs
+user_data_path    = /home/thegamecracks/.local/share/ministatus
+user_log_path     = /home/thegamecracks/.local/state/ministatus/log
+DB_PATH           = /home/thegamecracks/.local/share/ministatus/ministatus.db
+```
+
 View or change configuration settings:
 
 ```sh
@@ -143,6 +118,33 @@ $ ministatus config token xyz
 $ ministatus config token
 xyz
 ```
+
+Enable database encryption (see notes below):
+
+```sh
+$ export MIST_PASSWORD=abc123
+$ ministatus db encrypt
+Successfully encrypted!
+# Alteneratively use -p/--password:
+$ ministatus -p abc123 db encrypt
+Database is already encrypted 😴
+# Or type the password interactively:
+$ unset MIST_PASSWORD
+$ ministatus config
+Database Password:
+There are no settings defined 🙁
+```
+
+> [!NOTE]
+> This requires [SQLite3MultipleCiphers], [SQLCipher], or an equivalent library
+> with `PRAGMA key` and `PRAGMA rekey` support. This is only possible if you
+> are able to replace the sqlite3.dll or .so shared library used by Python.
+>
+> In the case of uv-managed Python installations, they are statically built
+> against SQLite and cannot be replaced with encryption extensions.
+
+[SQLite3MultipleCiphers]: https://github.com/utelle/SQLite3MultipleCiphers
+[SQLCipher]: https://github.com/sqlcipher/sqlcipher
 
 ## Environment Variables
 
