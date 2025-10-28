@@ -3,6 +3,14 @@ ALTER TABLE status_history ADD COLUMN
 ALTER TABLE status_display ADD COLUMN
     graph_interval INTERVAL NOT NULL DEFAULT 86400000 CHECK (graph_interval >= 0);
 
+-- Calculate num_players from existing data, if present
+UPDATE status_history AS h SET num_players = MIN(p.total, max_players)
+FROM (
+    SELECT status_history_id, COUNT(*) AS total FROM status_history_player
+    GROUP BY status_history_id
+) AS p
+WHERE h.status_history_id = p.status_history_id;
+
 -- Convert second-based timestamps to milliseconds
 UPDATE status SET enabled_at = enabled_at * 1000, failed_at = failed_at * 1000;
 UPDATE status_alert SET enabled_at = enabled_at * 1000, failed_at = failed_at * 1000;
