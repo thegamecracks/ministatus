@@ -138,12 +138,12 @@ There are no settings defined 🙁
 ```
 
 > [!NOTE]
-> This requires [SQLite3MultipleCiphers], [SQLCipher], or an equivalent library
+> This requires [SQLite3MultipleCiphers], [SQLCipher], or an equivalent extension
 > with `PRAGMA key` and `PRAGMA rekey` support. This is only possible if you
 > are able to replace the sqlite3.dll or .so shared library used by Python.
 >
 > In the case of uv-managed Python installations, they are statically built
-> against SQLite and cannot be replaced with encryption extensions.
+> against SQLite and cannot be used with encryption extensions.
 
 [SQLite3MultipleCiphers]: https://github.com/utelle/SQLite3MultipleCiphers
 [SQLCipher]: https://github.com/sqlcipher/sqlcipher
