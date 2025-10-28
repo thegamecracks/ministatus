@@ -390,7 +390,7 @@ class StatusDisplayView(LayoutView):
 
         graph = await asyncio.to_thread(
             create_player_count_graph,
-            [(h.created_at, len(h.players)) for h in history],
+            [(h.created_at, h.num_players) for h in history],
             colour=display.graph_colour,
             max_players=max((h.max_players for h in history), default=0),
         )
