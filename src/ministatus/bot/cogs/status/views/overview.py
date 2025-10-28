@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime
+from io import BytesIO
 from typing import TYPE_CHECKING, Any, Callable, Self, cast
 
 import discord
@@ -147,7 +148,8 @@ class StatusModify(Page):
         summary = discord.ui.TextDisplay("\n".join(content))
 
         if status.thumbnail is not None:
-            rendered.files.append(discord.File(status.thumbnail, "thumbnail.png"))
+            file = discord.File(BytesIO(status.thumbnail), "thumbnail.png")
+            rendered.files.append(file)
             accessory = discord.ui.Thumbnail("attachment://thumbnail.png")
             section = discord.ui.Section(summary, accessory=accessory)
             self.add_item(section)

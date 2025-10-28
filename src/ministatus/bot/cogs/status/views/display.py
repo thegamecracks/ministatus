@@ -6,6 +6,7 @@ import logging
 import math
 import textwrap
 import time
+from io import BytesIO
 from typing import TYPE_CHECKING, Any, Callable, Iterable, Iterator, Self, cast
 
 import discord
@@ -384,7 +385,7 @@ class StatusDisplayView(LayoutView):
         files = []
 
         if status.thumbnail:
-            f = discord.File(status.thumbnail, "thumbnail.png")
+            f = discord.File(BytesIO(status.thumbnail), "thumbnail.png")
             files.append(f)
 
         graph = await asyncio.to_thread(
