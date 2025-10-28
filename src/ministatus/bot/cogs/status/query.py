@@ -36,7 +36,8 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 DNS_TIMEOUT = 3
-HISTORY_EXPIRES_AFTER = datetime.timedelta(days=1)  # TODO: customize history window
+HISTORY_EXPIRES_AFTER = datetime.timedelta(days=30)
+HISTORY_PLAYERS_EXPIRES_AFTER = datetime.timedelta(hours=1)
 QUERY_DEAD_AFTER = datetime.timedelta(days=7)
 QUERY_TIMEOUT = 3
 
@@ -337,6 +338,14 @@ async def prune_history(status: Status) -> None:
             "DELETE FROM status_history WHERE status_id = $1 AND created_at < $2",
             status.status_id,
             past(HISTORY_EXPIRES_AFTER),
+        )
+        await conn.execute(
+            "DELETE FROM status_history_player WHERE status_history_player_id IN "
+            "(SELECT status_history_player_id FROM status_history_player "
+            "JOIN status_history USING (status_history_id) "
+            "WHERE status_id = $1 AND created_at < $2)",
+            status.status_id,
+            past(HISTORY_PLAYERS_EXPIRES_AFTER),
         )
 
 
