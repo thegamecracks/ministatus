@@ -333,9 +333,9 @@ class DatabaseClient:
                 thumbnail=row["thumbnail"],
                 enabled_at=row["enabled_at"],
                 failed_at=row["failed_at"],
-                alerts=status_alerts.get(status_id, []),
-                displays=status_displays.get(status_id, []),
-                queries=status_queries.get(status_id, []),
+                alerts=status_alerts[status_id],
+                displays=status_displays[status_id],
+                queries=status_queries[status_id],
             )
             status_objs.append(status)
 
@@ -374,8 +374,9 @@ class DatabaseClient:
         *status_ids: int,
         only_enabled: bool = False,
     ) -> dict[int, list[StatusAlert]]:
+        status_alerts = {status_id: [] for status_id in status_ids}
         if not status_ids:
-            return {}
+            return status_alerts
 
         enabled_expr = self._get_only_enabled_condition(only_enabled)
         sid = ", ".join("?" * len(status_ids))
@@ -384,7 +385,6 @@ class DatabaseClient:
             *status_ids,
         )
 
-        status_alerts = {status_id: [] for status_id in status_ids}
         for row in alerts:
             alert = StatusAlert(
                 status_alert_id=row["status_alert_id"],
@@ -404,8 +404,9 @@ class DatabaseClient:
         *status_ids: int,
         only_enabled: bool = False,
     ) -> dict[int, list[StatusDisplay]]:
+        status_displays = {status_id: [] for status_id in status_ids}
         if not status_ids:
-            return {}
+            return status_displays
 
         enabled_expr = self._get_only_enabled_condition(only_enabled)
         sid = ", ".join("?" * len(status_ids))
@@ -414,7 +415,6 @@ class DatabaseClient:
             *status_ids,
         )
 
-        status_displays = {status_id: [] for status_id in status_ids}
         for row in displays:
             display = StatusDisplay(
                 message_id=row["message_id"],
@@ -434,8 +434,9 @@ class DatabaseClient:
         *status_ids: int,
         only_enabled: bool = False,
     ) -> dict[int, list[StatusQuery]]:
+        status_queries = {status_id: [] for status_id in status_ids}
         if not status_ids:
-            return {}
+            return status_queries
 
         enabled_expr = self._get_only_enabled_condition(only_enabled)
         sid = ", ".join("?" * len(status_ids))
@@ -445,7 +446,6 @@ class DatabaseClient:
             *status_ids,
         )
 
-        status_queries = {status_id: [] for status_id in status_ids}
         for row in queries:
             query = StatusQuery(
                 status_query_id=row["status_query_id"],
@@ -468,8 +468,9 @@ class DatabaseClient:
         *status_ids: int,
         after: datetime.datetime,
     ) -> dict[int, list[StatusHistory]]:
+        history_models = {status_id: [] for status_id in status_ids}
         if not status_ids:
-            return {}
+            return history_models
 
         sid = ", ".join("?" * len(status_ids))
         history_rows = await self.conn.fetch(
@@ -482,7 +483,6 @@ class DatabaseClient:
         history_ids = {row["status_history_id"] for row in history_rows}
         history_players = await self.get_bulk_status_history_players(*history_ids)
 
-        history_models = {status_id: [] for status_id in status_ids}
         for row in history_rows:
             players = history_players[row["status_history_id"]]
             model = StatusHistory(
@@ -502,8 +502,9 @@ class DatabaseClient:
         self,
         *history_ids: int,
     ) -> dict[int, list[StatusHistoryPlayer]]:
+        history_players = {history_id: [] for history_id in history_ids}
         if not history_ids:
-            return {}
+            return history_players
 
         hid = ", ".join("?" * len(history_ids))
         players = await self.conn.fetch(
@@ -512,7 +513,6 @@ class DatabaseClient:
             *history_ids,
         )
 
-        history_players = {history_id: [] for history_id in history_ids}
         for p in players:
             p = StatusHistoryPlayer(
                 status_history_player_id=p["status_history_player_id"],

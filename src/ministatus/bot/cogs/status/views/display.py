@@ -307,7 +307,7 @@ class StatusDisplayView(LayoutView):
                 status.status_id,
                 after=past(display.graph_interval),
             )
-            history = history.get(status.status_id, [])
+            history = history[status.status_id]
 
         args = await self.render(status, display, history)
         await message.edit(view=self, **args.get_message_kwargs())
