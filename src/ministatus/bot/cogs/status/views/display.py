@@ -180,6 +180,7 @@ class StatusDisplayPage(Page):
             format_enabled_at(display.enabled_at),
             f"**Accent colour:** #{display.accent_colour:06X}",
             f"**Graph colour:** #{display.graph_colour:06X}",
+            f"**Graph period:** {display.graph_interval}",
             format_failed_at(display.failed_at),
         ]
         self.add_item(discord.ui.TextDisplay("\n".join(content)))
