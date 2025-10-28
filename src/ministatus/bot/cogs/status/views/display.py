@@ -318,11 +318,8 @@ class StatusDisplayView(LayoutView):
         online = get_online_message(latest)
         now = utcnow()
         last_updated = discord.utils.format_dt(now, "R")
-        players = (
-            sorted(latest.players, key=lambda p: p.name.lower())
-            if latest is not None
-            else []
-        )
+        players = (p for p in latest.players if p.name) if latest is not None else ()
+        players = sorted(players, key=lambda p: p.name.lower())
         num_players = latest and latest.num_players
         max_players = latest and latest.max_players
 
