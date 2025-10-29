@@ -18,12 +18,18 @@ def create_player_count_graph(
 ) -> io.BytesIO:
     def format_hour(x: float, pos: float) -> str:
         delta = cast(datetime.timedelta, mdates.num2timedelta(now_num - x))
-        hours = round(abs(delta.total_seconds() / 3600))
-        days = int(hours / 24)
-        if days > 0 and step >= 1:
+        seconds = int(delta.total_seconds())
+        minutes, seconds = divmod(seconds, 60)
+        hours, minutes = divmod(minutes, 60)
+        days, hours = divmod(hours, 24)
+
+        if days and step >= 1:
             return f"{days}d"
-        elif hours > 0:
+        elif hours and step >= 1 / 24:
             return f"{hours}h"
+        elif minutes:
+            return f"{minutes}m"
+
         return "now"
 
     now = discord.utils.utcnow()
@@ -57,12 +63,16 @@ def create_player_count_graph(
         color=colour_hex + "55",
     )
 
-    if x_max - x_min <= 3:
-        step = 1 / 12  # every 2 hours
-    elif x_max - x_min <= 10:
-        step = 1  # every day
-    else:
-        step = 3
+    # Figure out a reasonable interval to use for x-ticks.
+    # Remember that date2num() = 1 day, so 1 / 24 is 1 hour.
+    span_days = x_max - x_min
+    max_ticks = 16
+    possible_steps = [1 / 24 / 4, 1 / 24, 1 / 12, 1 / 6, 1 / 3, 1, 3, 30]
+    step = possible_steps[-1]
+    for pstep in possible_steps:
+        if span_days / pstep <= max_ticks:
+            step = pstep
+            break
 
     now_num = cast(float, mdates.date2num(now))
     start = x_max - step + (now_num - x_max)
