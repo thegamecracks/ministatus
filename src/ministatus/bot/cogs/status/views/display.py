@@ -319,23 +319,23 @@ class StatusDisplayView(LayoutView):
         history: list[StatusHistory],
     ) -> RenderArgs:
         self.clear_items()
+        self.add_item(self.container)
         self.container.clear_items()
         self.container.accent_colour = display.accent_colour
-
         rendered = RenderArgs()
 
-        title = status.title or status.label
-        title = discord.ui.TextDisplay(f"## {title}")
-
         if status.thumbnail:
+            # Sections allow up to three text displays, and no other components
             thumbnail = discord.ui.Thumbnail("attachment://thumbnail.png")
-            frame = discord.ui.Section(accessory=thumbnail)
-            frame.add_item(title)
-            self.container.add_item(frame)
+            section = discord.ui.Section(accessory=thumbnail)
+            self.container.add_item(section)
         else:
-            self.container.add_item(title)
+            section = self.container
 
-        self.container.add_item(discord.ui.Separator())
+        title = status.title or status.label
+        section.add_item(discord.ui.TextDisplay(f"## {title}"))
+        if section == self.container:
+            section.add_item(discord.ui.Separator())
 
         latest = history[-1] if history else None
         online = get_online_message(latest)
@@ -345,7 +345,6 @@ class StatusDisplayView(LayoutView):
         players = sorted(players, key=lambda p: p.name.lower())
         num_players = latest and latest.num_players
         max_players = latest and latest.max_players
-
         content = [
             f"**Address:** {status.address}",
             f"**Status:** {online}",
@@ -353,10 +352,9 @@ class StatusDisplayView(LayoutView):
             f"**Player count:** {num_players}/{max_players}",
             # TODO: tailor details to game
         ]
+        section.add_item(discord.ui.TextDisplay("\n".join(content)))
 
-        self.container.add_item(discord.ui.TextDisplay("\n".join(content)))
         self.container.add_item(discord.ui.Separator())
-
         for item in self._render_players(players):
             self.container.add_item(item)
 
@@ -366,11 +364,8 @@ class StatusDisplayView(LayoutView):
             )
         )
 
-        self.add_item(self.container)
-
         files = await self._maybe_refresh_attachments(status, display, history)
         rendered.files.extend(files)
-
         return rendered
 
     def _render_players(
