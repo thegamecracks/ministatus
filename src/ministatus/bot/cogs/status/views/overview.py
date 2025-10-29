@@ -136,8 +136,19 @@ class StatusModify(Page):
         rendered = RenderArgs()
         status = self.status
 
-        self.add_item(discord.ui.TextDisplay(f"## {status.label}"))
-        self.add_item(discord.ui.Separator())
+        if status.thumbnail is not None:
+            file = discord.File(BytesIO(status.thumbnail), "thumbnail.png")
+            rendered.files.append(file)
+
+            thumbnail = discord.ui.Thumbnail("attachment://thumbnail.png")
+            section = discord.ui.Section(accessory=thumbnail)
+            self.add_item(section)
+        else:
+            section = self
+
+        section.add_item(discord.ui.TextDisplay(f"## {status.label}"))
+        if section == self:
+            self.add_item(discord.ui.Separator())
 
         content = [
             format_enabled_at(status.enabled_at),
@@ -145,16 +156,7 @@ class StatusModify(Page):
             f"**Address:** {status.address}",
             format_failed_at(status.failed_at),
         ]
-        summary = discord.ui.TextDisplay("\n".join(content))
-
-        if status.thumbnail is not None:
-            file = discord.File(BytesIO(status.thumbnail), "thumbnail.png")
-            rendered.files.append(file)
-            accessory = discord.ui.Thumbnail("attachment://thumbnail.png")
-            section = discord.ui.Section(summary, accessory=accessory)
-            self.add_item(section)
-        else:
-            self.add_item(summary)
+        section.add_item(discord.ui.TextDisplay("\n".join(content)))
 
         self.add_item(await StatusModifyAlertRow(self).render())
         self.add_item(await StatusModifyDisplayRow(self).render())
