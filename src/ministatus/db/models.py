@@ -85,6 +85,10 @@ class Status(BaseModel):
     thumbnail: bytes | None = Field(default=None)
     enabled_at: datetime.datetime | None = Field(default=None)
     failed_at: datetime.datetime | None = Field(default=None)
+    game: str | None = Field(default=None)
+    map: str | None = Field(default=None)
+    mods: str | None = Field(default=None)
+    version: str | None = Field(default=None)
 
     alerts: list[StatusAlert] = Field(default_factory=list)
     displays: list[StatusDisplay] = Field(default_factory=list)

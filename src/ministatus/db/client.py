@@ -187,6 +187,10 @@ class DatabaseClient:
             status.thumbnail,
             status.enabled_at,
             status.failed_at,
+            status.game,
+            status.map,
+            status.mods,
+            status.version,
         )
         assert row is not None
         return Status.model_validate(dict(row))
@@ -270,6 +274,10 @@ class DatabaseClient:
                 thumbnail=row["thumbnail"],
                 enabled_at=row["enabled_at"],
                 failed_at=row["failed_at"],
+                game=row["game"],
+                map=row["map"],
+                mods=row["mods"],
+                version=row["version"],
             )
 
     async def get_status_display(self, *, message_id: int) -> StatusDisplay | None:
@@ -333,6 +341,10 @@ class DatabaseClient:
                 thumbnail=row["thumbnail"],
                 enabled_at=row["enabled_at"],
                 failed_at=row["failed_at"],
+                game=row["game"],
+                map=row["map"],
+                mods=row["mods"],
+                version=row["version"],
                 alerts=status_alerts[status_id],
                 displays=status_displays[status_id],
                 queries=status_queries[status_id],

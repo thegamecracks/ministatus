@@ -377,6 +377,15 @@ class StatusDisplayView(LayoutView):
             f"**Last updated:** {last_updated}",
         ]
 
+        if status.game:
+            content.append(f"**Game:** {status.game}")
+        if status.map:
+            content.append(f"**Map:** {status.map}")
+        if status.version:
+            content.append(f"**Version:** {status.version}")
+
+        # TODO: display mods in a manner suitable for long text
+
         if latest is None:
             return content
 

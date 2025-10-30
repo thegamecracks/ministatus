@@ -146,6 +146,10 @@ async def query_minecraft_bedrock(query: StatusQuery) -> Info:
         thumbnail=None,
         max_players=status.max_players,
         num_players=status.num_players,
+        game=status.game_mode,
+        map=None,
+        mods=None,
+        version=status.version_name,
         players=[],
     )
 
@@ -174,12 +178,17 @@ async def query_minecraft_java(query: StatusQuery) -> Info:
         thumbnail=thumbnail,
         max_players=status["players"]["max"],
         num_players=status["players"]["online"],
+        game=None,
+        map=None,
+        mods=None,  # TODO: parse "modinfo" key?
+        version=status["version"]["name"],  # can be a long string for proxy servers
         players=[],
     )
 
 
 async def query_source(query: StatusQuery) -> Info:
     from opengsq import Source
+    from opengsq.responses.source import GoldSourceInfo, SourceInfo
 
     host, port = await resolve_host(query)
     proto = Source(host, port, QUERY_TIMEOUT)
@@ -193,12 +202,23 @@ async def query_source(query: StatusQuery) -> Info:
 
     players = [Player(name=p.name) for p in players]
 
+    if isinstance(info, GoldSourceInfo):
+        version = str(info.version) if info.version is not None else None
+    elif isinstance(info, SourceInfo):
+        version = info.version
+    else:
+        version = None
+
     return Info(
         title=info.name,
         address=_format_address(query),
         thumbnail=None,
         max_players=info.max_players,
         num_players=info.players,
+        game=info.game,
+        map=info.map,
+        mods=None,  # TODO: parse mods per game?
+        version=version,
         players=players,
     )
 
@@ -323,12 +343,22 @@ async def record_info(status: Status, info: Info) -> None:
     await prune_history(status)
     async with connect() as conn:
         await conn.execute(
-            "UPDATE status SET title = COALESCE($1, title), "
-            "address = COALESCE($2, address), thumbnail = COALESCE($3, thumbnail) "
-            "WHERE status_id = $4",
+            "UPDATE status SET "
+            "title     = COALESCE($1, title), "
+            "address   = COALESCE($2, address), "
+            "thumbnail = COALESCE($3, thumbnail), "
+            "game      = COALESCE($4, game), "
+            "map       = COALESCE($5, map), "
+            "mods      = COALESCE($6, mods), "
+            "version   = COALESCE($7, version) "
+            "WHERE status_id =    $8",
             info.title,
             info.address,
             info.thumbnail,
+            info.game,
+            info.map,
+            info.mods,
+            info.version,
             status.status_id,
         )
 
@@ -407,6 +437,10 @@ class Info:
     title: str | None
     address: str
     thumbnail: bytes | None
+    game: str | None
+    map: str | None
+    mods: str | None
+    version: str | None
 
     max_players: int
     num_players: int
