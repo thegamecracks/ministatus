@@ -110,7 +110,19 @@ def _calculate_date_step(x_min: float, x_max: float) -> float:
     # Remember that date2num() = 1 day, so 1 / 24 is 1 hour.
     span_days = x_max - x_min
     max_ticks = 16
-    possible_steps = [1 / 24 / 4, 1 / 24, 1 / 12, 1 / 6, 1 / 3, 1, 3, 30]
+    possible_steps = [
+        1 / 24 / 60,  # 1min
+        1 / 24 / 30,  # 2min
+        1 / 24 / 12,  # 5min
+        1 / 24 / 4,  # 15min
+        1 / 24,  # 1h
+        1 / 12,  # 2h
+        1 / 6,  # 4h
+        1 / 3,  # 8h
+        1,  # 1d
+        3,  # 3d
+        30,  # 39d
+    ]
 
     for pstep in possible_steps:
         if span_days / pstep <= max_ticks:
