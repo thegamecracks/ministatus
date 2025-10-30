@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import datetime
 from contextlib import suppress
-from enum import Enum
-from typing import Annotated
+from enum import StrEnum
+from typing import Annotated, assert_never
 
 from pydantic import AfterValidator, BaseModel, Field
 
@@ -144,15 +144,27 @@ class StatusQuery(BaseModel):
     extra: str = ""
 
 
-class StatusQueryType(Enum):
-    ARMA_3 = ("arma3", "Arma 3")
-    ARMA_REFORGER = ("arma-reforger", "Arma Reforger")
-    MINECRAFT_BEDROCK = ("minecraft-bedrock", "Minecraft (Bedrock Edition)")
-    MINECRAFT_JAVA = ("minecraft-java", "Minecraft (Java Edition)")
-    SOURCE = ("source", "Source Query (A2S)")
-    PROJECT_ZOMBOID = ("project-zomboid", "Project Zomboid")
+class StatusQueryType(StrEnum):
+    ARMA_3 = "arma3"
+    ARMA_REFORGER = "arma-reforger"
+    MINECRAFT_BEDROCK = "minecraft-bedrock"
+    MINECRAFT_JAVA = "minecraft-java"
+    SOURCE = "source"
+    PROJECT_ZOMBOID = "project-zomboid"
 
-    def __init__(self, key: str, label: str) -> None:
-        super().__init__()
-        self.id = key
-        self.label = label
+    @property
+    def label(self) -> str:
+        if self == StatusQueryType.ARMA_3:
+            return "Arma 3"
+        elif self == StatusQueryType.ARMA_REFORGER:
+            return "Arma Reforger"
+        elif self == StatusQueryType.MINECRAFT_BEDROCK:
+            return "Minecraft (Bedrock Edition)"
+        elif self == StatusQueryType.MINECRAFT_JAVA:
+            return "Minecraft (Java Edition)"
+        elif self == StatusQueryType.SOURCE:
+            return "Source Query (A2S)"
+        elif self == StatusQueryType.PROJECT_ZOMBOID:
+            return "Project Zomboid"
+        else:
+            assert_never(self)

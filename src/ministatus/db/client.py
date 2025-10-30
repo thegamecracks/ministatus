@@ -246,7 +246,7 @@ class DatabaseClient:
             query.host,
             query.game_port,
             query.query_port,
-            query.type.id,
+            query.type,
             query.priority,
             query.enabled_at,
             query.failed_at,

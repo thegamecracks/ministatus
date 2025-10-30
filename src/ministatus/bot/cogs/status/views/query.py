@@ -78,7 +78,7 @@ class CreateStatusQueryTypeModal(Modal, title="Create Status Query"):
         text="Query Type",
         component=discord.ui.Select(
             options=sorted(
-                (SelectOption(label=t.label, value=t.id) for t in StatusQueryType),
+                (SelectOption(label=t.label, value=t) for t in StatusQueryType),
                 key=lambda o: o.label.lower(),
             ),
             placeholder="The game query protocol to use",
