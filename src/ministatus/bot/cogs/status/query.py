@@ -198,7 +198,7 @@ async def query_source(query: StatusQuery) -> Info:
         address=_format_address(query),
         thumbnail=None,
         max_players=info.max_players,
-        num_players=len(players),
+        num_players=info.players,
         players=players,
     )
 
