@@ -11,6 +11,15 @@ A Discord bot for managing game server status embeds.
 ![Terminal demonstration](https://github.com/user-attachments/assets/2515d62c-0177-40ac-b5b8-5e9c0fbcf7bd)
 ![Command demonstration](https://github.com/user-attachments/assets/c382fc35-ab9e-4ae6-9874-6e52e3dd8c94)
 
+## Supported Games / Query Protocols
+
+- Arma 3
+- Arma Reforger
+- Minecraft (Bedrock Edition)
+- Minecraft (Java Edition)
+- Project Zomboid
+- Valve Source Query (A2S)
+
 ## Setup
 
 This project requires Python 3.11 or newer. You can manually install this
