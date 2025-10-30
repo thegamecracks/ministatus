@@ -167,7 +167,7 @@ class StatusQueryType(StrEnum):
         elif self == StatusQueryType.MINECRAFT_JAVA:
             return "Minecraft (Java Edition)"
         elif self == StatusQueryType.SOURCE:
-            return "Source Query (A2S)"
+            return "Valve Source Query (A2S)"
         elif self == StatusQueryType.PROJECT_ZOMBOID:
             return "Project Zomboid"
         else:
