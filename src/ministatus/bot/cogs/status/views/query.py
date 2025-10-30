@@ -26,6 +26,7 @@ _CreateCallback: TypeAlias = (
 DEFAULT_PORTS: dict[StatusQueryType, tuple[int, int | bool]] = {
     StatusQueryType.ARMA_3: (2302, False),
     StatusQueryType.ARMA_REFORGER: (2001, 17777),
+    StatusQueryType.MINECRAFT_BEDROCK: (19132, False),
     StatusQueryType.MINECRAFT_JAVA: (25565, False),
     StatusQueryType.SOURCE: (27015, 27015),
     StatusQueryType.PROJECT_ZOMBOID: (16261, False),

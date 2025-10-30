@@ -117,10 +117,8 @@ async def send_query(query: StatusQuery) -> Info | None:
         return await query_source(query)
     elif query.type == StatusQueryType.ARMA_REFORGER:
         return await query_source(query)
-    # NOTE: Bedrock uses the RakNet protocol, but opengsq's implementation
-    #       seems to be broken. Use mcstatus instead, or wait for a hotfix.
-    # elif query.type == StatusQueryType.MINECRAFT_BEDROCK:
-    #     return await query_minecraft_bedrock(query)
+    elif query.type == StatusQueryType.MINECRAFT_BEDROCK:
+        return await query_minecraft_bedrock(query)
     elif query.type == StatusQueryType.MINECRAFT_JAVA:
         return await query_minecraft_java(query)
     elif query.type == StatusQueryType.SOURCE:
@@ -129,6 +127,27 @@ async def send_query(query: StatusQuery) -> Info | None:
         return await query_source(query)  # Wait, it's all source? Always has been
     else:
         assert_never(query.type)
+
+
+async def query_minecraft_bedrock(query: StatusQuery) -> Info:
+    from opengsq import RakNet
+
+    host, port = await resolve_host(query)
+    proto = RakNet(host, port, QUERY_TIMEOUT)
+
+    try:
+        status = await proto.get_status()
+    except TimeoutError as e:
+        raise FailedQueryError("Query timed out") from e
+
+    return Info(
+        title=status.motd_line1 or None,
+        address=_format_address(query),
+        thumbnail=None,
+        max_players=status.max_players,
+        num_players=status.num_players,
+        players=[],
+    )
 
 
 async def query_minecraft_java(query: StatusQuery) -> Info:
