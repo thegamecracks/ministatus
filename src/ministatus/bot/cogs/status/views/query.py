@@ -77,7 +77,10 @@ class CreateStatusQueryTypeModal(Modal, title="Create Status Query"):
     type = discord.ui.Label(
         text="Query Type",
         component=discord.ui.Select(
-            options=[SelectOption(label=t) for t in StatusQueryType],
+            options=sorted(
+                (SelectOption(label=t.label, value=t.id) for t in StatusQueryType),
+                key=lambda o: o.label.lower(),
+            ),
             placeholder="The game query protocol to use",
         ),
     )
@@ -122,7 +125,7 @@ class CreateStatusQueryView(LayoutView):
         self.type = type
 
         content = [
-            f"Type: {type}",
+            f"Type: {type.label}",
             f"Host: {host}",
         ]
 
@@ -249,7 +252,7 @@ class StatusQueryPage(Page):
             f"**Host:** {query.host}",
             f"**Game port:** {query.game_port}",
             f"**Query port:** {query.query_port}",
-            f"**Type:** {query.type}",
+            f"**Type:** {query.type.label}",
             f"**Priority:** {query.priority}",
             format_failed_at(query.failed_at),
         ]

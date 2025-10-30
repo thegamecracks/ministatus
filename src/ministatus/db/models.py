@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime
 from contextlib import suppress
-from enum import StrEnum
+from enum import Enum
 from typing import Annotated
 
 from pydantic import AfterValidator, BaseModel, Field
@@ -144,10 +144,15 @@ class StatusQuery(BaseModel):
     extra: str = ""
 
 
-class StatusQueryType(StrEnum):
-    ARMA_3 = "arma3"
-    ARMA_REFORGER = "arma-reforger"
-    MINECRAFT_BEDROCK = "minecraft-bedrock"
-    MINECRAFT_JAVA = "minecraft-java"
-    SOURCE = "source"
-    PROJECT_ZOMBOID = "project-zomboid"
+class StatusQueryType(Enum):
+    ARMA_3 = ("arma3", "Arma 3")
+    ARMA_REFORGER = ("arma-reforger", "Arma Reforger")
+    MINECRAFT_BEDROCK = ("minecraft-bedrock", "Minecraft (Bedrock Edition)")
+    MINECRAFT_JAVA = ("minecraft-java", "Minecraft (Java Edition)")
+    SOURCE = ("source", "Source Query (A2S)")
+    PROJECT_ZOMBOID = ("project-zomboid", "Project Zomboid")
+
+    def __init__(self, key: str, label: str) -> None:
+        super().__init__()
+        self.id = key
+        self.label = label
