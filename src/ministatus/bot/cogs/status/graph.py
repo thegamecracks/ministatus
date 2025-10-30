@@ -16,22 +16,6 @@ def create_player_count_graph(
     colour: int,
     max_players: int,
 ) -> io.BytesIO:
-    def format_hour(x: float, pos: float) -> str:
-        delta = cast(datetime.timedelta, mdates.num2timedelta(now_num - x))
-        seconds = int(delta.total_seconds())
-        minutes = seconds // 60
-        hours = seconds // 3600
-        days = seconds // 86400
-
-        if days and step >= 1:
-            return f"{days}d"
-        elif hours and step >= 1 / 24:
-            return f"{hours}h"
-        elif minutes:
-            return f"{minutes}m"
-
-        return "now"
-
     now = discord.utils.utcnow()
     if len(datapoints) < 2:
         datapoints = [
@@ -44,14 +28,11 @@ def create_player_count_graph(
 
     fig, ax = plt.subplots()
 
-    # if any(None not in (d.min, d.max) for d in datapoints):
-    #     # Resolution is not raw; generate bar graph with error bars
-    #     pass
-
     # Plot player counts
     x = [p[0] for p in datapoints]
     y = [p[1] for p in datapoints]
-    x_min, x_max = mdates.date2num(min(x)), mdates.date2num(max(x))
+    x_min = cast(float, mdates.date2num(min(x)))
+    x_max = cast(float, mdates.date2num(max(x)))
     ax.plot(x, y, colour_hex)  # , marker='.') # type: ignore
 
     # Set limits and fill under the line
@@ -63,21 +44,8 @@ def create_player_count_graph(
         color=colour_hex + "55",
     )
 
-    # Figure out a reasonable interval to use for x-ticks.
-    # Remember that date2num() = 1 day, so 1 / 24 is 1 hour.
-    span_days = x_max - x_min
-    max_ticks = 16
-    possible_steps = [1 / 24 / 4, 1 / 24, 1 / 12, 1 / 6, 1 / 3, 1, 3, 30]
-    step = possible_steps[-1]
-    for pstep in possible_steps:
-        if span_days / pstep <= max_ticks:
-            step = pstep
-            break
-
     now_num = cast(float, mdates.date2num(now))
-    start = x_max - step + (now_num - x_max)
-    ax.set_xticks(np.arange(start, x_min, -step))
-    ax.xaxis.set_major_formatter(format_hour)
+    _set_relative_date_xticks(ax, now_num, x_min, x_max)
 
     # Set yticks
     y_step = math.ceil(max_players / 10) or 5
@@ -108,6 +76,47 @@ def create_player_count_graph(
 
     plt.close(fig)
     return f
+
+
+def _set_relative_date_xticks(ax: Axes, now: float, x_min: float, x_max: float) -> None:
+    def format_hour(x: float, pos: float) -> str:
+        # Generate ticks based exactly on the tick position and step.
+        # Floating point errors can still occur from this, so unfortunately
+        # we have to round anyway.
+
+        pos += 1  # bump 0-indexed to 1-indexed for our math
+
+        if step >= 1:
+            days = round(pos * step)
+            return f"{days}d"
+        elif step >= 1 / 24:
+            hours = round(pos * step * 24)
+            return f"{hours}h"
+        elif step >= 1 / 24 / 60:
+            minutes = round(pos * step * 24 * 60)
+            return f"{minutes}m"
+
+        seconds = round(pos * step * 24 * 60 * 60)
+        return f"{seconds}s"
+
+    step = _calculate_date_step(x_min, x_max)
+    start = x_max - step + (now - x_max)
+    ax.set_xticks(np.arange(start, x_min, -step))
+    ax.xaxis.set_major_formatter(format_hour)
+
+
+def _calculate_date_step(x_min: float, x_max: float) -> float:
+    # Figure out a reasonable interval to use for x-ticks.
+    # Remember that date2num() = 1 day, so 1 / 24 is 1 hour.
+    span_days = x_max - x_min
+    max_ticks = 16
+    possible_steps = [1 / 24 / 4, 1 / 24, 1 / 12, 1 / 6, 1 / 3, 1, 3, 30]
+
+    for pstep in possible_steps:
+        if span_days / pstep <= max_ticks:
+            return pstep
+
+    return possible_steps[-1]
 
 
 def set_axes_aspect(ax: Axes, ratio: int | float, *args, **kwargs) -> None:
