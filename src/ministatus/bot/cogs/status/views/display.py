@@ -338,20 +338,13 @@ class StatusDisplayView(LayoutView):
             section.add_item(discord.ui.Separator())
 
         latest = history[-1] if history else None
-        online = get_online_message(latest)
-        now = utcnow()
-        last_updated = discord.utils.format_dt(now, "R")
-        players = (p for p in latest.players if p.name) if latest is not None else ()
-        players = sorted(players, key=lambda p: p.name.lower())
-        num_players = latest and latest.num_players
-        max_players = latest and latest.max_players
-        content = [
-            f"**Address:** {status.address}",
-            f"**Status:** {online}",
-            f"**Last updated:** {last_updated}",
-            f"**Player count:** {num_players}/{max_players}",
-            # TODO: tailor details to game
-        ]
+        if latest is not None:
+            players = (p for p in latest.players if p.name)
+            players = sorted(players, key=lambda p: p.name.lower())
+        else:
+            players = []
+
+        content = self._render_content(status, latest)
         section.add_item(discord.ui.TextDisplay("\n".join(content)))
 
         self.container.add_item(discord.ui.Separator())
@@ -367,6 +360,29 @@ class StatusDisplayView(LayoutView):
         files = await self._maybe_refresh_attachments(status, display, history)
         rendered.files.extend(files)
         return rendered
+
+    def _render_content(
+        self,
+        status: Status,
+        latest: StatusHistory | None,
+    ) -> list[str]:
+        now = utcnow()
+        last_updated = discord.utils.format_dt(now, "R")
+        online = get_online_message(latest)
+
+        # TODO: tailor details to game
+        content = [
+            f"**Address:** {status.address}",
+            f"**Status:** {online}",
+            f"**Last updated:** {last_updated}",
+        ]
+
+        if latest is None:
+            return content
+
+        content.append(f"**Player count:** {latest.num_players}/{latest.max_players}")
+
+        return content
 
     def _render_players(
         self,
