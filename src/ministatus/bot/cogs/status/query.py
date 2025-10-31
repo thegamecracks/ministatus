@@ -98,7 +98,7 @@ async def maybe_query(bot: Bot, query: StatusQuery) -> Info | None:
     try:
         info = await send_query(query)
     except FailedQueryError as e:
-        log.debug("Query #%d failed: %s", query.status_query_id, e)
+        log.debug("Query #%d failed: %s", query.status_query_id, e, exc_info=e)
         expired = await set_query_failed(query)
         if not expired:
             return
