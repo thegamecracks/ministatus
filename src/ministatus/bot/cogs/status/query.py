@@ -291,14 +291,14 @@ async def resolve_host(query: StatusQuery) -> tuple[str, int]:
 async def _resolve(qname: str, rdtype: RdataType) -> Answer | None:
     try:
         return await _resolver.resolve(qname, rdtype, lifetime=DNS_TIMEOUT)
-    except Timeout:
-        log.warning("DNS lookup for query #{query.id}timed out after %.2fs")
-        raise
+    except Timeout as e:
+        log.warning("DNS lookup timed out after %.2fs", DNS_TIMEOUT)
+        raise FailedQueryError("DNS lookup timed out") from e
     except (NoAnswer, NXDOMAIN):
         return None
-    except NoNameservers:
-        log.exception("Nameservers unavailable")
-        raise
+    except NoNameservers as e:
+        log.warning("DNS nameservers unavailable")
+        raise FailedQueryError("DNS nameservers unavailable") from e
     except YXDOMAIN as e:
         raise InvalidQueryError("DNS name is too long") from e
 
