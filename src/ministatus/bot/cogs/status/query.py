@@ -107,6 +107,9 @@ async def maybe_query(bot: Bot, query: StatusQuery) -> Info | None:
     except InvalidQueryError as e:
         await set_query_failed(query)
         return await disable_query(bot, query, str(e))
+    except Exception:
+        await set_query_failed(query)
+        raise
     else:
         await set_query_success(query)
         return info
