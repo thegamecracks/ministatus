@@ -6,6 +6,7 @@ import datetime
 import logging
 from contextlib import suppress
 from dataclasses import dataclass
+from enum import Enum
 from typing import TYPE_CHECKING, assert_never, cast
 
 import discord
@@ -19,6 +20,7 @@ from dns.resolver import Answer, Cache, NoAnswer, NoNameservers, NXDOMAIN, YXDOM
 
 from ministatus.bot.dt import past, utcnow
 from ministatus.db import (
+    SQLiteConnection,
     Status,
     StatusDisplay,
     StatusQuery,
@@ -331,13 +333,19 @@ async def record_offline(status: Status) -> None:
     log.debug("Recording status #%d as offline", status.status_id)
     await prune_history(status)
     async with connect() as conn:
+        downtime = await _check_downtime(conn, status)
         await conn.execute(
-            "INSERT INTO status_history (created_at, status_id, online) "
-            "VALUES ($1, $2, $3) RETURNING status_history_id",
+            "INSERT INTO status_history (created_at, status_id, online, down) "
+            "VALUES ($1, $2, $3, $4) RETURNING status_history_id",
             utcnow(),
             status.status_id,
             False,
+            downtime in (DowntimeStatus.DOWNTIME, DowntimeStatus.PENDING_DOWNTIME),
         )
+
+    if downtime == DowntimeStatus.PENDING_DOWNTIME:
+        # TODO: send downtime alert
+        log.info("Status #%d has went offline", status.status_id)
 
 
 async def record_info(status: Status, info: Info) -> None:
@@ -364,15 +372,17 @@ async def record_info(status: Status, info: Info) -> None:
             status.status_id,
         )
 
+        downtime = await _check_downtime(conn, status)
         status_history_id = await conn.fetchval(
             "INSERT INTO status_history "
-            "(created_at, status_id, online, max_players, num_players) "
-            "VALUES ($1, $2, $3, $4, $5) RETURNING status_history_id",
+            "(created_at, status_id, online, max_players, num_players, down) "
+            "VALUES ($1, $2, $3, $4, $5, $6) RETURNING status_history_id",
             utcnow(),
             status.status_id,
             True,
             info.max_players,
             info.num_players,
+            False,  # a successful query always terminates downtime
         )
 
         await conn.executemany(
@@ -380,6 +390,10 @@ async def record_info(status: Status, info: Info) -> None:
             "VALUES ($1, $2)",
             ((status_history_id, player.name) for player in info.players),
         )
+
+    if downtime == DowntimeStatus.DOWNTIME:
+        # TODO: send uptime alert
+        log.info("Status #%d has went online", status.status_id)
 
 
 async def prune_history(status: Status) -> None:
@@ -398,6 +412,31 @@ async def prune_history(status: Status) -> None:
             status.status_id,
             past(HISTORY_PLAYERS_EXPIRES_AFTER),
         )
+
+
+async def _check_downtime(conn: SQLiteConnection, status: Status) -> DowntimeStatus:
+    # The idea is if we have three consecutive offline queries, we should
+    # consider the server as down, and the server is otherwise online if
+    # at least one of the recent queries was successful.
+    #
+    # Since this function is called before a new row is inserted,
+    # we'll only select the last two rows and let the caller decide
+    # for the next row if it's uptime or downtime.
+    #
+    # NOTE: downtime is directly affected by query interval
+    history = await conn.fetch(
+        "SELECT online, down FROM status_history WHERE status_id = $1 "
+        "ORDER BY status_history_id DESC LIMIT 2",
+        status.status_id,
+    )
+
+    if any(row["online"] for row in history):
+        return DowntimeStatus.ONLINE
+    elif any(row["down"] for row in history):
+        return DowntimeStatus.DOWNTIME
+    else:
+        # This case also applies to fresh statuses without any history
+        return DowntimeStatus.PENDING_DOWNTIME
 
 
 async def maybe_update_display(bot: Bot, display: StatusDisplay) -> None:
@@ -452,6 +491,15 @@ class Info:
 @dataclass(kw_only=True)
 class Player:
     name: str
+
+
+class DowntimeStatus(Enum):
+    ONLINE = 1
+    """The server was recently online."""
+    PENDING_DOWNTIME = 2
+    """The server is down, but has not yet been logged as downtime."""
+    DOWNTIME = 3
+    """The server is down and has been logged as downtime."""
 
 
 class QueryError(RuntimeError):
