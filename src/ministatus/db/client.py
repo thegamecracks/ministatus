@@ -504,6 +504,7 @@ class DatabaseClient:
                 online=row["online"],
                 max_players=row["max_players"],
                 num_players=row["num_players"],
+                down=row["down"],
                 players=players,
             )
             history_models[model.status_id].append(model)
