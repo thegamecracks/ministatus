@@ -2,17 +2,22 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Collection
+from io import BytesIO
+from typing import TYPE_CHECKING, Any, Collection
 
 import discord
 
 from ministatus.bot.db import connect_discord_database_client
 from ministatus.bot.dt import utcnow
 from ministatus.bot.views import LayoutView
-from ministatus.db import StatusAlert, StatusDisplay, StatusQuery, connect
+from ministatus.db import Status, StatusAlert, StatusDisplay, StatusQuery, connect
 
 if TYPE_CHECKING:
     from ministatus.bot.bot import Bot
+
+ERROR_COLOUR = 0xFF4040
+WARNING_COLOUR = 0xFF9640
+SUCCESS_COLOUR = 0x4DFF40
 
 log = logging.getLogger(__name__)
 
@@ -109,10 +114,36 @@ async def send_alert_disabled_query(
     await send_alerts(bot, alert_channels, view)
 
 
+async def send_alert_downtime_started(bot: Bot, status: Status) -> None:
+    status_id = status.status_id
+    async with connect_discord_database_client(bot) as ddc:
+        alert_channels = await ddc.get_bulk_status_alert_channels(
+            status_id,
+            only_enabled=True,
+            type="downtime",
+        )
+
+    view = AlertDowntimeStarted(status)
+    await send_alerts(bot, alert_channels, view)
+
+
+async def send_alert_downtime_ended(bot: Bot, status: Status) -> None:
+    status_id = status.status_id
+    async with connect_discord_database_client(bot) as ddc:
+        alert_channels = await ddc.get_bulk_status_alert_channels(
+            status_id,
+            only_enabled=True,
+            type="downtime",
+        )
+
+    view = AlertDowntimeEnded(status)
+    await send_alerts(bot, alert_channels, view)
+
+
 async def send_alerts(
     bot: Bot,
     alert_channels: Collection[tuple[StatusAlert, discord.abc.MessageableChannel]],
-    view: LayoutView,
+    view: Alert,
 ) -> None:
     if not alert_channels:
         return
@@ -145,10 +176,11 @@ async def try_send_alert(
     bot: Bot,
     alert: StatusAlert,
     channel: discord.abc.MessageableChannel,
-    view: LayoutView,
+    view: Alert,
 ) -> None:
+    kwargs = view.get_send_kwargs()
     try:
-        await channel.send(view=view)
+        await channel.send(view=view, **kwargs)
     except discord.Forbidden:
         reason = "Missing permissions to send to channel"
         log.warning("Status alert #%d is invalid: %s", reason)
@@ -162,17 +194,20 @@ async def try_send_alert(
 class Alert(LayoutView):
     container = discord.ui.Container()
 
-    def __init__(self, *, accent_colour: int, title: str, content: str) -> None:
+    def __init__(self, *, accent_colour: int) -> None:
         super().__init__()
         self.container.accent_colour = accent_colour
-        self.container.add_item(discord.ui.TextDisplay(f"## {title}"))
-        self.container.add_item(discord.ui.Separator())
-        self.container.add_item(discord.ui.TextDisplay(content))
+
+    def get_send_kwargs(self) -> dict[str, Any]:
+        return {}
 
 
 class AlertDisabled(Alert):
     def __init__(self, title: str, content: str) -> None:
-        super().__init__(accent_colour=0xFF4040, title=title, content=content)
+        super().__init__(accent_colour=ERROR_COLOUR)
+        self.container.add_item(discord.ui.TextDisplay(f"## {title}"))
+        self.container.add_item(discord.ui.Separator())
+        self.container.add_item(discord.ui.TextDisplay(content))
 
 
 class AlertDisabledAlert(AlertDisabled):
@@ -213,3 +248,70 @@ class AlertDisabledQuery(AlertDisabled):
             f"```{reason}```"
         )
         super().__init__(title=title, content=content)
+
+
+class AlertDowntime(Alert):
+    def __init__(
+        self,
+        *,
+        status: Status,
+        accent_colour: int,
+        title: str,
+        content: str,
+    ) -> None:
+        super().__init__(accent_colour=accent_colour)
+
+        self.status = status
+        self.title = discord.ui.TextDisplay(title)
+        self.content = discord.ui.TextDisplay(content)
+
+        if status.thumbnail:
+            thumbnail = discord.ui.Thumbnail("attachment://thumbnail.png")
+            self.section = discord.ui.Section(accessory=thumbnail)
+            self.container.add_item(self.section)
+            self.section.add_item(self.title)
+            self.section.add_item(self.content)
+        else:
+            self.section = self.container
+            self.section.add_item(self.title)
+            self.section.add_item(discord.ui.Separator())
+            self.section.add_item(self.content)
+
+    def get_send_kwargs(self) -> dict[str, Any]:
+        kwargs = {}
+        if self.status.thumbnail:
+            thumbnail = discord.File(BytesIO(self.status.thumbnail), "thumbnail.png")
+            kwargs["files"] = [thumbnail]
+        return kwargs
+
+
+class AlertDowntimeStarted(AlertDowntime):
+    def __init__(self, status: Status) -> None:
+        label = status.title or status.label
+        title = f"## {label} offline"
+        content = [
+            f"{label} has stopped responding to queries.",
+            f"**Address:** {status.address}",
+        ]
+        super().__init__(
+            status=status,
+            accent_colour=WARNING_COLOUR,
+            title=title,
+            content="\n".join(content),
+        )
+
+
+class AlertDowntimeEnded(AlertDowntime):
+    def __init__(self, status: Status) -> None:
+        label = status.title or status.label
+        title = f"## {label} online"
+        content = [
+            f"{label} is now responding to queries.",
+            f"**Address:** {status.address}",
+        ]
+        super().__init__(
+            status=status,
+            accent_colour=SUCCESS_COLOUR,
+            title=title,
+            content="\n".join(content),
+        )

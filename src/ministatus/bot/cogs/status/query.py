@@ -29,7 +29,12 @@ from ministatus.db import (
     connect_client,
 )
 
-from .alert import disable_display, disable_query
+from .alert import (
+    disable_display,
+    disable_query,
+    send_alert_downtime_ended,
+    send_alert_downtime_started,
+)
 from .views import update_display
 
 if TYPE_CHECKING:
@@ -87,10 +92,10 @@ async def query_status(bot: Bot, status: Status) -> None:
     for query in status.queries:
         info = await maybe_query(bot, query)
         if info is not None:
-            await record_info(status, info)
+            await record_info(bot, status, info)
             break
     else:
-        await record_offline(status)
+        await record_offline(bot, status)
 
     for display in status.displays:
         await maybe_update_display(bot, display)
@@ -329,7 +334,7 @@ async def set_query_success(query: StatusQuery) -> None:
         )
 
 
-async def record_offline(status: Status) -> None:
+async def record_offline(bot: Bot, status: Status) -> None:
     log.debug("Recording status #%d as offline", status.status_id)
     await prune_history(status)
     async with connect() as conn:
@@ -344,11 +349,10 @@ async def record_offline(status: Status) -> None:
         )
 
     if downtime == DowntimeStatus.PENDING_DOWNTIME:
-        # TODO: send downtime alert
-        log.info("Status #%d has went offline", status.status_id)
+        await send_alert_downtime_started(bot, status)
 
 
-async def record_info(status: Status, info: Info) -> None:
+async def record_info(bot: Bot, status: Status, info: Info) -> None:
     log.debug("Recording status #%d as online", status.status_id)
     await prune_history(status)
     async with connect() as conn:
@@ -392,8 +396,7 @@ async def record_info(status: Status, info: Info) -> None:
         )
 
     if downtime == DowntimeStatus.DOWNTIME:
-        # TODO: send uptime alert
-        log.info("Status #%d has went online", status.status_id)
+        await send_alert_downtime_ended(bot, status)
 
 
 async def prune_history(status: Status) -> None:
