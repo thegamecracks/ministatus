@@ -274,6 +274,8 @@ def get_online_message(history: StatusHistory | None) -> str:
         return "Unknown 🟡"
     elif history.online:
         return "Online 🟢"
+    elif not history.down:
+        return "Online 🟡"
     else:
         return "Offline 🔴"
 
