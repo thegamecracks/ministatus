@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import textwrap
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from typing import (
     TYPE_CHECKING,
@@ -20,6 +21,7 @@ if TYPE_CHECKING:
 
 T = TypeVar("T")
 
+LOG_QUERIES = False
 log = logging.getLogger(__name__)
 
 
@@ -51,7 +53,9 @@ class SQLiteConnection(Connection):
         self.conn = conn
 
     async def execute(self, query: str, /, *args: object) -> None:
-        # log.debug("SQL execute: %s", query)
+        if LOG_QUERIES:
+            log.debug("SQL execute: %s", query)
+
         async with self.conn.execute(query, args):
             return
 
@@ -61,27 +65,35 @@ class SQLiteConnection(Connection):
         args: Iterable[Iterable[object]],
         /,
     ) -> None:
-        # log.debug("SQL executemany: %s", query)
+        if LOG_QUERIES:
+            log.debug("SQL executemany: %s", query)
+
         async with self.conn.executemany(query, args):
             return
 
     async def executescript(self, query: str) -> None:
-        # import textwrap
-        # log.debug("SQL executescript: %s", textwrap.shorten(query, 200))
+        if LOG_QUERIES:
+            log.debug("SQL executescript: %s", textwrap.shorten(query, 200))
 
         async with self.conn.executescript(query):
             return
 
     async def fetch(self, query: str, /, *args: object) -> Sequence[sqlite3.Row]:
-        # log.debug("SQL fetch: %s", query)
+        if LOG_QUERIES:
+            log.debug("SQL fetch: %s", query)
+
         return await self.conn.fetchall(query, args)
 
     async def fetchrow(self, query: str, /, *args: object) -> sqlite3.Row | None:
-        # log.debug("SQL fetchrow: %s", query)
+        if LOG_QUERIES:
+            log.debug("SQL fetchrow: %s", query)
+
         return await self.conn.fetchone(query, args)
 
     async def fetchval(self, query: str, /, *args: object) -> Any:
-        # log.debug("SQL fetchval: %s", query)
+        if LOG_QUERIES:
+            log.debug("SQL fetchval: %s", query)
+
         row = await self.conn.fetchone(query, args)
         if row is not None:
             return row[0]
