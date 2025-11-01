@@ -210,7 +210,7 @@ class _StatusModifyRow(discord.ui.ActionRow):
                     status_id,
                 )
             ]
-            # FIXME: lazy N+1 query
+            # NOTE: N+1 query
             messages = [await ddc.get_message(message_id=m) for m in messages]
             messages = [m for m in messages if m is not None]
             await conn.execute("DELETE FROM status WHERE status_id = $1", status_id)
