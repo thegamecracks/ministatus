@@ -267,7 +267,6 @@ async def resolve_host(query: StatusQuery) -> tuple[str, int]:
     # NOTE: there could be multiple DNS records, but we're always returning the first
 
     if host_srv and (answers := await _resolve(host_srv, SRV)):
-        # FIXME: how long are no answers cached for SRV queries?
         record = cast(SRVRecord, answers[0])
         log.debug("Resolved query #%d with SRV record", query.status_query_id)
         host = str(record.target).rstrip(".")
