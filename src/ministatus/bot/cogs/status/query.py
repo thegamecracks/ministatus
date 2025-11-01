@@ -45,7 +45,7 @@ log = logging.getLogger(__name__)
 DNS_TIMEOUT = 3
 HISTORY_EXPIRES_AFTER = datetime.timedelta(days=30)
 HISTORY_PLAYERS_EXPIRES_AFTER = datetime.timedelta(hours=1)
-QUERY_DEAD_AFTER = datetime.timedelta(days=7)
+QUERY_DEAD_AFTER = datetime.timedelta(days=1)
 QUERY_TIMEOUT = 3
 
 _resolver = Resolver()
