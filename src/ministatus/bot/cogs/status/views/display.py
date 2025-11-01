@@ -308,6 +308,7 @@ class StatusDisplayView(LayoutView):
             history = await ddc.client.get_bulk_status_history(
                 status.status_id,
                 after=past(display.graph_interval),
+                unknown=False,
             )
             history = history[status.status_id]
 

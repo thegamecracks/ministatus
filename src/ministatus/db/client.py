@@ -479,15 +479,18 @@ class DatabaseClient:
         self,
         *status_ids: int,
         after: datetime.datetime,
+        unknown: bool = True,
     ) -> dict[int, list[StatusHistory]]:
         history_models = {status_id: [] for status_id in status_ids}
         if not status_ids:
             return history_models
 
         sid = ", ".join("?" * len(status_ids))
+        unknown_expr = "true" if unknown else "online OR down"
         history_rows = await self.conn.fetch(
             f"SELECT * FROM status_history WHERE status_id IN ({sid}) "
-            f"AND created_at >= ? ORDER BY status_id, created_at",
+            f"AND created_at >= ? AND {unknown_expr} "
+            f"ORDER BY status_id, created_at",
             *status_ids,
             after,
         )
