@@ -308,7 +308,6 @@ class StatusDisplayView(LayoutView):
             history = await ddc.client.get_bulk_status_history(
                 status.status_id,
                 after=past(display.graph_interval),
-                unknown=False,
             )
             history = history[status.status_id]
 
@@ -340,14 +339,21 @@ class StatusDisplayView(LayoutView):
         if section == self.container:
             section.add_item(discord.ui.Separator())
 
-        latest = history[-1] if history else None
-        if latest is not None:
-            players = (p for p in latest.players if p.name)
+        # Sometimes queries may fail at random, resulting in a one-off row
+        # that's offline but not down. We want to exclude those rows so
+        # our player list and graph appears stable, just in case it was an
+        # intermittent failure.
+        clean_history = [h for h in history if h.online or h.down]
+        latest_raw = next(reversed(history), None)
+        latest_known = next(reversed(clean_history), latest_raw)
+
+        if latest_known is not None:
+            players = (p for p in latest_known.players if p.name)
             players = sorted(players, key=lambda p: p.name.lower())
         else:
             players = []
 
-        content = self._render_content(status, latest)
+        content = self._render_content(status, latest_raw, latest_known)
         section.add_item(discord.ui.TextDisplay("\n".join(content)))
 
         self.container.add_item(discord.ui.Separator())
@@ -360,18 +366,19 @@ class StatusDisplayView(LayoutView):
             )
         )
 
-        files = await self._maybe_refresh_attachments(status, display, history)
+        files = await self._maybe_refresh_attachments(status, display, clean_history)
         rendered.files.extend(files)
         return rendered
 
     def _render_content(
         self,
         status: Status,
-        latest: StatusHistory | None,
+        latest_raw: StatusHistory | None,
+        latest_known: StatusHistory | None,
     ) -> list[str]:
         now = utcnow()
         last_updated = discord.utils.format_dt(now, "R")
-        online = get_online_message(latest)
+        online = get_online_message(latest_raw)
 
         # TODO: tailor details to game
         content = [
@@ -389,10 +396,11 @@ class StatusDisplayView(LayoutView):
 
         # TODO: display mods in a manner suitable for long text
 
-        if latest is None:
+        if latest_known is None:
             return content
 
-        content.append(f"**Player count:** {latest.num_players}/{latest.max_players}")
+        h = latest_known
+        content.append(f"**Player count:** {h.num_players}/{h.max_players}")
 
         return content
 
@@ -415,7 +423,7 @@ class StatusDisplayView(LayoutView):
         self,
         status: Status,
         display: StatusDisplay,
-        history: list[StatusHistory],
+        clean_history: list[StatusHistory],
     ) -> list[discord.File]:
         # NOTE: A status can have multiple displays, each of which independently
         #       generates its own images. Perhaps this should be shared?
@@ -433,9 +441,9 @@ class StatusDisplayView(LayoutView):
 
         graph = await asyncio.to_thread(
             create_player_count_graph,
-            [(h.created_at, h.num_players) for h in history],
+            [(h.created_at, h.num_players) for h in clean_history],
             colour=display.graph_colour,
-            max_players=max((h.max_players for h in history), default=0),
+            max_players=max((h.max_players for h in clean_history), default=0),
         )
         f = discord.File(graph, "graph.png")
         files.append(f)
