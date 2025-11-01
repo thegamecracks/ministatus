@@ -178,8 +178,8 @@ class DatabaseClient:
 
         row = await self.conn.fetchrow(
             "INSERT INTO status "
-            "(guild_id, label, title, address, thumbnail, enabled_at, failed_at) "
-            "VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *",
+            "(guild_id, label, title, address, thumbnail, enabled_at, failed_at, game, map, mods, version) "
+            "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *",
             status.guild_id,
             status.label,
             status.title,
