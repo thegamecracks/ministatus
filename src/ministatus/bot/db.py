@@ -10,7 +10,7 @@ from typing import (
     runtime_checkable,
 )
 
-from ministatus.db import DatabaseClient, StatusAlert, connect_client
+from ministatus.db import DatabaseClient, StatusAlert, TransactionMode, connect_client
 
 if TYPE_CHECKING:
     import discord
@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 async def connect_discord_database_client(
     bot: Bot,
     *,
-    transaction: bool = True,
+    transaction: TransactionMode = True,
 ) -> AsyncIterator[DiscordDatabaseClient]:
     async with connect_client(transaction=transaction) as client:
         yield DiscordDatabaseClient(bot, client)

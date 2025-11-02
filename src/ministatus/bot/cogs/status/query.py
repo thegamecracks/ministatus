@@ -330,7 +330,10 @@ async def set_query_success(query: StatusQuery) -> None:
 async def record_offline(bot: Bot, status: Status) -> None:
     log.debug("Recording status #%d as offline", status.status_id)
     await prune_history(status)
-    async with connect() as conn:
+
+    # Use transaction="write" to eagerly lock the database with a timeout,
+    # since our transaction starts with a read.
+    async with connect(transaction="write") as conn:
         downtime = await _check_downtime(conn, status)
         await conn.execute(
             "INSERT INTO status_history (created_at, status_id, online, down) "

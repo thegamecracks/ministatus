@@ -9,9 +9,12 @@ from typing import (
     AsyncIterator,
     Iterable,
     Iterator,
+    Literal,
     Protocol,
+    Self,
     Sequence,
     TypeVar,
+    assert_never,
 )
 
 if TYPE_CHECKING:
@@ -20,6 +23,7 @@ if TYPE_CHECKING:
     import asqlite
 
 T = TypeVar("T")
+TransactionMode = bool | Literal["read", "write"]
 
 LOG_QUERIES = False
 log = logging.getLogger(__name__)
@@ -45,7 +49,11 @@ class Connection(Protocol):
     async def fetch(self, query: str, /, *args: object) -> Sequence[Record]: ...
     async def fetchrow(self, query: str, /, *args: object) -> Record | None: ...
     async def fetchval(self, query: str, /, *args: object) -> Any: ...
-    def transaction(self) -> AbstractAsyncContextManager[Any]: ...
+    def transaction(
+        self,
+        mode: TransactionMode,
+        /,
+    ) -> AbstractAsyncContextManager[Self]: ...
 
 
 class SQLiteConnection(Connection):
@@ -99,6 +107,24 @@ class SQLiteConnection(Connection):
             return row[0]
 
     @asynccontextmanager
-    async def transaction(self) -> AsyncIterator[asqlite.Transaction]:
-        async with self.conn.transaction() as transaction:
-            yield transaction
+    async def transaction(
+        self,
+        mode: TransactionMode,
+    ) -> AsyncIterator[Self]:
+        if mode is False:
+            yield self
+        elif mode in (True, "read"):
+            async with self.conn.transaction():
+                yield self
+        elif mode == "write":
+            await self.conn.execute("BEGIN IMMEDIATE TRANSACTION")
+            try:
+                yield self
+            except BaseException:
+                await self.conn.rollback()
+                raise
+            else:
+                await self.conn.commit()
+
+        else:
+            assert_never(mode)

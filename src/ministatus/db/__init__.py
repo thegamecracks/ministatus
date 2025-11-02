@@ -16,6 +16,7 @@ from .connection import (
     Connection as Connection,
     Record as Record,
     SQLiteConnection as SQLiteConnection,
+    TransactionMode as TransactionMode,
 )
 from .errors import (
     DatabaseEncryptedError as DatabaseEncryptedError,
@@ -57,7 +58,10 @@ _real_connect = sqlite3.connect
 
 
 @asynccontextmanager
-async def connect(*, transaction: bool = True) -> AsyncIterator[SQLiteConnection]:
+async def connect(
+    *,
+    transaction: TransactionMode = True,
+) -> AsyncIterator[SQLiteConnection]:
     if LOG_CONNECTION_STACKS:
         log.debug("CONNECT:    %s", _format_connection_stack())
     if _current_conn.get(None):
@@ -75,10 +79,7 @@ async def connect(*, transaction: bool = True) -> AsyncIterator[SQLiteConnection
         async with _connect(str(DB_PATH)) as conn:
             wrapped = SQLiteConnection(conn)
             token = _current_conn.set(wrapped)
-            if transaction:
-                async with wrapped.transaction():
-                    yield wrapped
-            else:
+            async with wrapped.transaction(transaction):
                 yield wrapped
     finally:
         if token is not None:
@@ -96,7 +97,10 @@ async def connect(*, transaction: bool = True) -> AsyncIterator[SQLiteConnection
 
 
 @asynccontextmanager
-async def connect_client(*, transaction: bool = True) -> AsyncIterator[DatabaseClient]:
+async def connect_client(
+    *,
+    transaction: TransactionMode = True,
+) -> AsyncIterator[DatabaseClient]:
     async with connect(transaction=transaction) as conn:
         yield DatabaseClient(conn)
 
