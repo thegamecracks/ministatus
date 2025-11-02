@@ -38,6 +38,8 @@ def get_default_ports(type: StatusQueryType) -> tuple[int, int | None]:
         return 2302, None
     elif type == StatusQueryType.ARMA_REFORGER:
         return 2001, 17777
+    elif type == StatusQueryType.FIVEM:
+        return 30120, None
     elif type == StatusQueryType.MINECRAFT_BEDROCK:
         return 19132, None
     elif type == StatusQueryType.MINECRAFT_JAVA:

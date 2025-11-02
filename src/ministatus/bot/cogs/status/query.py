@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import TYPE_CHECKING, assert_never, cast
 
+import aiohttp
 import discord
 from dns.asyncresolver import Resolver
 from dns.exception import Timeout
@@ -129,6 +130,8 @@ async def send_query(query: StatusQuery) -> Info | None:
         return await query_source(query)
     elif query.type == StatusQueryType.ARMA_REFORGER:
         return await query_source(query)
+    elif query.type == StatusQueryType.FIVEM:
+        return await query_fivem(query)
     elif query.type == StatusQueryType.MINECRAFT_BEDROCK:
         return await query_minecraft_bedrock(query)
     elif query.type == StatusQueryType.MINECRAFT_JAVA:
@@ -139,6 +142,40 @@ async def send_query(query: StatusQuery) -> Info | None:
         return await query_source(query)  # Wait, it's all source? Always has been
     else:
         assert_never(query.type)
+
+
+async def query_fivem(query: StatusQuery) -> Info:
+    from opengsq import FiveM
+
+    host, port = await resolve_host(query)
+    proto = FiveM(host, port, QUERY_TIMEOUT)
+    # TODO: use ClientSession, above refuses self-signed and timeout is broken
+
+    try:
+        dynamic = await proto.get_dynamic()
+        info = await proto.get_info()
+        players = await proto.get_players()
+    except aiohttp.ClientConnectorError as e:
+        raise FailedQueryError("Query timed out") from e
+
+    vars = info.get("vars", {})
+    if thumbnail := info.get("icon"):
+        thumbnail = base64.b64decode(thumbnail)
+
+    players = [Player(name=name) for p in players if (name := p.get("name"))]
+
+    return Info(
+        title=dynamic.get("hostname") or vars.get("sv_projectName"),
+        address=query.address,
+        thumbnail=thumbnail,
+        max_players=int(dynamic.get("sv_maxclients") or info.get("sv_maxClients") or 0),
+        num_players=int(dynamic.get("clients") or 0),
+        game=dynamic.get("freeroam") or None,
+        map=dynamic.get("mapname") or None,
+        mods=None,  # mods=info.get("resources", []),
+        version=str(info.get("version", "")) or None,
+        players=players,
+    )
 
 
 async def query_minecraft_bedrock(query: StatusQuery) -> Info:
@@ -261,6 +298,8 @@ async def resolve_host(query: StatusQuery) -> tuple[str, int]:
     if type == StatusQueryType.ARMA_3:
         host_srv = f"_arma3._udp.{host}"
         srv_offset = 1
+    elif type == StatusQueryType.FIVEM:
+        host_srv = f"_cfx._udp.{host}"
     elif type == StatusQueryType.MINECRAFT_JAVA:
         host_srv = f"_minecraft._tcp.{host}"
 

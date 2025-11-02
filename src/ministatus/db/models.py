@@ -160,6 +160,7 @@ class StatusQuery(BaseModel):
 class StatusQueryType(StrEnum):
     ARMA_3 = "arma3"
     ARMA_REFORGER = "arma-reforger"
+    FIVEM = "fivem"
     MINECRAFT_BEDROCK = "minecraft-bedrock"
     MINECRAFT_JAVA = "minecraft-java"
     SOURCE = "source"
@@ -171,6 +172,8 @@ class StatusQueryType(StrEnum):
             return "Arma 3"
         elif self == StatusQueryType.ARMA_REFORGER:
             return "Arma Reforger"
+        elif self == StatusQueryType.FIVEM:
+            return "FiveM"
         elif self == StatusQueryType.MINECRAFT_BEDROCK:
             return "Minecraft (Bedrock Edition)"
         elif self == StatusQueryType.MINECRAFT_JAVA:

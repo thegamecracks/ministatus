@@ -15,6 +15,7 @@ A Discord bot for managing game server status embeds.
 
 - Arma 3
 - Arma Reforger
+- FiveM
 - Minecraft (Bedrock Edition)
 - Minecraft (Java Edition)
 - Project Zomboid
