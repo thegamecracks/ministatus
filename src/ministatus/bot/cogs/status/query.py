@@ -311,7 +311,6 @@ async def _resolve(qname: str, rdtype: RdataType) -> Answer | None:
 
 
 async def set_query_failed(query: StatusQuery) -> bool:
-    # TODO: send alerts
     now = utcnow()
     async with connect() as conn:
         failed_at = await conn.fetchval(
@@ -455,7 +454,6 @@ async def maybe_update_display(bot: Bot, display: StatusDisplay) -> None:
 
 
 async def set_display_failed(display: StatusDisplay) -> None:
-    # TODO: send alerts
     now = utcnow()
     async with connect() as conn:
         await conn.execute(
