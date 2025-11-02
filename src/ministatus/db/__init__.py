@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import sqlite3
 from contextlib import asynccontextmanager, closing, contextmanager
+from contextvars import ContextVar
 from typing import TYPE_CHECKING, Any, AsyncIterator, Iterator
 
 from ministatus import state
@@ -49,6 +50,7 @@ LOG_CONNECTION_STACKS = False
 
 log = logging.getLogger(__name__)
 
+_current_conn: ContextVar[SQLiteConnection] = ContextVar("_current_conn")
 _real_connect = sqlite3.connect
 
 
@@ -56,16 +58,22 @@ _real_connect = sqlite3.connect
 async def connect(*, transaction: bool = True) -> AsyncIterator[SQLiteConnection]:
     if LOG_CONNECTION_STACKS:
         log.debug("CONNECT:    %s", _format_connection_stack())
+    if _current_conn.get(None):
+        log.debug("Nested connection in task", stack_info=True, stacklevel=2)
 
+    token = None
     try:
         async with _connect(str(DB_PATH)) as conn:
             wrapped = SQLiteConnection(conn)
+            token = _current_conn.set(wrapped)
             if transaction:
                 async with wrapped.transaction():
                     yield wrapped
             else:
                 yield wrapped
     finally:
+        if token is not None:
+            _current_conn.reset(token)
         if LOG_CONNECTION_STACKS:
             log.debug("DISCONNECT: %s", _format_connection_stack())
 
