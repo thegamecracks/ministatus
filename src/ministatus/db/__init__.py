@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import sqlite3
+import time
 from contextlib import asynccontextmanager, closing, contextmanager
 from contextvars import ContextVar
 from typing import TYPE_CHECKING, Any, AsyncIterator, Iterator
@@ -47,6 +48,7 @@ if TYPE_CHECKING:
     import asqlite
 
 LOG_CONNECTION_STACKS = False
+LOG_LONG_CONNECTIONS = 0
 
 log = logging.getLogger(__name__)
 
@@ -61,6 +63,7 @@ async def connect(*, transaction: bool = True) -> AsyncIterator[SQLiteConnection
     if _current_conn.get(None):
         log.debug("Nested connection in task", stack_info=True, stacklevel=2)
 
+    start = time.perf_counter()
     token = None
     try:
         async with _connect(str(DB_PATH)) as conn:
@@ -76,6 +79,14 @@ async def connect(*, transaction: bool = True) -> AsyncIterator[SQLiteConnection
             _current_conn.reset(token)
         if LOG_CONNECTION_STACKS:
             log.debug("DISCONNECT: %s", _format_connection_stack())
+        if LOG_LONG_CONNECTIONS > 0:
+            elapsed = time.perf_counter() - start
+            if elapsed >= LOG_LONG_CONNECTIONS:
+                log.debug(
+                    "Connection lasted for %.2fs (%s)",
+                    elapsed,
+                    _format_connection_stack(),
+                )
 
 
 @asynccontextmanager
