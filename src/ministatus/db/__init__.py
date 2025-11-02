@@ -61,7 +61,13 @@ async def connect(*, transaction: bool = True) -> AsyncIterator[SQLiteConnection
     if LOG_CONNECTION_STACKS:
         log.debug("CONNECT:    %s", _format_connection_stack())
     if _current_conn.get(None):
-        log.debug("Nested connection in task", stack_info=True, stacklevel=2)
+        # Using nested connections within a single task is likely a mistake,
+        # as it is prone to deadlocking.
+        #
+        # If transaction is False and the caller never explicitly starts a transaction,
+        # assuming the default behaviour is to autocommit after each query,
+        # then this deadlock risk is low, but we should avoid it regardless.
+        log.warning("Nested database connection: %s", _format_connection_stack())
 
     start = time.perf_counter()
     token = None
