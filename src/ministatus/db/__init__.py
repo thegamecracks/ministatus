@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import sqlite3
 from contextlib import asynccontextmanager, closing, contextmanager
 from typing import TYPE_CHECKING, Any, AsyncIterator, Iterator
@@ -44,19 +45,29 @@ from .secret import Secret as Secret
 if TYPE_CHECKING:
     import asqlite
 
+LOG_CONNECTION_STACKS = False
+
+log = logging.getLogger(__name__)
+
 _real_connect = sqlite3.connect
 
 
 @asynccontextmanager
 async def connect(*, transaction: bool = True) -> AsyncIterator[SQLiteConnection]:
-    database = str(DB_PATH)
-    async with _connect(database) as conn:
-        wrapped = SQLiteConnection(conn)
-        if transaction:
-            async with wrapped.transaction():
+    if LOG_CONNECTION_STACKS:
+        log.debug("CONNECT:    %s", _format_connection_stack())
+
+    try:
+        async with _connect(str(DB_PATH)) as conn:
+            wrapped = SQLiteConnection(conn)
+            if transaction:
+                async with wrapped.transaction():
+                    yield wrapped
+            else:
                 yield wrapped
-        else:
-            yield wrapped
+    finally:
+        if LOG_CONNECTION_STACKS:
+            log.debug("DISCONNECT: %s", _format_connection_stack())
 
 
 @asynccontextmanager
@@ -70,6 +81,25 @@ async def run_migrations() -> None:
     async with connect() as conn:
         migrator = SQLiteMigrator(conn)
         await migrator.run_migrations(migrations)
+
+
+def _format_connection_stack() -> str:
+    import traceback
+
+    assert __package__ is not None
+    package = __package__.partition(".")[0]
+
+    stack = [
+        f"{frame.f_code.co_name}:L{frame.f_lineno}"
+        for frame, _ in traceback.walk_stack(None)
+        if package in frame.f_code.co_filename
+        and frame.f_code.co_name not in ("wrapper",)
+    ]
+
+    # <module> -> __call__ -> main -> invoke -> invoke -> invoke -> new_func
+    stack = stack[:-7]
+
+    return " -> ".join(reversed(stack))
 
 
 # Derived from asqlite.connect(), v2.0.0
