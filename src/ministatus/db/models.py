@@ -148,6 +148,14 @@ class StatusQuery(BaseModel):
     failed_at: datetime.datetime | None = Field(default=None)
     extra: str = ""
 
+    @property
+    def address(self) -> str:
+        if self.game_port:
+            return f"{self.host}:{self.game_port}"
+        elif self.query_port:
+            return f"{self.host}:{self.query_port}"
+        return self.host
+
 
 class StatusQueryType(StrEnum):
     ARMA_3 = "arma3"

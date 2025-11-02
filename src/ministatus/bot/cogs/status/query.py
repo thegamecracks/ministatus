@@ -90,7 +90,7 @@ async def query_status(bot: Bot, status: Status) -> None:
         return
 
     for query in status.queries:
-        info = await maybe_query(bot, query)
+        info = await maybe_query(bot, status, query)
         if info is not None:
             await record_info(bot, status, info)
             break
@@ -98,20 +98,24 @@ async def query_status(bot: Bot, status: Status) -> None:
         await record_offline(bot, status)
 
     for display in status.displays:
-        await maybe_update_display(bot, display)
+        await maybe_update_display(bot, status, display)
 
 
-async def maybe_query(bot: Bot, query: StatusQuery) -> Info | None:
+async def maybe_query(
+    bot: Bot,
+    status: Status,
+    query: StatusQuery,
+) -> Info | None:
     try:
         info = await send_query(query)
     except FailedQueryError as e:
         log.debug("Query #%d failed: %s", query.status_query_id, e, exc_info=e)
         if await set_query_failed(query):
             reason = "Offline for extended period of time"
-            return await disable_query(bot, query, reason)
+            return await disable_query(bot, status, query, reason)
     except InvalidQueryError as e:
         await set_query_failed(query)
-        return await disable_query(bot, query, str(e))
+        return await disable_query(bot, status, query, str(e))
     except Exception:
         await set_query_failed(query)
         raise
@@ -150,7 +154,7 @@ async def query_minecraft_bedrock(query: StatusQuery) -> Info:
 
     return Info(
         title=status.motd_line1 or None,
-        address=_format_address(query),
+        address=query.address,
         thumbnail=None,
         max_players=status.max_players,
         num_players=status.num_players,
@@ -182,7 +186,7 @@ async def query_minecraft_java(query: StatusQuery) -> Info:
 
     return Info(
         title=None,  # TODO: parse MOTD for title
-        address=_format_address(query),
+        address=query.address,
         thumbnail=thumbnail,
         max_players=status["players"]["max"],
         num_players=status["players"]["online"],
@@ -219,7 +223,7 @@ async def query_source(query: StatusQuery) -> Info:
 
     return Info(
         title=info.name,
-        address=_format_address(query),
+        address=query.address,
         thumbnail=None,
         max_players=info.max_players,
         num_players=info.players,
@@ -229,14 +233,6 @@ async def query_source(query: StatusQuery) -> Info:
         version=version,
         players=players,
     )
-
-
-def _format_address(query: StatusQuery) -> str:
-    if query.game_port:
-        return f"{query.host}:{query.game_port}"
-    elif query.query_port:
-        return f"{query.host}:{query.query_port}"
-    return query.host
 
 
 async def resolve_host(query: StatusQuery) -> tuple[str, int]:
@@ -439,13 +435,17 @@ async def _check_downtime(conn: SQLiteConnection, status: Status) -> DowntimeSta
         return DowntimeStatus.PENDING_DOWNTIME
 
 
-async def maybe_update_display(bot: Bot, display: StatusDisplay) -> None:
+async def maybe_update_display(
+    bot: Bot,
+    status: Status,
+    display: StatusDisplay,
+) -> None:
     try:
         await update_display(bot, message_id=display.message_id)
     except (discord.Forbidden, discord.NotFound) as e:
         await set_display_failed(display)
         reason = str(e)
-        await disable_display(bot, display, reason)
+        await disable_display(bot, status, display, reason)
     except Exception:
         await set_display_failed(display)
         raise

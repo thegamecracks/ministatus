@@ -22,7 +22,12 @@ SUCCESS_COLOUR = 0x4DFF40
 log = logging.getLogger(__name__)
 
 
-async def disable_alert(bot: Bot, alert: StatusAlert, reason: str) -> None:
+async def disable_alert(
+    bot: Bot,
+    status: Status,
+    alert: StatusAlert,
+    reason: str,
+) -> None:
     log.warning("Alert #%d is invalid: %s", alert.status_alert_id, reason)
     async with connect() as conn:
         await conn.execute(
@@ -32,10 +37,15 @@ async def disable_alert(bot: Bot, alert: StatusAlert, reason: str) -> None:
             alert.status_alert_id,
         )
 
-    await send_alert_disabled_alert(bot, alert, reason)
+    await send_alert_disabled_alert(bot, status, alert, reason)
 
 
-async def disable_display(bot: Bot, display: StatusDisplay, reason: str) -> None:
+async def disable_display(
+    bot: Bot,
+    status: Status,
+    display: StatusDisplay,
+    reason: str,
+) -> None:
     log.warning("Display #%d is invalid: %s", display.message_id, reason)
     async with connect() as conn:
         await conn.execute(
@@ -45,10 +55,15 @@ async def disable_display(bot: Bot, display: StatusDisplay, reason: str) -> None
             display.message_id,
         )
 
-    await send_alert_disabled_display(bot, display, reason)
+    await send_alert_disabled_display(bot, status, display, reason)
 
 
-async def disable_query(bot: Bot, query: StatusQuery, reason: str) -> None:
+async def disable_query(
+    bot: Bot,
+    status: Status,
+    query: StatusQuery,
+    reason: str,
+) -> None:
     log.warning("Query #%d is invalid: %s", query.status_query_id, reason)
     async with connect() as conn:
         await conn.execute(
@@ -58,28 +73,31 @@ async def disable_query(bot: Bot, query: StatusQuery, reason: str) -> None:
             query.status_query_id,
         )
 
-    await send_alert_disabled_query(bot, query, reason)
+    await send_alert_disabled_query(bot, status, query, reason)
 
 
 async def send_alert_disabled_alert(
     bot: Bot,
+    status: Status,
     alert: StatusAlert,
     reason: str,
 ) -> None:
     status_id = alert.status_id
     async with connect_discord_database_client(bot) as ddc:
+        channel = await ddc.get_channel(channel_id=alert.channel_id)
         alert_channels = await ddc.get_bulk_status_alert_channels(
             status_id,
             only_enabled=True,
             type="audit",
         )
 
-    view = AlertDisabledAlert(alert, reason)
-    await send_alerts(bot, alert_channels, view)
+    view = AlertDisabledAlert(status, alert, channel, reason)
+    await send_alerts(bot, status, alert_channels, view)
 
 
 async def send_alert_disabled_display(
     bot: Bot,
+    status: Status,
     display: StatusDisplay,
     reason: str,
 ) -> None:
@@ -93,12 +111,13 @@ async def send_alert_disabled_display(
         )
 
     message = message or display.message_id
-    view = AlertDisabledDisplay(display, message, reason)
-    await send_alerts(bot, alert_channels, view)
+    view = AlertDisabledDisplay(status, display, message, reason)
+    await send_alerts(bot, status, alert_channels, view)
 
 
 async def send_alert_disabled_query(
     bot: Bot,
+    status: Status,
     query: StatusQuery,
     reason: str,
 ) -> None:
@@ -110,8 +129,8 @@ async def send_alert_disabled_query(
             type="audit",
         )
 
-    view = AlertDisabledQuery(query, reason)
-    await send_alerts(bot, alert_channels, view)
+    view = AlertDisabledQuery(status, query, reason)
+    await send_alerts(bot, status, alert_channels, view)
 
 
 async def send_alert_downtime_started(bot: Bot, status: Status) -> None:
@@ -124,7 +143,7 @@ async def send_alert_downtime_started(bot: Bot, status: Status) -> None:
         )
 
     view = AlertDowntimeStarted(status)
-    await send_alerts(bot, alert_channels, view)
+    await send_alerts(bot, status, alert_channels, view)
 
 
 async def send_alert_downtime_ended(bot: Bot, status: Status) -> None:
@@ -137,11 +156,12 @@ async def send_alert_downtime_ended(bot: Bot, status: Status) -> None:
         )
 
     view = AlertDowntimeEnded(status)
-    await send_alerts(bot, alert_channels, view)
+    await send_alerts(bot, status, alert_channels, view)
 
 
 async def send_alerts(
     bot: Bot,
+    status: Status,
     alert_channels: Collection[tuple[StatusAlert, discord.abc.MessageableChannel]],
     view: Alert,
 ) -> None:
@@ -153,7 +173,7 @@ async def send_alerts(
         async with asyncio.TaskGroup() as tg:
             tasks = []
             for alert, channel in alert_channels:
-                coro = try_send_alert(bot, alert, channel, view)
+                coro = try_send_alert(bot, status, alert, channel, view)
                 tasks.append(tg.create_task(coro))
 
             # Let all tasks run first, and collect any errors to raise afterwards
@@ -174,6 +194,7 @@ async def send_alerts(
 
 async def try_send_alert(
     bot: Bot,
+    status: Status,
     alert: StatusAlert,
     channel: discord.abc.MessageableChannel,
     view: Alert,
@@ -184,11 +205,11 @@ async def try_send_alert(
     except discord.Forbidden:
         reason = "Missing permissions to send to channel"
         log.warning("Status alert #%d is invalid: %s", reason)
-        await disable_alert(bot, alert, reason)
+        await disable_alert(bot, status, alert, reason)
     except discord.NotFound:
         reason = "Channel could not be found"
         log.warning("Status alert #%d is invalid: %s", reason)
-        await disable_alert(bot, alert, reason)
+        await disable_alert(bot, status, alert, reason)
 
 
 class Alert(LayoutView):
@@ -211,11 +232,18 @@ class AlertDisabled(Alert):
 
 
 class AlertDisabledAlert(AlertDisabled):
-    def __init__(self, alert: StatusAlert, reason: str) -> None:
-        title = f"Alert <#{alert.channel_id}> failed"
+    def __init__(
+        self,
+        status: Status,
+        alert: StatusAlert,
+        channel,
+        reason: str,
+    ) -> None:
+        title = f"Alert for {status.label} failed"
         reason = discord.utils.escape_markdown(reason)
         content = (
-            f"The alert channel has been disabled due to the following reason:\n"
+            f"The alert channel {channel.jump_url} "
+            f"has been disabled due to the following reason:\n"
             f"```{reason}```"
         )
         super().__init__(title=title, content=content)
@@ -224,26 +252,28 @@ class AlertDisabledAlert(AlertDisabled):
 class AlertDisabledDisplay(AlertDisabled):
     def __init__(
         self,
+        status: Status,
         display: StatusDisplay,
         message: discord.PartialMessage | int,
         reason: str,
     ) -> None:
         jump_url = str(message) if isinstance(message, int) else message.jump_url
-        title = f"Display {jump_url} failed"
+        title = f"Display for {status.label} failed"
         reason = discord.utils.escape_markdown(reason)
         content = (
-            f"Display {jump_url} has been disabled due to the following reason:\n"
+            f"The display message {jump_url} "
+            f"has been disabled due to the following reason:\n"
             f"```{reason}```"
         )
         super().__init__(title=title, content=content)
 
 
 class AlertDisabledQuery(AlertDisabled):
-    def __init__(self, query: StatusQuery, reason: str) -> None:
-        title = f"Query {query.host} failed"
+    def __init__(self, status: Status, query: StatusQuery, reason: str) -> None:
+        title = f"Query for {status.label} failed"
         reason = discord.utils.escape_markdown(reason)
         content = (
-            f"The query for {query.host}:{query.game_port}:{query.query_port} "
+            f"The {query.type.label} query on {query.address} "
             f"has been disabled due to the following reason:\n"
             f"```{reason}```"
         )
