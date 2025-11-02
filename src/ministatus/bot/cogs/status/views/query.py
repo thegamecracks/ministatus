@@ -1,7 +1,16 @@
 from __future__ import annotations
 
 import datetime
-from typing import TYPE_CHECKING, Any, Awaitable, Callable, Self, TypeAlias, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Awaitable,
+    Callable,
+    Self,
+    TypeAlias,
+    assert_never,
+    cast,
+)
 
 import discord
 from discord import Interaction, SelectOption
@@ -23,14 +32,22 @@ _CreateCallback: TypeAlias = (
     "Callable[[Interaction[Bot], StatusQuery | None], Awaitable[Any]]"
 )
 
-DEFAULT_PORTS: dict[StatusQueryType, tuple[int, int | bool]] = {
-    StatusQueryType.ARMA_3: (2302, False),
-    StatusQueryType.ARMA_REFORGER: (2001, 17777),
-    StatusQueryType.MINECRAFT_BEDROCK: (19132, False),
-    StatusQueryType.MINECRAFT_JAVA: (25565, False),
-    StatusQueryType.SOURCE: (27015, 27015),
-    StatusQueryType.PROJECT_ZOMBOID: (16261, False),
-}
+
+def get_default_ports(type: StatusQueryType) -> tuple[int, int | None]:
+    if type == StatusQueryType.ARMA_3:
+        return 2302, None
+    elif type == StatusQueryType.ARMA_REFORGER:
+        return 2001, 17777
+    elif type == StatusQueryType.MINECRAFT_BEDROCK:
+        return 19132, None
+    elif type == StatusQueryType.MINECRAFT_JAVA:
+        return 25565, None
+    elif type == StatusQueryType.SOURCE:
+        return 27015, 27015
+    elif type == StatusQueryType.PROJECT_ZOMBOID:
+        return 16261, None
+    else:
+        assert_never(type)
 
 
 class StatusModifyQueryRow(discord.ui.ActionRow):
@@ -129,9 +146,8 @@ class CreateStatusQueryView(LayoutView):
             f"Host: {host}",
         ]
 
-        game_port, query_port = DEFAULT_PORTS.get(type, (None, None))
-        game_port = "<incomplete>" if game_port is not False else "N/A"
-        query_port = "<incomplete>" if query_port is not False else "N/A"
+        game_port, query_port = get_default_ports(type)
+        query_port = query_port or "N/A"
         content.append(f"Game port: {game_port}")
         content.append(f"Query port: {query_port}")
 
@@ -198,14 +214,12 @@ class CreateStatusQueryModal(Modal, title="Create Status Query"):
         self.host = host
         self.type = type
 
-        game_port, query_port = DEFAULT_PORTS.get(type, (None, None))
-        if game_port is not None:
-            self.game_port.default = str(game_port)
-
-        if query_port is False:
-            self.remove_item(self.query_port)
-        elif query_port is not None:
+        game_port, query_port = get_default_ports(type)
+        self.game_port.default = str(game_port)
+        if query_port is not None:
             self.query_port.default = str(query_port)
+        else:
+            self.remove_item(self.query_port)
 
     async def on_submit(self, interaction: Interaction) -> None:
         interaction = cast("Interaction[Bot]", interaction)
