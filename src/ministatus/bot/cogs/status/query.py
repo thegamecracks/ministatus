@@ -106,11 +106,9 @@ async def maybe_query(bot: Bot, query: StatusQuery) -> Info | None:
         info = await send_query(query)
     except FailedQueryError as e:
         log.debug("Query #%d failed: %s", query.status_query_id, e, exc_info=e)
-        expired = await set_query_failed(query)
-        if not expired:
-            return
-        reason = "Offline for extended period of time"
-        return await disable_query(bot, query, reason)
+        if await set_query_failed(query):
+            reason = "Offline for extended period of time"
+            return await disable_query(bot, query, reason)
     except InvalidQueryError as e:
         await set_query_failed(query)
         return await disable_query(bot, query, str(e))
