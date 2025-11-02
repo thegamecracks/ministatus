@@ -48,7 +48,7 @@ if TYPE_CHECKING:
     import asqlite
 
 LOG_CONNECTION_STACKS = False
-LOG_LONG_CONNECTIONS = 0
+LOG_LONG_CONNECTIONS = 0.1
 
 log = logging.getLogger(__name__)
 
