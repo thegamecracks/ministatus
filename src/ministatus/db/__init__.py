@@ -83,8 +83,8 @@ async def connect(*, transaction: bool = True) -> AsyncIterator[SQLiteConnection
             elapsed = time.perf_counter() - start
             if elapsed >= LOG_LONG_CONNECTIONS:
                 log.debug(
-                    "Connection lasted for %.2fs (%s)",
-                    elapsed,
+                    "Connection lasted for %.0fms (%s)",
+                    elapsed * 1000,
                     _format_connection_stack(),
                 )
 
