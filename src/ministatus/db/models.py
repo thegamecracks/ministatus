@@ -5,7 +5,7 @@ from contextlib import suppress
 from enum import StrEnum
 from typing import Annotated, assert_never
 
-from pydantic import AfterValidator, BaseModel, Field
+from pydantic import AfterValidator, BaseModel, Field, TypeAdapter
 
 
 def is_snowflake(value: int) -> int:
@@ -87,7 +87,7 @@ class Status(BaseModel):
     failed_at: datetime.datetime | None = Field(default=None)
     game: str | None = Field(default=None)
     map: str | None = Field(default=None)
-    mods: str | None = Field(default=None)
+    mods: list[StatusMod] | None = Field(default=None)
     version: str | None = Field(default=None)
 
     alerts: list[StatusAlert] = Field(default_factory=list)
@@ -133,6 +133,14 @@ class StatusHistoryPlayer(BaseModel):
     status_history_player_id: int
     status_history_id: int
     name: str
+
+
+class StatusMod(BaseModel):
+    name: str
+    url: str | None
+
+
+status_mod_list_adapter = TypeAdapter(list[StatusMod])
 
 
 class StatusQuery(BaseModel):

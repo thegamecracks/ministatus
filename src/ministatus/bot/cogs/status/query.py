@@ -24,10 +24,12 @@ from ministatus.db import (
     SQLiteConnection,
     Status,
     StatusDisplay,
+    StatusMod,
     StatusQuery,
     StatusQueryType,
     connect,
     connect_client,
+    status_mod_list_adapter,
 )
 
 from .alert import (
@@ -389,6 +391,11 @@ async def record_offline(bot: Bot, status: Status) -> None:
 
 async def record_info(bot: Bot, status: Status, info: Info) -> None:
     log.debug("Recording status #%d as online", status.status_id)
+
+    mods = None
+    if info.mods is not None:
+        mods = status_mod_list_adapter.dump_json(info.mods).decode()
+
     await prune_history(status)
     async with connect() as conn:
         await conn.execute(
@@ -406,7 +413,7 @@ async def record_info(bot: Bot, status: Status, info: Info) -> None:
             info.thumbnail,
             info.game,
             info.map,
-            info.mods,
+            mods,
             info.version,
             status.status_id,
         )
@@ -521,7 +528,7 @@ class Info:
     thumbnail: bytes | None
     game: str | None
     map: str | None
-    mods: str | None
+    mods: list[StatusMod] | None
     version: str | None
 
     max_players: int
