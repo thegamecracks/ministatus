@@ -64,7 +64,8 @@ class SQLiteConnection(Connection):
         if LOG_QUERIES:
             log.debug("SQL execute: %s", query)
 
-        async with self.conn.execute(query, *args):
+        params = self._transform_args(query, args)
+        async with self.conn.execute(query, params):
             return
 
     async def executemany(
@@ -76,7 +77,8 @@ class SQLiteConnection(Connection):
         if LOG_QUERIES:
             log.debug("SQL executemany: %s", query)
 
-        async with self.conn.executemany(query, args):
+        params = [self._transform_args(query, sub) for sub in args]
+        async with self.conn.executemany(query, params):
             return
 
     async def executescript(self, query: str) -> None:
@@ -90,19 +92,22 @@ class SQLiteConnection(Connection):
         if LOG_QUERIES:
             log.debug("SQL fetch: %s", query)
 
-        return await self.conn.fetchall(query, *args)
+        params = self._transform_args(query, args)
+        return await self.conn.fetchall(query, params)
 
     async def fetchrow(self, query: str, /, *args: object) -> sqlite3.Row | None:
         if LOG_QUERIES:
             log.debug("SQL fetchrow: %s", query)
 
-        return await self.conn.fetchone(query, *args)
+        params = self._transform_args(query, args)
+        return await self.conn.fetchone(query, params)
 
     async def fetchval(self, query: str, /, *args: object) -> Any:
         if LOG_QUERIES:
             log.debug("SQL fetchval: %s", query)
 
-        row = await self.conn.fetchone(query, *args)
+        params = self._transform_args(query, args)
+        row = await self.conn.fetchone(query, params)
         if row is not None:
             return row[0]
 
@@ -128,3 +133,13 @@ class SQLiteConnection(Connection):
 
         else:
             assert_never(mode)
+
+    @staticmethod
+    def _transform_args(
+        query: str,
+        args: Iterable[object],
+    ) -> dict[str, object] | tuple[object, ...]:
+        # Used for Python 3.14+ compatibility
+        if "$1" in query:
+            return {str(i): x for i, x in enumerate(args, 1)}
+        return tuple(args)
