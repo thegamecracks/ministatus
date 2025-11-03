@@ -8,10 +8,11 @@ from discord.ext import commands, tasks
 
 from ministatus.bot.bot import Bot
 from ministatus.bot.db import connect_discord_database_client
+from ministatus.bot.errors import ErrorResponse
 from ministatus.db import connect_client
 
 from .query import run_query_jobs
-from .views import StatusManageView, display_cache
+from .views import StatusManageView, StatusSummaryView, display_cache
 
 DEFAULT_QUERY_INTERVAL = 60
 
@@ -60,6 +61,25 @@ class StatusCog(
             )
 
         view = StatusManageView(interaction, statuses)
+        await view.send(interaction, ephemeral=True)
+
+    @app_commands.command(name="summary")
+    async def status_summary(self, interaction: discord.Interaction[Bot]) -> None:
+        """Show a summary of your server statuses."""
+        assert interaction.guild is not None
+        assert isinstance(interaction.user, discord.Member)
+
+        guild_id = interaction.guild.id
+        async with connect_client() as client:
+            statuses = await client.get_bulk_statuses_by_guilds(
+                guild_id,
+                with_relationships=True,
+            )
+
+        if not statuses:
+            raise ErrorResponse("No server statuses to see here 😴")
+
+        view = StatusSummaryView(interaction, statuses)
         await view.send(interaction, ephemeral=True)
 
     @tasks.loop(seconds=60)

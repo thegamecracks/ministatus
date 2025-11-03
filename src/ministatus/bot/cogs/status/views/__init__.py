@@ -28,3 +28,4 @@ from .query import (
     StatusModifyQueryRow as StatusModifyQueryRow,
     StatusQueryPage as StatusQueryPage,
 )
+from .summary import StatusSummaryView as StatusSummaryView

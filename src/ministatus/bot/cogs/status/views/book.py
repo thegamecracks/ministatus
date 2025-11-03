@@ -18,10 +18,16 @@ if TYPE_CHECKING:
 class RenderArgs:
     files: list[discord.File] = field(default_factory=list)
 
-    def get_message_kwargs(self) -> dict[str, Any]:
+    def get_edit_kwargs(self) -> dict[str, Any]:
         kwargs = {}
         if self.files:
             kwargs["attachments"] = self.files
+        return kwargs
+
+    def get_send_kwargs(self) -> dict[str, Any]:
+        kwargs = {}
+        if self.files:
+            kwargs["files"] = self.files
         return kwargs
 
     def update(self, other: Self) -> None:
@@ -41,12 +47,12 @@ class Book(CancellableView):
 
     async def edit(self, interaction: Interaction, **kwargs) -> None:
         rendered = await self.render()
-        kwargs = rendered.get_message_kwargs() | kwargs
+        kwargs = rendered.get_edit_kwargs() | kwargs
         await interaction.response.edit_message(view=self, **kwargs)
 
     async def send(self, interaction: Interaction, **kwargs) -> None:
         rendered = await self.render()
-        kwargs = rendered.get_message_kwargs() | kwargs
+        kwargs = rendered.get_edit_kwargs() | kwargs
         await interaction.response.send_message(view=self, **kwargs)
 
     async def render(self) -> RenderArgs:

@@ -312,7 +312,7 @@ class StatusDisplayView(LayoutView):
             history = history[status.status_id]
 
         args = await self.render(status, display, history)
-        await message.edit(view=self, **args.get_message_kwargs())
+        await message.edit(view=self, **args.get_edit_kwargs())
 
     async def render(
         self,
