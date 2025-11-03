@@ -214,7 +214,7 @@ async def query_minecraft_java(query: StatusQuery) -> Info:
 
     try:
         status = await proto.get_status()
-    except TimeoutError as e:
+    except OSError as e:
         raise FailedQueryError("Query timed out") from e
 
     favicon = cast(str, status.get("favicon", ""))
