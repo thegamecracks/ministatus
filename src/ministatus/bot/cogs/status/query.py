@@ -332,7 +332,7 @@ async def resolve_host(query: StatusQuery) -> tuple[str, int]:
 
     host_srv = None
     srv_offset = 0
-    ipv6_allowed = False  # TODO: check which games work over IPv6
+    ipv6_allowed = True  # TODO: check which games work over IPv6
     if type == StatusQueryType.ARMA_3:
         host_srv = f"_arma3._udp.{host}"
         srv_offset = 1
@@ -355,14 +355,14 @@ async def resolve_host(query: StatusQuery) -> tuple[str, int]:
     elif query_port < 1:
         raise InvalidQueryError("Domain name provided without a query port")
 
-    if ipv6_allowed and (answers := await _resolve(host, AAAA)):
-        record = cast(AAAARecord, answers[0])
-        log.debug("Resolved query #%d with AAAA record", query.status_query_id)
-        return str(record.address), query_port
-
     if answers := await _resolve(host, A):
         record = cast(ARecord, answers[0])
         log.debug("Resolved query #%d with A record", query.status_query_id)
+        return str(record.address), query_port
+
+    if ipv6_allowed and (answers := await _resolve(host, AAAA)):
+        record = cast(AAAARecord, answers[0])
+        log.debug("Resolved query #%d with AAAA record", query.status_query_id)
         return str(record.address), query_port
 
     raise InvalidQueryError("DNS name does not exist")
