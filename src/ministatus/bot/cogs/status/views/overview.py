@@ -10,6 +10,7 @@ from discord.ui import Button, Select
 
 from ministatus.bot.db import connect_discord_database_client
 from ministatus.bot.dt import utcnow
+from ministatus.bot.errors import ErrorResponse
 from ministatus.bot.views import Modal
 from ministatus.db import Status, connect, connect_client
 
@@ -109,8 +110,7 @@ class CreateStatusModal(Modal, title="Create Status"):
 
         label = discord.utils.remove_markdown(self.label.value).splitlines()[0].strip()
         if not label:
-            content = "Label not allowed. Please try again!"
-            await interaction.response.send_message(content, ephemeral=True)
+            raise ErrorResponse("Label not allowed. Please try again!")
 
         status = Status(
             status_id=0,
