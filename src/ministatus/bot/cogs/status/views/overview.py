@@ -108,7 +108,9 @@ class CreateStatusModal(Modal, title="Create Status"):
         interaction = cast("Interaction[Bot]", interaction)
         assert interaction.guild is not None
 
-        label = discord.utils.remove_markdown(self.label.value).splitlines()[0].strip()
+        label = discord.utils.remove_markdown(self.label.value)
+        label, _, _ = label.partition("\n")
+        label = label.strip()
         if not label:
             raise ErrorResponse("Label not allowed. Please try again!")
 
