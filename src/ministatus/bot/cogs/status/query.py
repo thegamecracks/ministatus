@@ -3,11 +3,12 @@ from __future__ import annotations
 import asyncio
 import base64
 import datetime
+import json
 import logging
 from contextlib import suppress
 from dataclasses import dataclass
 from enum import Enum
-from typing import TYPE_CHECKING, assert_never, cast
+from typing import TYPE_CHECKING, Any, assert_never, cast
 
 import aiohttp
 import discord
@@ -50,6 +51,7 @@ HISTORY_EXPIRES_AFTER = datetime.timedelta(days=30)
 HISTORY_PLAYERS_EXPIRES_AFTER = datetime.timedelta(hours=1)
 QUERY_DEAD_AFTER = datetime.timedelta(days=1)
 QUERY_TIMEOUT = 3
+HTTP_TIMEOUT = aiohttp.ClientTimeout(3)
 
 _resolver = Resolver()
 _resolver.cache = Cache()
@@ -110,7 +112,7 @@ async def maybe_query(
     query: StatusQuery,
 ) -> Info | None:
     try:
-        info = await send_query(query)
+        info = await send_query(bot, query)
     except FailedQueryError as e:
         log.debug("Query #%d failed: %s", query.status_query_id, e, exc_info=e)
         if await set_query_failed(query):
@@ -127,13 +129,13 @@ async def maybe_query(
         return info
 
 
-async def send_query(query: StatusQuery) -> Info | None:
+async def send_query(bot: Bot, query: StatusQuery) -> Info | None:
     if query.type == StatusQueryType.ARMA_3:
         return await query_source(query)
     elif query.type == StatusQueryType.ARMA_REFORGER:
         return await query_source(query)
     elif query.type == StatusQueryType.FIVEM:
-        return await query_fivem(query)
+        return await query_fivem(bot.session, query)
     elif query.type == StatusQueryType.MINECRAFT_BEDROCK:
         return await query_minecraft_bedrock(query)
     elif query.type == StatusQueryType.MINECRAFT_JAVA:
@@ -146,19 +148,19 @@ async def send_query(query: StatusQuery) -> Info | None:
         assert_never(query.type)
 
 
-async def query_fivem(query: StatusQuery) -> Info:
-    from opengsq import FiveM
+async def query_fivem(session: aiohttp.ClientSession, query: StatusQuery) -> Info:
+    async def get(filename: str) -> Any:
+        params = {"v": int(now.timestamp())}
+        url = f"https://{host}:{port}/{filename}"
+        # NOTE: several servers use self-signed certificates, so ssl=False is needed
+        return await _http_get_json(session, url, params=params, ssl=False)
 
     host, port = await resolve_host(query)
-    proto = FiveM(host, port, QUERY_TIMEOUT)
-    # TODO: use ClientSession, above refuses self-signed and timeout is broken
+    now = utcnow()
 
-    try:
-        dynamic = await proto.get_dynamic()
-        info = await proto.get_info()
-        players = await proto.get_players()
-    except aiohttp.ClientConnectorError as e:
-        raise FailedQueryError("Query timed out") from e
+    dynamic = await get("dynamic.json")
+    info = await get("info.json")
+    players = await get("players.json")
 
     vars = info.get("vars", {})
     if thumbnail := info.get("icon"):
@@ -287,6 +289,25 @@ async def query_source(query: StatusQuery) -> Info:
         version=version,
         players=players,
     )
+
+
+async def _http_get_json(session: aiohttp.ClientSession, *args, **kwargs) -> Any:
+    kwargs.setdefault("timeout", HTTP_TIMEOUT)
+    try:
+        async with session.get(*args, **kwargs) as res:
+            res.raise_for_status()
+            return await res.json(content_type=None)
+    except TimeoutError as e:
+        raise FailedQueryError("HTTP request timed out") from e
+    except aiohttp.ClientConnectorError as e:
+        raise FailedQueryError("Failed to connect to server") from e
+    except aiohttp.ClientResponseError as e:
+        message = f"Server responded with {e.status}"
+        if 400 <= e.status < 500:  # Maybe support 429 ratelimiting?
+            raise InvalidQueryError(message) from e
+        raise FailedQueryError(message) from e
+    except json.JSONDecodeError as e:
+        raise InvalidQueryError("Server responded with malformed JSON") from e
 
 
 async def resolve_host(query: StatusQuery) -> tuple[str, int]:

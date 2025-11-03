@@ -1,10 +1,12 @@
 import importlib.metadata
 import logging
 
+import aiohttp
 import click
 import discord
 from discord.ext import commands
 
+from ministatus import _user_agent
 from ministatus.bot.cogs import list_extensions
 from ministatus.db import connect_client
 
@@ -37,7 +39,8 @@ class Bot(commands.Bot):
 
     async def start(self, *args, sync: bool, **kwargs) -> None:
         self._sync_on_setup = sync
-        return await super().start(*args, **kwargs)
+        async with self._create_http_client() as self.session:
+            return await super().start(*args, **kwargs)
 
     async def setup_hook(self) -> None:
         assert self.application is not None
@@ -55,6 +58,9 @@ class Bot(commands.Bot):
 
         invite_link = self.get_standard_invite()
         log.info("Invite link:\n    %s", invite_link)
+
+    def _create_http_client(self) -> aiohttp.ClientSession:
+        return aiohttp.ClientSession(headers={"User-Agent": _user_agent})
 
     async def _maybe_load_jishaku(self) -> None:
         try:
