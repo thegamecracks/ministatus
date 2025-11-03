@@ -75,23 +75,20 @@ To start the bot and store your bot token:
 
 ```sh
 $ ministatus start
-2025-10-28 22:50:34 INFO     ministatus.db.migrations Migrating database to v3
+2025-11-03 12:55:43 INFO     ministatus.db.migrations Migrating database to v5
 No Discord bot token found in config.
-Would you like to enter your token now?
-You can change your token at any time using the 'config' command.
- [y/N]: y
-Your Discord bot token should look something like this:
-    MTI0NjgyNjg0MTIzMTMyNzI3NQ.GTIAZm.x2fbSNuYJgpAocvMM53ROlMC23NixWt-0NOjMc
-Token:
-2025-10-28 22:50:37 INFO     discord.client logging in using static token
-2025-10-28 22:50:37 INFO     ministatus.bot.bot Loading extension ministatus.bot.cogs.cleanup
-2025-10-28 22:50:37 INFO     ministatus.bot.bot Loading extension ministatus.bot.cogs.errors
-2025-10-28 22:50:37 INFO     ministatus.bot.bot Loading extension ministatus.bot.cogs.owner
-2025-10-28 22:50:37 INFO     ministatus.bot.bot Loading extension ministatus.bot.cogs.status
-2025-10-28 22:50:37 INFO     ministatus.bot.bot Invite link:
+Your token should look something like this:
+MTI0NjgyNjg0MTIzMTMyNzI3NQ.GTIAZm.x2fbSNuYJgpAocvMM53ROlMC23NixWt-0NOjMc
+Enter token:
+2025-11-03 12:55:47 INFO     discord.client logging in using static token
+2025-11-03 12:55:47 INFO     ministatus.bot.bot Loading extension ministatus.bot.cogs.cleanup
+2025-11-03 12:55:47 INFO     ministatus.bot.bot Loading extension ministatus.bot.cogs.errors
+2025-11-03 12:55:47 INFO     ministatus.bot.bot Loading extension ministatus.bot.cogs.owner
+2025-11-03 12:55:47 INFO     ministatus.bot.bot Loading extension ministatus.bot.cogs.status
+2025-11-03 12:55:47 INFO     ministatus.bot.bot Invite link:
     https://discord.com/oauth2/authorize?client_id=...
-2025-10-28 22:50:37 INFO     ministatus.bot.cogs.status.cog Waiting 22.01s before starting query loop...
-2025-10-28 22:50:38 INFO     discord.gateway Shard ID None has connected to Gateway.
+2025-11-03 12:55:47 INFO     ministatus.bot.cogs.status.cog Waiting 12.28s before starting query loop...
+2025-11-03 12:55:47 INFO     discord.gateway Shard ID None has connected to Gateway.
 ```
 
 To synchronize the bot's application commands with Discord, invite the bot to
