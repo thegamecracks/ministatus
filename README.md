@@ -169,8 +169,8 @@ The following environment variables are supported:
   to run on the same user, as each instance uses a separate database and can load
   different Discord bot tokens.
 
-  For example, `MIST_APPDIR_SUFFIX=2` results in data files being stored in the
-  `~/.local/share/ministatus-2` directory on Linux, and
+  For example, `MIST_APPDIR_SUFFIX=2` results in data files being stored in
+  `~/.local/share/ministatus-2` on Linux, and
   `C:\Users\<name>\AppData\Local\thegamecracks\ministatus-2` on Windows.
 
 - `MIST_PASSWORD`
