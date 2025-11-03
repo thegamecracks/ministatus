@@ -206,6 +206,7 @@ async def query_minecraft_bedrock(query: StatusQuery) -> Info:
 
 
 async def query_minecraft_java(query: StatusQuery) -> Info:
+    # https://minecraft.wiki/w/Java_Edition_protocol/Server_List_Ping
     from opengsq import Minecraft
 
     host, port = await resolve_host(query)
@@ -223,17 +224,31 @@ async def query_minecraft_java(query: StatusQuery) -> Info:
     else:
         thumbnail = None
 
+    if players := status.get("players"):
+        max_players = players.get("max", 0)
+        num_players = players.get("online", 0)
+        sample = [
+            Player(name=name)
+            for p in players.get("sample", [])
+            if p.get("id", "") not in ("", "00000000-0000-0000-0000-000000000000")
+            and (name := p.get("name"))
+        ]
+    else:
+        max_players = 0
+        num_players = 0
+        sample = []
+
     return Info(
         title=None,  # TODO: parse MOTD for title
         address=query.address,
         thumbnail=thumbnail,
-        max_players=status["players"]["max"],
-        num_players=status["players"]["online"],
+        max_players=max_players,
+        num_players=num_players,
         game=None,
         map=None,
         mods=None,  # TODO: parse "modinfo" key?
         version=status["version"]["name"],  # can be a long string for proxy servers
-        players=[],
+        players=sample,
     )
 
 
