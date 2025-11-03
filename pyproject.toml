@@ -43,7 +43,7 @@ dependencies = [
     "dnspython~=2.8",
     "ipaddress~=1.0",
     "matplotlib~=3.10",
-    "opengsq~=3.4",
+    "opengsq~=3.5",
     "platformdirs~=4.5",
     "pydantic~=2.12",
 ]
