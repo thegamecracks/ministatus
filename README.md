@@ -125,8 +125,9 @@ Settings:
     status-interval = 60
     token = ****
 
-$ ministatus config token xyz
-$ ministatus config token
+$ ministatus config --unset token  # unset token
+$ ministatus config token xyz      # set token=xyz
+$ ministatus config token          # get token
 xyz
 ```
 
