@@ -9,7 +9,13 @@ import click
 
 from ministatus import state
 from ministatus.appdirs import DB_PATH
-from ministatus.db import DatabaseEncryptedError, Secret, encrypt, run_migrations
+from ministatus.db import (
+    DatabaseEncryptedError,
+    EncryptionUnsupportedError,
+    Secret,
+    encrypt,
+    run_migrations,
+)
 
 P = ParamSpec("P")
 T = TypeVar("T")
@@ -61,6 +67,8 @@ def _maybe_set_database_password() -> None:
     except DatabaseEncryptedError:
         password = click.prompt("Database Password", hide_input=True, type=Secret)
         state.DB_PASSWORD = password
+    except EncryptionUnsupportedError:
+        pass
 
 
 def _check_database_password(password: Secret[str]) -> None:
@@ -69,6 +77,10 @@ def _check_database_password(password: Secret[str]) -> None:
             encrypt(conn, Secret(""))
         except DatabaseEncryptedError:
             pass
+        except EncryptionUnsupportedError:
+            from ministatus.cli.commands.db import ENCRYPTION_NOT_SUPPORTED
+
+            sys.exit(ENCRYPTION_NOT_SUPPORTED)
         else:
             # Attempted to use password on a decrypted database
             not_encrypted = click.style(
