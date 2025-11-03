@@ -40,16 +40,13 @@ async def read_token() -> Secret[str]:
     if token is not None:
         return _parse_token(token)
 
-    click.secho("No Discord bot token found in config.", fg="yellow")
-    click.echo("Would you like to enter your token now?")
-    click.echo("You can change your token at any time using the 'config' command.")
-    click.confirm("", abort=True)
-    click.echo("Your Discord bot token should look something like this:")
+    click.secho("No Discord bot token found in config.")
+    click.echo("Your token should look something like this:")
     click.secho(
-        "    MTI0NjgyNjg0MTIzMTMyNzI3NQ.GTIAZm.x2fbSNuYJgpAocvMM53ROlMC23NixWt-0NOjMc",
+        "MTI0NjgyNjg0MTIzMTMyNzI3NQ.GTIAZm.x2fbSNuYJgpAocvMM53ROlMC23NixWt-0NOjMc",
         fg="green",
     )
-    token = click.prompt("Token", hide_input=True, type=_parse_token)
+    token = click.prompt("Enter token", hide_input=True, type=_parse_token)
 
     async with connect_client() as client:
         await client.set_setting("token", token)
