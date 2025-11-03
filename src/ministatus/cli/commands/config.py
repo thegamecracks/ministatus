@@ -44,7 +44,7 @@ async def list_settings(conn: SQLiteConnection) -> None:
     if not rows:
         return click.secho("There are no settings defined 🙁", err=True, fg="yellow")
 
-    click.echo("Settings:")
+    click.secho("Settings:", fg="cyan")
     for name, value in rows:
         name = click.style(name, fg="yellow")
         value = click.style(value, fg="green")
