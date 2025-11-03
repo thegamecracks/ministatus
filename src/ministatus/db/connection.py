@@ -64,7 +64,7 @@ class SQLiteConnection(Connection):
         if LOG_QUERIES:
             log.debug("SQL execute: %s", query)
 
-        async with self.conn.execute(query, args):
+        async with self.conn.execute(query, *args):
             return
 
     async def executemany(
@@ -90,19 +90,19 @@ class SQLiteConnection(Connection):
         if LOG_QUERIES:
             log.debug("SQL fetch: %s", query)
 
-        return await self.conn.fetchall(query, args)
+        return await self.conn.fetchall(query, *args)
 
     async def fetchrow(self, query: str, /, *args: object) -> sqlite3.Row | None:
         if LOG_QUERIES:
             log.debug("SQL fetchrow: %s", query)
 
-        return await self.conn.fetchone(query, args)
+        return await self.conn.fetchone(query, *args)
 
     async def fetchval(self, query: str, /, *args: object) -> Any:
         if LOG_QUERIES:
             log.debug("SQL fetchval: %s", query)
 
-        row = await self.conn.fetchone(query, args)
+        row = await self.conn.fetchone(query, *args)
         if row is not None:
             return row[0]
 
