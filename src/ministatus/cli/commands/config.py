@@ -42,7 +42,7 @@ async def list_settings(conn: SQLiteConnection) -> None:
     client = DatabaseClient(conn)
     rows = await client.list_settings()
     if not rows:
-        return click.echo("There are no settings defined 🙁", err=True)
+        return click.secho("There are no settings defined 🙁", err=True, fg="yellow")
 
     click.echo("Settings:")
     for name, value in rows:
