@@ -132,9 +132,11 @@ Each status can define one or more of the following components:
 2. Displays
 3. Queries
 
-All three components can be enabled and disabled at any time, allowing the admin
-to switch between configurations without. The status can also be disabled as a
-whole to halt its components.
+All three components can be enabled and disabled at any time, allowing you to switch
+between components without permanently deleting them. For example, you could have a
+status that has one alert and one display, but two queries for different game servers,
+with only one query enabled to display whichever game's stats you want at a given time.
+As well, the status itself can be disabled to halt all its components at once.
 
 Statuses are specific to each Discord server, so admins in one server won't
 be able to share or modify statuses in another server.
