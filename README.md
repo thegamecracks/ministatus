@@ -22,6 +22,7 @@ A Discord bot for managing game server status embeds.
     - [Displays](#displays)
     - [Queries](#queries)
       - [DNS Lookups (Technical)](#dns-lookups-technical)
+    - [Downtime Detection](#downtime-detection)
     - [Refresh Intervals](#refresh-intervals)
   - [Other CLI commands](#other-cli-commands)
   - [Environment Variables](#environment-variables)
@@ -187,6 +188,9 @@ priority (lowest number) is tested first, and if it fails, the next query is
 tested instead. If all queries fail, the status is recorded as offline.
 For most users, we recommend adding and enabling exactly one query per status.
 
+Continuously failing query methods will be automatically disabled after 24 hours.
+This triggers an audit alert with the reason `Offline for extended period of time`.
+
 #### DNS Lookups (Technical)
 
 When a domain name is specified, like `ia.420thdelta.net`, the bot will attempt
@@ -205,6 +209,20 @@ The game port will also be omitted from displays, since members can connect usin
 the hostname directly. If the query port is 0 and no `SRV` record exists, or the
 game type doesn't support `SRV` records, the query is invalidated.
 `SRV` records are never used if an explicit game / query port is provided.
+
+### Downtime Detection
+
+After a query fails once, displays won't immediately report the server as `Offline 🔴`,
+but will instead show an intermediary `Online 🟡` status and continue to present the
+last known player count and list.
+
+If the server responds within two queries, the status re-appears as `Online 🟢`
+and the player list is updated like normal. However, if three consecutive queries fail,
+the status returns `Offline 🔴` and downtime alerts are sent. The next time the query
+succeeds, the status will return online and a corresponding alert will be sent.
+
+Player graphs will avoid rendering `Online 🟡` intermediary datapoints,
+reducing outliers that cause "spikes" in the graph.
 
 ### Refresh Intervals
 
