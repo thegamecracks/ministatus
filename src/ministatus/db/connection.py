@@ -57,6 +57,9 @@ class Connection(Protocol):
 
 
 class SQLiteConnection(Connection):
+    _transaction: TransactionMode | None = None
+    _is_write_transaction: bool | None = None
+
     def __init__(self, conn: asqlite.Connection) -> None:
         self.conn = conn
 
@@ -64,6 +67,7 @@ class SQLiteConnection(Connection):
         if LOG_QUERIES:
             log.debug("SQL execute: %s", query)
 
+        self._check_transaction(query)
         params = self._transform_args(query, args)
         async with self.conn.execute(query, params):
             return
@@ -77,6 +81,7 @@ class SQLiteConnection(Connection):
         if LOG_QUERIES:
             log.debug("SQL executemany: %s", query)
 
+        self._check_transaction(query)
         params = [self._transform_args(query, sub) for sub in args]
         async with self.conn.executemany(query, params):
             return
@@ -85,6 +90,7 @@ class SQLiteConnection(Connection):
         if LOG_QUERIES:
             log.debug("SQL executescript: %s", textwrap.shorten(query, 200))
 
+        self._check_transaction(query)
         async with self.conn.executescript(query):
             return
 
@@ -92,6 +98,7 @@ class SQLiteConnection(Connection):
         if LOG_QUERIES:
             log.debug("SQL fetch: %s", query)
 
+        self._check_transaction(query)
         params = self._transform_args(query, args)
         return await self.conn.fetchall(query, params)
 
@@ -99,6 +106,7 @@ class SQLiteConnection(Connection):
         if LOG_QUERIES:
             log.debug("SQL fetchrow: %s", query)
 
+        self._check_transaction(query)
         params = self._transform_args(query, args)
         return await self.conn.fetchone(query, params)
 
@@ -106,6 +114,7 @@ class SQLiteConnection(Connection):
         if LOG_QUERIES:
             log.debug("SQL fetchval: %s", query)
 
+        self._check_transaction(query)
         params = self._transform_args(query, args)
         row = await self.conn.fetchone(query, params)
         if row is not None:
@@ -116,23 +125,62 @@ class SQLiteConnection(Connection):
         self,
         mode: TransactionMode,
     ) -> AsyncIterator[Self]:
-        if mode is False:
-            yield self
-        elif mode in (True, "read"):
-            async with self.conn.transaction():
-                yield self
-        elif mode == "write":
-            await self.conn.execute("BEGIN IMMEDIATE TRANSACTION")
-            try:
-                yield self
-            except BaseException:
-                await self.conn.rollback()
-                raise
-            else:
-                await self.conn.commit()
+        if self._transaction is not None:
+            raise RuntimeError("Cannot start a transaction within a transaction")
 
-        else:
-            assert_never(mode)
+        self._transaction = mode
+        try:
+            if mode is False:
+                yield self
+            elif mode in (True, "read"):
+                async with self.conn.transaction():
+                    yield self
+            elif mode == "write":
+                self._is_write_transaction = True
+                await self.conn.execute("BEGIN IMMEDIATE TRANSACTION")
+                try:
+                    yield self
+                except BaseException:
+                    await self.conn.rollback()
+                    raise
+                else:
+                    await self.conn.commit()
+            else:
+                assert_never(mode)
+        finally:
+            self._transaction = None
+            self._is_write_transaction = None
+
+    def _check_transaction(self, query: str) -> None:
+        if self._transaction in (None, False, "write"):
+            return
+
+        write = self._is_write_query(query)
+        if write is None:
+            return
+        elif self._is_write_transaction is None:
+            self._is_write_transaction = write
+
+        if not write or self._is_write_transaction is True:
+            return
+        elif self._transaction is True:
+            # This is where most mistakes will be caught, where a SELECT is followed
+            # by a write which is highly likely to cause "database is locked" errors.
+            # If you're here, you should probably use transaction="write"
+            # or transaction=False.
+            raise RuntimeError("Cannot write in an implicit read transaction")
+        else:  # self._transaction == "read"
+            raise RuntimeError("Cannot write in an explicit read transaction")
+
+    def _is_write_query(self, query: str) -> bool | None:
+        # Comments and CTEs can interfere with this, but most queries should match.
+        query = query.strip()[:7].upper()
+        if query.startswith("SELECT "):
+            return False
+        elif query.startswith(
+            ("ALTER ", "CREATE ", "DELETE ", "DROP ", "INSERT ", "UPDATE ")
+        ):
+            return True
 
     @staticmethod
     def _transform_args(
