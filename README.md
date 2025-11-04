@@ -166,6 +166,12 @@ graph colour, and a graph period between 1 hour and 30 days.
 A status can have multiple displays, allowing the same data to be rendered
 across many messages. For most users, we recommend one display per status.
 
+Displays are dependent on queries, and will only update if the parent status
+has at least one enabled query. Displays only show information from the first
+successful query in the status (see [Queries](#queries) below). If you need
+two displays to show different game servers, you should create two statuses
+and add a display + query to each one.
+
 While the bot is online, deleting a display through the `/status manage` command
 will automatically delete its Discord message, and vice versa. If the parent status
 is deleted, all its displays are deleted with it.
