@@ -109,7 +109,7 @@ async def connect_client(
 
 async def run_migrations() -> None:
     migrations = read_migrations()
-    async with connect() as conn:
+    async with connect(transaction="write") as conn:
         migrator = SQLiteMigrator(conn)
         await migrator.run_migrations(migrations)
 

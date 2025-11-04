@@ -81,14 +81,14 @@ class Cleanup(commands.Cog):
         if not guild_ids:
             return  # cache might be empty, don't do antyhing
 
-        async with connect() as conn:
+        async with connect(transaction=False) as conn:
             rows = await conn.fetch("SELECT guild_id FROM discord_guild")
             rows = {row[0] for row in rows}
             deleted = rows - guild_ids
-            for guild_id in deleted:
-                await conn.execute(
+            if deleted:
+                await conn.executemany(
                     "DELETE FROM discord_guild WHERE guild_id = $1",
-                    guild_id,
+                    [(guild_id,) for guild_id in deleted],
                 )
 
         if deleted:

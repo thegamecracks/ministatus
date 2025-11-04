@@ -53,7 +53,7 @@ class StatusCog(
         assert isinstance(interaction.user, discord.Member)
 
         guild_id = interaction.guild.id
-        async with connect_discord_database_client(self.bot) as ddc:
+        async with connect_discord_database_client(self.bot, transaction=False) as ddc:
             await ddc.add_member(interaction.user)
             statuses = await ddc.client.get_bulk_statuses_by_guilds(
                 guild_id,
