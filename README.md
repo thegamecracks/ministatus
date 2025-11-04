@@ -22,6 +22,7 @@ A Discord bot for managing game server status embeds.
     - [Displays](#displays)
     - [Queries](#queries)
       - [DNS Lookups (Technical)](#dns-lookups-technical)
+    - [Refresh Intervals](#refresh-intervals)
   - [Other CLI commands](#other-cli-commands)
   - [Environment Variables](#environment-variables)
   - [License](#license)
@@ -204,6 +205,18 @@ The game port will also be omitted from displays, since members can connect usin
 the hostname directly. If the query port is 0 and no `SRV` record exists, or the
 game type doesn't support `SRV` records, the query is invalidated.
 `SRV` records are never used if an explicit game / query port is provided.
+
+### Refresh Intervals
+
+By default, all status displays and queries are updated every minute, with image
+attachments being re-uploaded every ten minutes. Server admins cannot change these
+intervals, but the hoster can change this globally using the `ministatus config`
+CLI command:
+
+```sh
+$ ministatus config status-interval 60
+$ ministatus config status-interval-attachments 600
+```
 
 ## Other CLI commands
 
