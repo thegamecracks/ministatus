@@ -171,12 +171,11 @@ is deleted, all its displays are deleted with it.
 
 Queries are the protocols used to query game servers for their state.
 The admin must provide the server's address or hostname, the type of query
-(see [Supported Games](#supported-games--query-protocols)), the game / query port
-used to query that server, and a priority value (0). The game port is the port
-used by players to connect, which is shown next to the server's address, and the
-query port is the port used by the bot to query the server. Some game types
-require just the game port, in which case the bot will not prompt for a query
-port.
+(see [Supported Games](#supported-games--query-protocols)), the game / query port,
+and a priority value (0). The game port is the port used by players to connect,
+which is shown next to the server's address, and the query port is the port used
+by the bot to query the server. Some types require just the game port, in which
+case the bot will not prompt for the query port.
 
 Queries operate independently of displays, so a status without any displays can
 still query its game server and trigger downtime alerts.
@@ -190,13 +189,14 @@ For most users, we recommend adding and enabling exactly one query per status.
 
 When a domain name is specified, like `ia.420thdelta.net`, the bot will attempt
 to resolve any `A` record associated with that hostname to find an IPv4 address
-to query. If not present, the `AAAA` record is looked up for its IPv6 address instead.
-If neither exist, the query is considered invalid and disabled, sending an audit
-alert with the reason `DNS name does not exist`. If either DNS record can be found,
-the query is sent to that defined address with the provided game / query port.
+to query. If not present, an `AAAA` record is looked up for its IPv6 address instead.
+If either DNS record can be found, the query is sent to that address with the provided
+game / query port. Otherwise, the query is considered invalid and disabled, sending
+an audit alert with the reason `DNS name does not exist`. If multiple `A` or `AAAA`
+records are defined, only the first one will be used.
 
-For certain games, that being Arma 3, FiveM, and Minecraft (Java Edition),
-you can also use a port of 0 to indicate that an `SRV` record should be looked up
+For certain games, that being Arma 3, FiveM, and Minecraft (Java Edition), you can
+also use a game port of 0 to indicate that an `SRV` record should be looked up
 instead. If the record exists, it will use its defined target hostname and port to
 query the server, performing the same `A` / `AAAA` record lookups on the target.
 The game port will also be omitted from displays, since members can connect using
