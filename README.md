@@ -159,9 +159,10 @@ for staff to help diagnose failing statuses.
 ### Displays
 
 Displays are messages sent by the bot which are routinely updated to reflect
-the latest data provided by the status's queries. A status can have multiple
-displays, allowing the same data to be rendered across many messages.
-For most users, we recommend one display per status.
+the latest data provided by the status's queries. Displays have an accent colour,
+graph colour, and a graph period between 1 hour and 30 days.
+A status can have multiple displays, allowing the same data to be rendered
+across many messages. For most users, we recommend one display per status.
 
 While the bot is online, deleting a display through the `/status manage` command
 will automatically delete its Discord message, and vice versa. If the parent status
