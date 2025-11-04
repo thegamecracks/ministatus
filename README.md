@@ -6,9 +6,25 @@
 [![](https://img.shields.io/github/actions/workflow/status/thegamecracks/ministatus/ruff-check.yml?style=flat-square&logo=ruff&label=lints)](https://docs.astral.sh/ruff/)
 [![](https://img.shields.io/github/actions/workflow/status/thegamecracks/ministatus/ruff-format.yml?style=flat-square&logo=ruff&label=style)](https://docs.astral.sh/ruff/)
 
+![Ministatus banner](https://github.com/user-attachments/assets/d8276cec-727d-4805-8eff-b97c52e85fcf)
+
 A Discord bot for managing game server status embeds.
 
-![Ministatus banner](https://github.com/user-attachments/assets/d8276cec-727d-4805-8eff-b97c52e85fcf)
+## Table of Contents
+
+- [ministatus](#ministatus)
+  - [Table of Contents](#table-of-contents)
+  - [Supported Games / Query Protocols](#supported-games--query-protocols)
+  - [Setup](#setup)
+  - [Usage](#usage)
+  - [Configuration](#configuration)
+    - [Alerts](#alerts)
+    - [Displays](#displays)
+    - [Queries](#queries)
+      - [DNS Lookups (Technical)](#dns-lookups-technical)
+  - [Other CLI commands](#other-cli-commands)
+  - [Environment Variables](#environment-variables)
+  - [License](#license)
 
 ## Supported Games / Query Protocols
 
