@@ -393,7 +393,8 @@ class DatabaseClient:
         enabled_expr = self._get_only_enabled_condition(only_enabled)
         sid = ", ".join("?" * len(status_ids))
         alerts = await self.conn.fetch(
-            f"SELECT * FROM status_alert WHERE status_id IN ({sid}) AND {enabled_expr}",
+            f"SELECT * FROM status_alert WHERE status_id IN ({sid}) "
+            f"AND {enabled_expr} ORDER BY status_alert_id",
             *status_ids,
         )
 
@@ -423,7 +424,8 @@ class DatabaseClient:
         enabled_expr = self._get_only_enabled_condition(only_enabled)
         sid = ", ".join("?" * len(status_ids))
         displays = await self.conn.fetch(
-            f"SELECT * FROM status_display WHERE status_id IN ({sid}) AND {enabled_expr}",
+            f"SELECT * FROM status_display WHERE status_id IN ({sid}) "
+            f"AND {enabled_expr} ORDER BY message_id",
             *status_ids,
         )
 
@@ -454,7 +456,7 @@ class DatabaseClient:
         sid = ", ".join("?" * len(status_ids))
         queries = await self.conn.fetch(
             f"SELECT * FROM status_query WHERE status_id IN ({sid}) "
-            f"AND {enabled_expr} ORDER BY priority",
+            f"AND {enabled_expr} ORDER BY priority, status_query_id",
             *status_ids,
         )
 
