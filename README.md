@@ -21,9 +21,9 @@ A Discord bot for managing game server status embeds.
     - [Alerts](#alerts)
     - [Displays](#displays)
     - [Queries](#queries)
-      - [DNS Lookups (Technical)](#dns-lookups-technical)
-    - [Downtime Detection](#downtime-detection)
-    - [Refresh Intervals](#refresh-intervals)
+  - [Downtime Detection](#downtime-detection)
+  - [Refresh Intervals](#refresh-intervals)
+  - [DNS Lookups (Technical)](#dns-lookups-technical)
   - [Other CLI commands](#other-cli-commands)
   - [Environment Variables](#environment-variables)
   - [License](#license)
@@ -191,7 +191,33 @@ For most users, we recommend adding and enabling exactly one query per status.
 Continuously failing query methods will be automatically disabled after 24 hours.
 This triggers an audit alert with the reason `Offline for extended period of time`.
 
-#### DNS Lookups (Technical)
+## Downtime Detection
+
+After a query fails once, displays won't immediately report the server as `Offline 🔴`,
+but will instead show an intermediary `Online 🟡` status and continue to present the
+last known player count and list.
+
+If the server responds within two queries, the status re-appears as `Online 🟢`
+and the player list is updated like normal. However, if three consecutive queries fail,
+the status returns `Offline 🔴` and downtime alerts are sent. The next time the query
+succeeds, the status will return online and a corresponding alert will be sent.
+
+Player graphs will avoid rendering `Online 🟡` intermediary datapoints,
+reducing outliers that cause "spikes" in the graph.
+
+## Refresh Intervals
+
+By default, all status displays and queries are updated every minute, with image
+attachments being re-uploaded every ten minutes. Server admins cannot change these
+intervals, but the hoster can change this globally using the `ministatus config`
+CLI command:
+
+```sh
+$ ministatus config status-interval 60
+$ ministatus config status-interval-attachments 600
+```
+
+## DNS Lookups (Technical)
 
 When a domain name is specified, like `ia.420thdelta.net`, the bot will attempt
 to resolve any `A` record associated with that hostname to find an IPv4 address
@@ -209,32 +235,6 @@ The game port will also be omitted from displays, since members can connect usin
 the hostname directly. If the query port is 0 and no `SRV` record exists, or the
 game type doesn't support `SRV` records, the query is invalidated.
 `SRV` records are never used if an explicit game / query port is provided.
-
-### Downtime Detection
-
-After a query fails once, displays won't immediately report the server as `Offline 🔴`,
-but will instead show an intermediary `Online 🟡` status and continue to present the
-last known player count and list.
-
-If the server responds within two queries, the status re-appears as `Online 🟢`
-and the player list is updated like normal. However, if three consecutive queries fail,
-the status returns `Offline 🔴` and downtime alerts are sent. The next time the query
-succeeds, the status will return online and a corresponding alert will be sent.
-
-Player graphs will avoid rendering `Online 🟡` intermediary datapoints,
-reducing outliers that cause "spikes" in the graph.
-
-### Refresh Intervals
-
-By default, all status displays and queries are updated every minute, with image
-attachments being re-uploaded every ten minutes. Server admins cannot change these
-intervals, but the hoster can change this globally using the `ministatus config`
-CLI command:
-
-```sh
-$ ministatus config status-interval 60
-$ ministatus config status-interval-attachments 600
-```
 
 ## Other CLI commands
 
