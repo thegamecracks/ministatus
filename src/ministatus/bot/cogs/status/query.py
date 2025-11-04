@@ -298,8 +298,9 @@ async def query_teamspeak_3(query: StatusQuery) -> Info:
 
     # In this context, "game port" is the TeamSpeak query port and "query port"
     # is the TeamSpeak voice port. SRV records are looked up for the voice port.
+    query_port = query.game_port or 10011
     host, voice_port = await resolve_host(query)
-    proto = TeamSpeak3(host, query.game_port, voice_port, QUERY_TIMEOUT)
+    proto = TeamSpeak3(host, query_port, voice_port, QUERY_TIMEOUT)
 
     try:
         info = await proto.get_info()
