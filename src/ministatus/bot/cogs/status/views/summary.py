@@ -9,7 +9,7 @@ from discord import Interaction
 
 from ministatus.bot.db import connect_discord_database_client
 from ministatus.bot.views import LayoutView
-from ministatus.db import Status
+from ministatus.db import Status, StatusAlert, StatusDisplay, StatusQuery
 
 from .book import RenderArgs
 
@@ -31,6 +31,29 @@ def _format_state(state: ToggleableState) -> str:
         return "enabled 🟢"
     else:
         return "enabled, failing 🟡"
+
+
+def _format_alert(alert: StatusAlert) -> str:
+    types = []
+    if alert.send_audit:
+        types.append("audit")
+    if alert.send_downtime:
+        types.append("downtime")
+
+    types = ", ".join(types) or "no-op"
+    return f"<#{alert.channel_id}> ({types})"
+
+
+def _format_display(
+    display: StatusDisplay,
+    message: discord.PartialMessage | None,
+) -> str:
+    jump_url = display.message_id if message is None else message.jump_url
+    return f"{jump_url} ({display.graph_interval})"
+
+
+def _format_query(query: StatusQuery) -> str:
+    return f"{query.type.label} at {query.address}"
 
 
 class StatusSummaryView(LayoutView):
@@ -84,19 +107,20 @@ class _StatusContainer(discord.ui.Container):
 
         async with connect_discord_database_client(self.bot) as ddc:
             for i, alert in enumerate(status.alerts, 1):
-                line = f"**Alert {i}** {_format_state(alert)} ⇒ <#{alert.channel_id}>"
+                line = _format_alert(alert)
+                line = f"**Alert {i}** {_format_state(alert)} ⇒ {line}"
                 content.append(line)
 
             for i, display in enumerate(status.displays, 1):
                 # NOTE: N+1 query
                 message = await ddc.get_message(message_id=display.message_id)
-                jump_url = display.message_id if message is None else message.jump_url
-                line = f"**Display {i}** {_format_state(display)} ⇒ {jump_url}"
+                line = _format_display(display, message)
+                line = f"**Display {i}** {_format_state(display)} ⇒ {line}"
                 content.append(line)
 
             for i, query in enumerate(status.queries, 1):
-                label = f"{query.type.label} at {query.address}"
-                line = f"**Query {i}** {_format_state(query)} ⇒ {label}"
+                line = _format_query(query)
+                line = f"**Query {i}** {_format_state(query)} ⇒ {line}"
                 content.append(line)
 
         section.add_item(discord.ui.TextDisplay("\n".join(content)))
