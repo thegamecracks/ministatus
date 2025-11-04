@@ -106,7 +106,87 @@ to synchronize them again.
 
 ![Command demonstration](https://github.com/user-attachments/assets/c382fc35-ab9e-4ae6-9874-6e52e3dd8c94)
 
-### Other commands
+## Configuration
+
+When added to a server, any members with the Manage Server permission can use
+the `/status manage` slash command to create statuses for that server.
+A Discord server can have multiple statuses to track different game servers.
+Each status can define one or more of the following components:
+1. Alerts
+2. Displays
+3. Queries
+
+All three components can be enabled and disabled at any time, allowing the admin
+to switch between configurations without. The status can also be disabled as a
+whole to halt its components.
+
+Statuses are specific to each Discord server, so admins in one server won't
+be able to share or modify statuses in another server.
+
+> [!CAUTION]
+> To avoid potential abuse, it is strongly recommended to **NOT** use this
+> in a public bot. You should only invite this bot to servers with admins
+> that you trust.
+
+### Alerts
+
+Alerts are channels that the bot uses to send events related to its status.
+
+Alert messages are categorized into audit and downtime. Downtime events indicate when
+the server goes online or offline, while audit events indicate failures in the status,
+such as missing permissions to edit a display or a misconfigured query.
+
+Alerts can be filtered to one or both events, so you might send downtime notifications
+to a public channel for members to see, and audit events to a private channel
+for staff to help diagnose failing statuses.
+
+### Displays
+
+Displays are messages sent by the bot which are routinely updated to reflect
+the latest data provided by the status's queries. A status can have multiple
+displays, allowing the same data to be rendered across many messages.
+For most users, we recommend one display per status.
+
+While the bot is online, deleting a display through the `/status manage` command
+will automatically delete its Discord message, and vice versa. If the parent status
+is deleted, all its displays are deleted with it.
+
+### Queries
+
+Queries are the protocols used to query game servers for their state.
+The admin must provide the server's address or hostname, the type of query
+(see [Supported Games](#supported-games--query-protocols)), the game / query port
+used to query that server, and a priority value (0). The game port is the port
+used by players to connect, which is shown next to the server's address, and the
+query port is the port used by the bot to query the server. Some game types
+require just the game port, in which case the bot will not prompt for a query
+port.
+
+Queries operate independently of displays, so a status without any displays can
+still query its game server and trigger downtime alerts.
+
+If multiple queries are enabled on a single status, the query with the highest
+priority (lowest number) is tested first, and if it fails, the next query is
+tested instead. If all queries fail, the status is recorded as offline.
+For most users, we recommend adding and enabling exactly one query per status.
+
+#### DNS Lookups (Technical)
+
+When a domain name is specified, like `ia.420thdelta.net`, the bot will attempt
+to resolve any A record associated with that hostname to find an IPv4 address
+to query. If not present, the AAAA record is looked up for its IPv6 address instead.
+If neither exist, the query is considered invalid and disabled, sending an audit
+alert with the reason `DNS name does not exist`. If either DNS record can be found,
+the query is sent to that defined address with the provided game / query port.
+
+For certain games, that being Arma 3 and Minecraft (Java Edition), you can also
+use a port of 0 to indicate that a DNS SRV lookup should be performed.
+If the record exists, it will use its defined target and port. This allows the
+query port to be dictated by DNS records, and only the hostname will be shown
+in displays, which members can use to connect instead. SRV records are never
+looked up if an explicit game / query port is provided.
+
+## Other CLI commands
 
 View where files are saved:
 
