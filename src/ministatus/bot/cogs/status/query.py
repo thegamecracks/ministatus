@@ -142,6 +142,8 @@ async def send_query(bot: Bot, query: StatusQuery) -> Info | None:
         return await query_minecraft_java(query)
     elif query.type == StatusQueryType.SOURCE:
         return await query_source(query)
+    elif query.type == StatusQueryType.TEAMSPEAK_3:
+        return await query_teamspeak_3(query)
     elif query.type == StatusQueryType.PROJECT_ZOMBOID:
         return await query_source(query)  # Wait, it's all source? Always has been
     else:
@@ -291,6 +293,40 @@ async def query_source(query: StatusQuery) -> Info:
     )
 
 
+async def query_teamspeak_3(query: StatusQuery) -> Info:
+    from opengsq import TeamSpeak3
+
+    # In this context, "game port" is the TeamSpeak query port and "query port"
+    # is the TeamSpeak voice port. SRV records are looked up for the voice port.
+    host, voice_port = await resolve_host(query)
+    proto = TeamSpeak3(host, query.game_port, voice_port, QUERY_TIMEOUT)
+
+    try:
+        info = await proto.get_info()
+        clients = await proto.get_clients()
+    except TimeoutError as e:
+        raise FailedQueryError("Query timed out") from e
+
+    clients = [
+        Player(name=name)
+        for c in clients
+        if c.get("client_type") == "0" and (name := c.get("client_nickname"))
+    ]
+
+    return Info(
+        title=info.get("virtualserver_name", "").strip() or None,
+        address=f"{query.host}:{query.query_port}" if query.query_port else query.host,
+        thumbnail=None,
+        max_players=int(info.get("virtualserver_maxclients") or 0),
+        num_players=int(info.get("virtualserver_clientsonline") or 0),
+        game=None,
+        map=None,
+        mods=None,
+        version=info.get("virtualserver_version", "").strip() or None,
+        players=clients,
+    )
+
+
 async def _http_get_json(session: aiohttp.ClientSession, *args, **kwargs) -> Any:
     kwargs.setdefault("timeout", HTTP_TIMEOUT)
     try:
@@ -340,6 +376,8 @@ async def resolve_host(query: StatusQuery) -> tuple[str, int]:
         host_srv = f"_cfx._udp.{host}"
     elif type == StatusQueryType.MINECRAFT_JAVA:
         host_srv = f"_minecraft._tcp.{host}"
+    elif type == StatusQueryType.TEAMSPEAK_3:
+        host_srv = f"_ts3._udp.{host}"
 
     # See also https://github.com/py-mine/mcstatus/blob/v12.0.6/mcstatus/dns.py
     # NOTE: there could be multiple DNS records, but we're always returning the first

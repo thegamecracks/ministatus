@@ -46,6 +46,8 @@ def get_default_ports(type: StatusQueryType) -> tuple[int, int | None]:
         return 25565, None
     elif type == StatusQueryType.SOURCE:
         return 27015, 27015
+    elif type == StatusQueryType.TEAMSPEAK_3:
+        return 10011, 9987  # Query port, voice port
     elif type == StatusQueryType.PROJECT_ZOMBOID:
         return 16261, None
     else:

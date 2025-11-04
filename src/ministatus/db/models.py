@@ -172,6 +172,7 @@ class StatusQueryType(StrEnum):
     MINECRAFT_BEDROCK = "minecraft-bedrock"
     MINECRAFT_JAVA = "minecraft-java"
     SOURCE = "source"
+    TEAMSPEAK_3 = "teamspeak-3"
     PROJECT_ZOMBOID = "project-zomboid"
 
     @property
@@ -188,6 +189,8 @@ class StatusQueryType(StrEnum):
             return "Minecraft (Java Edition)"
         elif self == StatusQueryType.SOURCE:
             return "Valve Source Query (A2S)"
+        elif self == StatusQueryType.TEAMSPEAK_3:
+            return "TeamSpeak 3"
         elif self == StatusQueryType.PROJECT_ZOMBOID:
             return "Project Zomboid"
         else:
