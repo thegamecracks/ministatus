@@ -93,8 +93,8 @@ class CreateStatusAlertModal(Modal, title="Create Status Alert"):
         description="Sends a message for misconfiguration errors. Should be private.",
         component=discord.ui.Select(
             options=[
-                discord.SelectOption(label="Yes", emoji="🟢", value="1"),
-                discord.SelectOption(label="No", emoji="🔴", value="0", default=True),
+                discord.SelectOption(label="Yes", emoji="🟢", value="1", default=True),
+                discord.SelectOption(label="No", emoji="🔴", value="0"),
             ],
         ),
     )
