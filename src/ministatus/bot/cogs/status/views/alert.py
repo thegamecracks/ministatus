@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime
+import sqlite3
 from typing import TYPE_CHECKING, Any, Callable, Self, cast
 
 import discord
@@ -10,6 +11,7 @@ from discord.ui import Button, Select
 from ministatus.bot.cogs.status.permissions import check_channel_permissions
 from ministatus.bot.db import connect_discord_database_client
 from ministatus.bot.dt import utcnow
+from ministatus.bot.errors import ErrorResponse
 from ministatus.bot.views import Modal
 from ministatus.db import Status, StatusAlert, connect
 
@@ -128,9 +130,16 @@ class CreateStatusAlertModal(Modal, title="Create Status Alert"):
             send_downtime=self.send_downtime.component.values[0] == "1",
         )
 
-        async with connect_discord_database_client(interaction.client) as ddc:
-            await ddc.add_channel(channel)
-            alert = await ddc.client.create_status_alert(alert)
+        try:
+            async with connect_discord_database_client(interaction.client) as ddc:
+                await ddc.add_channel(channel)
+                alert = await ddc.client.create_status_alert(alert)
+        except sqlite3.IntegrityError as e:
+            raise ErrorResponse(
+                f"Alerts must be unique per status and channel. If you want to "
+                f"update the alert in {channel.mention} for {self.status.label}, "
+                f"you will need to delete the existing alert and re-create it."
+            ) from e
 
         self.status.alerts.append(alert)
         await self.callback(interaction, alert)
