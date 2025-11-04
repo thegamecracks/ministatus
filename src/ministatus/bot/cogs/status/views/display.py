@@ -141,8 +141,12 @@ class CreateStatusDisplayModal(Modal, title="Create Status Display"):
         channel = channel.resolve() or await channel.fetch()
         await check_channel_permissions(channel)
 
+        accent_colour = discord.Color.from_str(self.accent_colour.value).value
+        graph_colour = discord.Color.from_str(self.graph_colour.value).value
+
         assert not isinstance(channel, (discord.ForumChannel, discord.CategoryChannel))
-        message = await channel.send(view=PlaceholderView(interaction.user))
+        view = PlaceholderView(interaction.user, accent_colour=accent_colour)
+        message = await channel.send(view=view)
 
         graph_interval = int(self.graph_interval.component.values[0])
         graph_interval = datetime.timedelta(seconds=graph_interval)
@@ -150,8 +154,8 @@ class CreateStatusDisplayModal(Modal, title="Create Status Display"):
         display = StatusDisplay(
             message_id=message.id,
             status_id=self.status.status_id,
-            accent_colour=discord.Color.from_str(self.accent_colour.value).value,
-            graph_colour=discord.Color.from_str(self.graph_colour.value).value,
+            accent_colour=accent_colour,
+            graph_colour=graph_colour,
             graph_interval=graph_interval,
             enabled_at=interaction.created_at,
         )
@@ -258,8 +262,14 @@ class _StatusDisplayRow(discord.ui.ActionRow):
 class PlaceholderView(LayoutView):
     container = discord.ui.Container()
 
-    def __init__(self, user: discord.Member | discord.User) -> None:
+    def __init__(
+        self,
+        user: discord.Member | discord.User,
+        *,
+        accent_colour: int | None = None,
+    ) -> None:
         super().__init__()
+        self.container.accent_colour = accent_colour
         self.container.add_item(discord.ui.TextDisplay("## Mini Status"))
         self.container.add_item(discord.ui.Separator())
         self.container.add_item(
