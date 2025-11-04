@@ -24,6 +24,7 @@ from ministatus.db import (
     StatusHistory,
     StatusHistoryPlayer,
     connect,
+    connect_client,
 )
 
 from .book import Book, Page, RenderArgs, format_enabled_at, format_failed_at
@@ -33,7 +34,7 @@ if TYPE_CHECKING:
 
     from .overview import StatusModify
 
-DISPLAY_UPDATE_ATTACHMENTS_INTERVAL = 600
+DEFAULT_ATTACHMENTS_INTERVAL = 600
 
 log = logging.getLogger(__name__)
 
@@ -283,10 +284,11 @@ def get_online_message(history: StatusHistory | None) -> str:
 class StatusDisplayView(LayoutView):
     container = discord.ui.Container()
 
-    def __init__(self, bot: Bot, message_id: int) -> None:
+    def __init__(self, bot: Bot, message_id: int, attachments_interval: float) -> None:
         super().__init__(timeout=None)
         self.bot = bot
         self.message_id = message_id
+        self.attachments_interval = attachments_interval
 
         self._last_attachment_refresh = -math.inf
 
@@ -427,9 +429,8 @@ class StatusDisplayView(LayoutView):
     ) -> list[discord.File]:
         # NOTE: A status can have multiple displays, each of which independently
         #       generates its own images. Perhaps this should be shared?
-        interval = DISPLAY_UPDATE_ATTACHMENTS_INTERVAL
         now = time.perf_counter()
-        if now - self._last_attachment_refresh < interval:
+        if now - self._last_attachment_refresh < self.attachments_interval:
             return []
 
         self._last_attachment_refresh = now
@@ -457,6 +458,15 @@ async def update_display(bot: Bot, *, message_id: int) -> None:
         return await view.update()
 
     log.debug("Creating view for display #%d", message_id)
-    view = StatusDisplayView(bot, message_id)
+
+    async with connect_client() as client:
+        attachments_interval = await client.get_setting("status-interval-attachments")
+        if attachments_interval is None:
+            await client.set_setting(
+                "status-interval-attachments",
+                attachments_interval := DEFAULT_ATTACHMENTS_INTERVAL,
+            )
+
+    view = StatusDisplayView(bot, message_id, attachments_interval)
     await view.update()
     display_cache[message_id] = view

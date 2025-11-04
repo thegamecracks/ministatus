@@ -224,6 +224,7 @@ $ ministatus config
 Settings:
     appid = 1430326736775544903
     status-interval = 60
+    status-interval-attachments = 600
     token = ****
 
 $ ministatus config --unset token  # unset token
