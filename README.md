@@ -233,14 +233,21 @@ game / query port. Otherwise, the query is considered invalid and disabled, send
 an audit alert with the reason `DNS name does not exist`. If multiple `A` or `AAAA`
 records are defined, only the first one will be used.
 
-For certain games, that being Arma 3, FiveM, and Minecraft (Java Edition), you can
-also use a game port of 0 to indicate that an `SRV` record should be looked up
-instead. If the record exists, it will use its defined target hostname and port to
-query the server, performing the same `A` / `AAAA` record lookups on the target.
+For certain games, that being Arma 3, FiveM, Minecraft (Java Edition), and TeamSpeak 3\*,
+you can also specify port 0 to indicate that an `SRV` record should be looked up instead.
+If the record exists, it will use its defined target hostname and port to query the server,
+performing the same `A` / `AAAA` record lookups on the target.
 The game port will also be omitted from displays, since members can connect using
 the hostname directly. If the query port is 0 and no `SRV` record exists, or the
 game type doesn't support `SRV` records, the query is invalidated.
 `SRV` records are never used if an explicit game / query port is provided.
+
+> [!NOTE]
+> For TeamSpeak 3, the "game port" and "query port" as shown by Ministatus maps to the
+> TS query port and voice port respectively. This is because only the latter supports
+> SRV records, and the TS query port has no SRV record. If you specify 0 for both
+> "game port" and "query port", the TS query port is assumed to be 10011, and the
+> voice port will be looked up using the SRV record.
 
 ## Other CLI commands
 
