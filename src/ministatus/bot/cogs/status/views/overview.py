@@ -203,7 +203,7 @@ class _StatusModifyRow(discord.ui.ActionRow):
         bot = cast("Bot", interaction.client)
         status_id = self.page.status.status_id
 
-        async with connect_discord_database_client(bot, transaction=False) as ddc:
+        async with connect_discord_database_client(bot, transaction="write") as ddc:
             conn = ddc.client.conn
             messages = [
                 row["message_id"]
