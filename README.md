@@ -179,7 +179,7 @@ is deleted, all its displays are deleted with it.
 ### Queries
 
 Queries are the protocols used to query game servers for their state.
-The admin must provide the server's address or hostname, the type of query
+The admin must provide the server's address or hostname, the query type
 (see [Supported Games](#supported-games--query-protocols)), the game / query port,
 and a priority value (0). The game port is the port used by players to connect,
 shown next to the server's address, and the query port is the port used by the bot
