@@ -346,8 +346,7 @@ class StatusDisplayView(LayoutView):
         else:
             section = self.container
 
-        title = status.title or status.label
-        section.add_item(discord.ui.TextDisplay(f"## {title}"))
+        section.add_item(discord.ui.TextDisplay(f"## {status.display_name}"))
         if section == self.container:
             section.add_item(discord.ui.Separator())
 

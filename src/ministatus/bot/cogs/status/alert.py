@@ -317,10 +317,9 @@ class AlertDowntime(Alert):
 
 class AlertDowntimeStarted(AlertDowntime):
     def __init__(self, status: Status) -> None:
-        label = status.title or status.label
-        title = f"## {label} offline"
+        title = f"## {status.display_name} offline"
         content = [
-            f"{label} has stopped responding to queries.",
+            f"{status.display_name} has stopped responding to queries.",
             f"**Address:** {status.address}",
         ]
         super().__init__(
@@ -333,10 +332,9 @@ class AlertDowntimeStarted(AlertDowntime):
 
 class AlertDowntimeEnded(AlertDowntime):
     def __init__(self, status: Status) -> None:
-        label = status.title or status.label
-        title = f"## {label} online"
+        title = f"## {status.display_name} online"
         content = [
-            f"{label} is now responding to queries.",
+            f"{status.display_name} is now responding to queries.",
             f"**Address:** {status.address}",
         ]
         super().__init__(

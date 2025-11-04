@@ -94,6 +94,10 @@ class Status(BaseModel):
     displays: list[StatusDisplay] = Field(default_factory=list)
     queries: list[StatusQuery] = Field(default_factory=list)
 
+    @property
+    def display_name(self) -> str:
+        return self.title or self.label
+
 
 class StatusAlert(BaseModel):
     status_alert_id: int
