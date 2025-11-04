@@ -120,8 +120,6 @@ Make sure to **only** synchronize once to avoid being ratelimited by Discord.
 If ministatus is updated with changes to application commands, you may need
 to synchronize them again.
 
-![Command demonstration](https://github.com/user-attachments/assets/c382fc35-ab9e-4ae6-9874-6e52e3dd8c94)
-
 ## Configuration
 
 When added to a server, any members with the Manage Server permission can use
@@ -138,6 +136,8 @@ whole to halt its components.
 
 Statuses are specific to each Discord server, so admins in one server won't
 be able to share or modify statuses in another server.
+
+![Command demonstration](https://github.com/user-attachments/assets/c382fc35-ab9e-4ae6-9874-6e52e3dd8c94)
 
 > [!CAUTION]
 > To avoid potential abuse, it is strongly recommended to **NOT** use this
