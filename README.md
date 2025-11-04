@@ -176,9 +176,9 @@ Queries are the protocols used to query game servers for their state.
 The admin must provide the server's address or hostname, the type of query
 (see [Supported Games](#supported-games--query-protocols)), the game / query port,
 and a priority value (0). The game port is the port used by players to connect,
-which is shown next to the server's address, and the query port is the port used
-by the bot to query the server. Some types require just the game port, in which
-case the bot will not prompt for the query port.
+shown next to the server's address, and the query port is the port used by the bot
+to query the server. Some query types only require the game port, in which case
+the bot won't prompt for a query port.
 
 Queries operate independently of displays, so a status without any displays can
 still query its game server and trigger downtime alerts.
