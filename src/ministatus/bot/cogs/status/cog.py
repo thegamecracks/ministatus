@@ -94,10 +94,10 @@ class StatusCog(
 
     async def _set_query_interval(self) -> None:
         async with connect_client() as client:
-            query_interval = await client.get_setting("status-interval")
-            if query_interval is None:
-                query_interval = DEFAULT_QUERY_INTERVAL
-                await client.set_setting("status-interval", query_interval)
+            query_interval = await client.set_default_setting(
+                "status-interval",
+                DEFAULT_QUERY_INTERVAL,
+            )
 
         query_interval = int(query_interval)
         if query_interval < 30:

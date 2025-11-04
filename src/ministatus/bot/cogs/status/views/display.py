@@ -460,12 +460,10 @@ async def update_display(bot: Bot, *, message_id: int) -> None:
     log.debug("Creating view for display #%d", message_id)
 
     async with connect_client() as client:
-        attachments_interval = await client.get_setting("status-interval-attachments")
-        if attachments_interval is None:
-            await client.set_setting(
-                "status-interval-attachments",
-                attachments_interval := DEFAULT_ATTACHMENTS_INTERVAL,
-            )
+        attachments_interval = await client.set_default_setting(
+            "status-interval-attachments",
+            DEFAULT_ATTACHMENTS_INTERVAL,
+        )
 
     view = StatusDisplayView(bot, message_id, attachments_interval)
     await view.update()

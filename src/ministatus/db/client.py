@@ -66,6 +66,24 @@ class DatabaseClient:
             secret,
         )
 
+    async def set_default_setting(
+        self,
+        name: str,
+        value: Any,
+        *,
+        secret: bool = False,
+    ) -> Any:
+        if name in self.SECRET_SETTINGS:
+            secret = True
+
+        return await self.conn.fetchval(
+            "INSERT INTO setting (name, value, secret) VALUES ($1, $2, $3) "
+            "ON CONFLICT (name) DO UPDATE SET value = value RETURNING value",
+            name,
+            value,
+            secret,
+        )
+
     async def delete_setting(self, name: str) -> bool:
         ret = await self.conn.fetchval(
             "DELETE FROM setting WHERE name = $1 RETURNING 1",
