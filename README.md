@@ -189,18 +189,20 @@ For most users, we recommend adding and enabling exactly one query per status.
 #### DNS Lookups (Technical)
 
 When a domain name is specified, like `ia.420thdelta.net`, the bot will attempt
-to resolve any A record associated with that hostname to find an IPv4 address
-to query. If not present, the AAAA record is looked up for its IPv6 address instead.
+to resolve any `A` record associated with that hostname to find an IPv4 address
+to query. If not present, the `AAAA` record is looked up for its IPv6 address instead.
 If neither exist, the query is considered invalid and disabled, sending an audit
 alert with the reason `DNS name does not exist`. If either DNS record can be found,
 the query is sent to that defined address with the provided game / query port.
 
-For certain games, that being Arma 3 and Minecraft (Java Edition), you can also
-use a port of 0 to indicate that a DNS SRV lookup should be performed.
-If the record exists, it will use its defined target and port. This allows the
-query port to be dictated by DNS records, and only the hostname will be shown
-in displays, which members can use to connect instead. SRV records are never
-looked up if an explicit game / query port is provided.
+For certain games, that being Arma 3, FiveM, and Minecraft (Java Edition),
+you can also use a port of 0 to indicate that an `SRV` record should be looked up
+instead. If the record exists, it will use its defined target hostname and port to
+query the server, performing the same `A` / `AAAA` record lookups on the target.
+The game port will also be omitted from displays, since members can connect using
+the hostname directly. If the query port is 0 and no `SRV` record exists, or the
+game type doesn't support `SRV` records, the query is invalidated.
+`SRV` records are never used if an explicit game / query port is provided.
 
 ## Other CLI commands
 
