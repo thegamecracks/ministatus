@@ -15,9 +15,9 @@ A Discord bot for managing game server status embeds.
 - [ministatus](#ministatus)
   - [Table of Contents](#table-of-contents)
   - [Supported Games / Query Protocols](#supported-games--query-protocols)
+  - [Installation](#installation)
   - [Setup](#setup)
   - [Usage](#usage)
-  - [Configuration](#configuration)
     - [Alerts](#alerts)
     - [Displays](#displays)
     - [Queries](#queries)
@@ -36,7 +36,7 @@ A Discord bot for managing game server status embeds.
 - Project Zomboid
 - Valve Source Query (A2S)
 
-## Setup
+## Installation
 
 This project requires Python 3.11 or newer. You can manually install this
 project into a virtual environment:
@@ -65,7 +65,7 @@ $ uvx ministatus
 [pipx]: https://pipx.pypa.io/latest/
 [uv]: https://docs.astral.sh/uv/
 
-## Usage
+## Setup
 
 ```sh
 $ ministatus
@@ -120,7 +120,7 @@ Make sure to **only** synchronize once to avoid being ratelimited by Discord.
 If ministatus is updated with changes to application commands, you may need
 to synchronize them again.
 
-## Configuration
+## Usage
 
 When added to a server, any members with the Manage Server permission can use
 the `/status manage` slash command to create statuses for that server.
