@@ -53,7 +53,7 @@ class Cleanup(commands.Cog):
         mid = ", ".join("?" * len(payload.message_ids))
         async with connect() as conn:
             await conn.execute(
-                f"DELETE FROM message WHERE id IN ({mid})",
+                f"DELETE FROM discord_message WHERE id IN ({mid})",
                 *payload.message_ids,
             )
 
