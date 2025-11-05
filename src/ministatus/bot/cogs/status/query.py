@@ -5,6 +5,7 @@ import base64
 import datetime
 import json
 import logging
+import re
 from contextlib import suppress
 from dataclasses import dataclass
 from enum import Enum
@@ -52,6 +53,8 @@ HISTORY_PLAYERS_EXPIRES_AFTER = datetime.timedelta(hours=1)
 QUERY_DEAD_AFTER = datetime.timedelta(days=1)
 QUERY_TIMEOUT = 3
 HTTP_TIMEOUT = aiohttp.ClientTimeout(3)
+
+FIVEM_COLOUR_CODE = re.compile(r"\^\d")
 
 _resolver = Resolver()
 _resolver.cache = Cache()
@@ -168,10 +171,12 @@ async def query_fivem(session: aiohttp.ClientSession, query: StatusQuery) -> Inf
     if thumbnail := info.get("icon"):
         thumbnail = base64.b64decode(thumbnail)
 
+    title = dynamic.get("hostname") or vars.get("sv_projectName") or ""
+    title = FIVEM_COLOUR_CODE.sub("", title).strip()
     players = [Player(name=name) for p in players if (name := p.get("name"))]
 
     return Info(
-        title=dynamic.get("hostname") or vars.get("sv_projectName"),
+        title=title or None,
         address=query.address,
         thumbnail=thumbnail,
         max_players=int(dynamic.get("sv_maxclients") or info.get("sv_maxClients") or 0),
