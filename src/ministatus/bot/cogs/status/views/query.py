@@ -62,7 +62,11 @@ class StatusModifyQueryRow(discord.ui.ActionRow):
     async def render(self) -> Self:
         queries = self.page.status.queries
         query_options = [
-            SelectOption(label=f"Query {i}", emoji="📡", value=str(i - 1))
+            SelectOption(
+                label=f"Query {i}",
+                emoji="📡",
+                value=str(query.status_query_id),
+            )
             for i, query in enumerate(queries, start=1)
         ]
         query_options.append(
@@ -79,7 +83,8 @@ class StatusModifyQueryRow(discord.ui.ActionRow):
             modal = CreateStatusQueryTypeModal(self.page.status, self._create_callback)
             await interaction.response.send_modal(modal)
         else:
-            query = self.page.status.queries[int(value)]
+            queries = self.page.status.queries
+            query = discord.utils.get(queries, status_query_id=int(value))
             assert query is not None
             self.page.book.push(StatusQueryPage(self.page.book, query))
             await self.page.book.edit(interaction)
