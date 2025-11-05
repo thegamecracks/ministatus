@@ -86,6 +86,7 @@ class StatusOverviewSelect(discord.ui.ActionRow):
         status: Status,
     ) -> None:
         self.statuses.append(status)
+        self.statuses.sort(key=lambda s: s.label.lower())
         self.parent.book.push(StatusModify(self.parent.book, status))
         await self.parent.book.edit(interaction)
 
