@@ -328,7 +328,8 @@ class DatabaseClient:
         enabled_expr = self._get_only_enabled_condition(only_enabled)
         sid = ", ".join("?" * len(status_ids))
         statuses = await self.conn.fetch(
-            f"SELECT * FROM status WHERE {enabled_expr} AND status_id IN ({sid})",
+            f"SELECT * FROM status WHERE {enabled_expr} AND status_id IN ({sid}) "
+            f"ORDER BY LOWER(label)",
             *status_ids,
         )
 
