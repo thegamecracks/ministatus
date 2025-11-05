@@ -9,7 +9,7 @@ import re
 from contextlib import suppress
 from dataclasses import dataclass
 from enum import Enum
-from typing import TYPE_CHECKING, Any, assert_never, cast
+from typing import TYPE_CHECKING, Any, Type, TypeVar, assert_never, cast
 
 import aiohttp
 import discord
@@ -45,8 +45,6 @@ from .views import update_display
 if TYPE_CHECKING:
     from ministatus.bot.bot import Bot
 
-log = logging.getLogger(__name__)
-
 DNS_TIMEOUT = 3
 HISTORY_EXPIRES_AFTER = datetime.timedelta(days=30)
 HISTORY_PLAYERS_EXPIRES_AFTER = datetime.timedelta(hours=1)
@@ -55,6 +53,10 @@ QUERY_TIMEOUT = 3
 HTTP_TIMEOUT = aiohttp.ClientTimeout(3)
 
 FIVEM_COLOUR_CODE = re.compile(r"\^\d")
+
+T = TypeVar("T")
+
+log = logging.getLogger(__name__)
 
 _resolver = Resolver()
 _resolver.cache = Cache()
@@ -154,18 +156,25 @@ async def send_query(bot: Bot, query: StatusQuery) -> Info | None:
 
 
 async def query_fivem(session: aiohttp.ClientSession, query: StatusQuery) -> Info:
-    async def get(filename: str) -> Any:
+    async def get(filename: str, type_: Type[T]) -> T:
         params = {"v": int(now.timestamp())}
         url = f"https://{host}:{port}/{filename}"
+
         # NOTE: several servers use self-signed certificates, so ssl=False is needed
-        return await _http_get_json(session, url, params=params, ssl=False)
+        # TODO: proper validation with pydantic?
+        data = await _http_get_json(session, url, params=params, ssl=False)
+        if not isinstance(data, type_):
+            message = f"{filename} returned type {type(data)}, expected {type_}"
+            raise FailedQueryError(message)
+
+        return data
 
     host, port = await resolve_host(query)
     now = utcnow()
 
-    dynamic = await get("dynamic.json")
-    info = await get("info.json")
-    players = await get("players.json")
+    dynamic = await get("dynamic.json", dict[str, Any])
+    info = await get("info.json", dict[str, Any])
+    players = await get("players.json", list[dict[str, Any]])
 
     vars = info.get("vars", {})
     if thumbnail := info.get("icon"):
