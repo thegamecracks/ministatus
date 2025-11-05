@@ -20,6 +20,7 @@ from dns.rdtypes.IN.A import A as ARecord
 from dns.rdtypes.IN.AAAA import AAAA as AAAARecord
 from dns.rdtypes.IN.SRV import SRV as SRVRecord
 from dns.resolver import Answer, Cache, NoAnswer, NoNameservers, NXDOMAIN, YXDOMAIN
+from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 
 from ministatus.bot.dt import past, utcnow
 from ministatus.db import (
@@ -167,24 +168,32 @@ async def query_fivem(session: aiohttp.ClientSession, query: StatusQuery) -> Inf
     info = await get("info.json")
     players = await get("players.json")
 
-    vars = info.get("vars", {})
-    if thumbnail := info.get("icon"):
-        thumbnail = base64.b64decode(thumbnail)
+    try:
+        dynamic = FiveMDynamic.model_validate(dynamic)
+        info = FiveMInfo.model_validate(info)
+        players = fivem_players_list_adapter.validate_python(players)
+    except ValidationError as e:
+        message = "Unexpected response format; did server shutdown?"
+        raise FailedQueryError(message) from e
 
-    title = dynamic.get("hostname") or vars.get("sv_projectName") or ""
+    vars = info.vars
+    thumbnail = base64.b64decode(info.icon) if info.icon else None
+
+    title = dynamic.hostname or vars.sv_projectName or ""
     title = FIVEM_COLOUR_CODE.sub("", title).strip()
-    players = [Player(name=name) for p in players if (name := p.get("name"))]
+    version = dynamic.iv or info.version
+    players = [Player(name=p.name) for p in players if p.name]
 
     return Info(
         title=title or None,
         address=query.address,
         thumbnail=thumbnail,
-        max_players=int(dynamic.get("sv_maxclients") or info.get("sv_maxClients") or 0),
-        num_players=int(dynamic.get("clients") or 0),
-        game=dynamic.get("freeroam") or None,
-        map=dynamic.get("mapname") or None,
+        max_players=dynamic.sv_maxclients or vars.sv_maxClients,
+        num_players=dynamic.clients,
+        game=dynamic.gametype or None,
+        map=dynamic.mapname or None,
         mods=None,  # mods=info.get("resources", []),
-        version=str(info.get("version", "")) or None,
+        version=str(version) if version else None,
         players=players,
     )
 
@@ -619,6 +628,40 @@ class Info:
 @dataclass(kw_only=True)
 class Player:
     name: str
+
+
+# https://github.com/citizenfx/fivem/blob/v1.0.0.21703/code/components/citizen-server-impl/src/InfoHttpHandler.cpp#L562-L576
+# Tolerate missing keys for everything, just in case...
+class FiveMDynamic(BaseModel):
+    hostname: str = ""
+    gametype: str = ""
+    mapname: str = ""
+    clients: int = 0
+    iv: int = 0
+    sv_maxclients: int = 0
+
+
+class FiveMInfoVars(BaseModel):
+    gamename: str = ""
+    sv_maxClients: int = 0
+    sv_projectDesc: str = ""
+    sv_projectName: str = ""
+    tags: str = ""
+
+
+class FiveMInfo(BaseModel):
+    icon: str | None = None
+    resources: list[str] = Field(default_factory=list)
+    server: str = ""
+    vars: FiveMInfoVars = Field(default_factory=FiveMInfoVars)
+    version: int = 0
+
+
+class FiveMPlayer(BaseModel):
+    name: str
+
+
+fivem_players_list_adapter = TypeAdapter(list[FiveMPlayer])
 
 
 class DowntimeStatus(Enum):
