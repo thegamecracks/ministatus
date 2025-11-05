@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime
+import sqlite3
 from io import BytesIO
 from typing import TYPE_CHECKING, Any, Callable, Self, cast
 
@@ -121,8 +122,16 @@ class CreateStatusModal(Modal, title="Create Status"):
             enabled_at=interaction.created_at,
         )
 
-        async with connect_client() as client:
-            status = await client.create_status(status)
+        try:
+            async with connect_client() as client:
+                status = await client.create_status(status)
+        except sqlite3.IntegrityError as e:
+            if "status.label" in str(e):
+                raise ErrorResponse(
+                    f"Status labels must be unique. Please use a label "
+                    f"different from {label}."
+                ) from e
+            raise
 
         await self.callback(interaction, status)
 
