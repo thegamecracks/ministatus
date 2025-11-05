@@ -128,7 +128,7 @@ class DiscordDatabaseClient:
         aid = ", ".join("?" * len(alert_ids))
         channels = await self.client.conn.fetch(
             f"SELECT channel_id, guild_id FROM discord_channel "
-            f"WHERE channel_id IN ({aid})",
+            f"WHERE channel_id IN ({aid}) ORDER BY channel_id",
             *alert_ids,
         )
         channels = {
