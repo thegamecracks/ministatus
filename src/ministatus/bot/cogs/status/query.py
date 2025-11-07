@@ -285,6 +285,8 @@ async def query_source(ctx: QueryContext, query: StatusQuery) -> Info:
             # rules = await proto.get_rules()
     except TimeoutError as e:
         raise FailedQueryError("Query timed out") from e
+    except ValueError as e:
+        raise FailedQueryError("Query response was malformed") from e
 
     players = [Player(name=p.name) for p in players]
 
