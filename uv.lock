@@ -645,6 +645,15 @@ wheels = [
 ]
 
 [[package]]
+name = "little-a2s"
+version = "0.5.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/e1/a2/0276b942f179268bf4e2c29df4d30c0bb1032d921138c0f55536bb702806/little_a2s-0.5.1.tar.gz", hash = "sha256:045e4b6d5de97b46c5bf6655f127d600bbd5bc511747fc8ff31b7224d048fa6e", size = 16159, upload-time = "2025-11-07T05:11:45.696Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/cc/d0/6aceac16edab9cc47ad49dc9babf42471fac2160848652d7e43cf4ed7d9a/little_a2s-0.5.1-py3-none-any.whl", hash = "sha256:45dffc081c6c3b95aef11fbbefa5a0b3a2a87a0f3177ed336da232f1d685d507", size = 22478, upload-time = "2025-11-07T05:11:44.351Z" },
+]
+
+[[package]]
 name = "matplotlib"
 version = "3.10.7"
 source = { registry = "https://pypi.org/simple" }
@@ -718,6 +727,7 @@ dependencies = [
     { name = "discord-py" },
     { name = "dnspython" },
     { name = "ipaddress" },
+    { name = "little-a2s" },
     { name = "matplotlib" },
     { name = "opengsq" },
     { name = "platformdirs" },
@@ -736,6 +746,7 @@ requires-dist = [
     { name = "discord-py", specifier = "~=2.6" },
     { name = "dnspython", specifier = "~=2.8" },
     { name = "ipaddress", specifier = "~=1.0" },
+    { name = "little-a2s", specifier = "==0.5.1" },
     { name = "matplotlib", specifier = "~=3.10" },
     { name = "opengsq", specifier = "~=3.4.1" },
     { name = "platformdirs", specifier = "~=4.5" },
