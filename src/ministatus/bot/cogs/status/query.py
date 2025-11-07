@@ -6,10 +6,10 @@ import datetime
 import json
 import logging
 import re
-from contextlib import suppress
+from contextlib import AsyncExitStack, suppress
 from dataclasses import dataclass
 from enum import Enum
-from typing import TYPE_CHECKING, Any, assert_never, cast
+from typing import TYPE_CHECKING, Any, Self, assert_never, cast
 
 import aiohttp
 import discord
@@ -20,6 +20,7 @@ from dns.rdtypes.IN.A import A as ARecord
 from dns.rdtypes.IN.AAAA import AAAA as AAAARecord
 from dns.rdtypes.IN.SRV import SRV as SRVRecord
 from dns.resolver import Answer, Cache, NoAnswer, NoNameservers, NXDOMAIN, YXDOMAIN
+from little_a2s import AsyncA2S
 from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 
 from ministatus.bot.dt import past, utcnow
@@ -75,18 +76,7 @@ async def run_query_jobs(bot: Bot) -> None:
         return
 
     try:
-        tasks = []
-        async with asyncio.TaskGroup() as tg:
-            for status in statuses:
-                tasks.append(tg.create_task(query_status(bot, status)))
-
-            # Let all tasks run first, and collect any errors to raise afterwards
-            await asyncio.wait(tasks)
-
-        exceptions = [e for t in tasks if (e := t.exception()) is not None]
-        if exceptions:
-            raise ExceptionGroup(f"{len(exceptions)} query job(s) failed", exceptions)
-
+        await _run_query_jobs(bot, statuses)
     except* (discord.DiscordServerError, discord.RateLimited) as eg:
         # Ergh, drop all other exceptions so tasks.loop() can handle it
         log.warning("One or more status queries failed: %s", exc_info=eg)
@@ -94,37 +84,51 @@ async def run_query_jobs(bot: Bot) -> None:
         raise e from None
 
 
-async def query_status(bot: Bot, status: Status) -> None:
+async def _run_query_jobs(bot: Bot, statuses: list[Status]) -> None:
+    tasks = []
+    async with QueryContext(bot) as ctx, asyncio.TaskGroup() as tg:
+        for status in statuses:
+            tasks.append(tg.create_task(query_status(ctx, status)))
+
+            # Let all tasks run first, and collect any errors to raise afterwards
+        await asyncio.wait(tasks)
+
+    exceptions = [e for t in tasks if (e := t.exception()) is not None]
+    if exceptions:
+        raise ExceptionGroup(f"{len(exceptions)} query job(s) failed", exceptions)
+
+
+async def query_status(ctx: QueryContext, status: Status) -> None:
     if not status.queries:
         return
 
     for query in status.queries:
-        info = await maybe_query(bot, status, query)
+        info = await maybe_query(ctx, status, query)
         if info is not None:
-            await record_info(bot, status, info)
+            await record_info(ctx, status, info)
             break
     else:
-        await record_offline(bot, status)
+        await record_offline(ctx, status)
 
     for display in status.displays:
-        await maybe_update_display(bot, status, display)
+        await maybe_update_display(ctx.bot, status, display)
 
 
 async def maybe_query(
-    bot: Bot,
+    ctx: QueryContext,
     status: Status,
     query: StatusQuery,
 ) -> Info | None:
     try:
-        info = await send_query(bot, query)
+        info = await send_query(ctx, query)
     except FailedQueryError as e:
         log.debug("Query #%d failed: %s", query.status_query_id, e, exc_info=e)
         if await set_query_failed(query):
             reason = "Offline for extended period of time"
-            return await disable_query(bot, status, query, reason)
+            return await disable_query(ctx.bot, status, query, reason)
     except InvalidQueryError as e:
         await set_query_failed(query)
-        return await disable_query(bot, status, query, str(e))
+        return await disable_query(ctx.bot, status, query, str(e))
     except Exception:
         await set_query_failed(query)
         raise
@@ -133,23 +137,23 @@ async def maybe_query(
         return info
 
 
-async def send_query(bot: Bot, query: StatusQuery) -> Info | None:
+async def send_query(ctx: QueryContext, query: StatusQuery) -> Info | None:
     if query.type == StatusQueryType.ARMA_3:
-        return await query_source(query)
+        return await query_source(ctx, query)
     elif query.type == StatusQueryType.ARMA_REFORGER:
-        return await query_source(query)
+        return await query_source(ctx, query)
     elif query.type == StatusQueryType.FIVEM:
-        return await query_fivem(bot.session, query)
+        return await query_fivem(ctx.bot.session, query)
     elif query.type == StatusQueryType.MINECRAFT_BEDROCK:
         return await query_minecraft_bedrock(query)
     elif query.type == StatusQueryType.MINECRAFT_JAVA:
         return await query_minecraft_java(query)
     elif query.type == StatusQueryType.SOURCE:
-        return await query_source(query)
+        return await query_source(ctx, query)
     elif query.type == StatusQueryType.TEAMSPEAK_3:
         return await query_teamspeak_3(query)
     elif query.type == StatusQueryType.PROJECT_ZOMBOID:
-        return await query_source(query)  # Wait, it's all source? Always has been
+        return await query_source(ctx, query)
     else:
         assert_never(query.type)
 
@@ -270,28 +274,19 @@ async def query_minecraft_java(query: StatusQuery) -> Info:
     )
 
 
-async def query_source(query: StatusQuery) -> Info:
-    from opengsq import Source
-    from opengsq.responses.source import GoldSourceInfo, SourceInfo
-
+async def query_source(ctx: QueryContext, query: StatusQuery) -> Info:
     host, port = await resolve_host(query)
-    proto = Source(host, port, QUERY_TIMEOUT)
+    proto = await ctx.start_source(host)
 
     try:
-        info = await proto.get_info()
-        players = await proto.get_players()
-        # rules = await proto.get_rules()
+        async with asyncio.timeout(QUERY_TIMEOUT):
+            info = await proto.info((host, port))
+            players = await proto.players((host, port))
+            # rules = await proto.get_rules()
     except TimeoutError as e:
         raise FailedQueryError("Query timed out") from e
 
     players = [Player(name=p.name) for p in players]
-
-    if isinstance(info, GoldSourceInfo):
-        version = str(info.version) if info.version is not None else None
-    elif isinstance(info, SourceInfo):
-        version = info.version
-    else:
-        version = None
 
     return Info(
         title=info.name,
@@ -302,7 +297,7 @@ async def query_source(query: StatusQuery) -> Info:
         game=info.game,
         map=info.map,
         mods=None,  # TODO: parse mods per game?
-        version=version,
+        version=info.version,
         players=players,
     )
 
@@ -457,7 +452,7 @@ async def set_query_success(query: StatusQuery) -> None:
         )
 
 
-async def record_offline(bot: Bot, status: Status) -> None:
+async def record_offline(ctx: QueryContext, status: Status) -> None:
     log.debug("Recording status #%d as offline", status.status_id)
     await prune_history(status)
 
@@ -475,10 +470,10 @@ async def record_offline(bot: Bot, status: Status) -> None:
         )
 
     if downtime == DowntimeStatus.PENDING_DOWNTIME:
-        await send_alert_downtime_started(bot, status)
+        await send_alert_downtime_started(ctx.bot, status)
 
 
-async def record_info(bot: Bot, status: Status, info: Info) -> None:
+async def record_info(ctx: QueryContext, status: Status, info: Info) -> None:
     log.debug("Recording status #%d as online", status.status_id)
 
     mods = None
@@ -527,7 +522,7 @@ async def record_info(bot: Bot, status: Status, info: Info) -> None:
         )
 
     if downtime == DowntimeStatus.DOWNTIME:
-        await send_alert_downtime_ended(bot, status)
+        await send_alert_downtime_ended(ctx.bot, status)
 
 
 async def prune_history(status: Status) -> None:
@@ -608,6 +603,43 @@ async def set_display_success(display: StatusDisplay) -> None:
             "UPDATE status_display SET failed_at = NULL WHERE message_id = $1",
             display.message_id,
         )
+
+
+class QueryContext:
+    _a2s_ipv4: AsyncA2S | None = None
+    _a2s_ipv6: AsyncA2S | None = None
+
+    def __init__(self, bot: Bot) -> None:
+        self.bot = bot
+        self._stack = AsyncExitStack()
+
+    async def __aenter__(self) -> Self:
+        await self._stack.__aenter__()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, tb) -> None:
+        await self._stack.__aexit__(exc_type, exc_val, tb)
+
+    async def start_source(self, host: str) -> AsyncA2S:
+        if ":" in host:
+            return await self._start_source_ipv6()
+        return await self._start_source_ipv4()
+
+    async def _start_source_ipv4(self) -> AsyncA2S:
+        if self._a2s_ipv4 is not None:
+            return self._a2s_ipv4
+
+        self._a2s_ipv4 = AsyncA2S.from_ipv4()
+        await self._stack.enter_async_context(self._a2s_ipv4)
+        return self._a2s_ipv4
+
+    async def _start_source_ipv6(self) -> AsyncA2S:
+        if self._a2s_ipv6 is not None:
+            return self._a2s_ipv6
+
+        self._a2s_ipv6 = AsyncA2S.from_ipv6()
+        await self._stack.enter_async_context(self._a2s_ipv6)
+        return self._a2s_ipv6
 
 
 @dataclass(kw_only=True)
