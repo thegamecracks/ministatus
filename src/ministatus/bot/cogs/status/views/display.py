@@ -423,10 +423,10 @@ class StatusDisplayView(LayoutView):
             return
 
         lines = textwrap.wrap(", ".join([p.name for p in players]), 72)
+        lines = lines[:40] + ["..."] * (len(lines) > 40)
         for chunk in discord.utils.as_chunks(lines, 3):
             content = "\n".join(chunk).removesuffix(",")
             content = discord.utils.escape_markdown(content, ignore_links=False)
-            content = content[:3000] + "..." * (len(content) > 3000)
             yield discord.ui.TextDisplay(content)
 
         yield discord.ui.Separator()
