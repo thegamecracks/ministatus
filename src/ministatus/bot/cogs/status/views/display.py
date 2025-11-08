@@ -426,6 +426,7 @@ class StatusDisplayView(LayoutView):
         for chunk in discord.utils.as_chunks(lines, 3):
             content = "\n".join(chunk).removesuffix(",")
             content = discord.utils.escape_markdown(content, ignore_links=False)
+            content = content[:3000] + "..." * (len(content) > 3000)
             yield discord.ui.TextDisplay(content)
 
         yield discord.ui.Separator()
