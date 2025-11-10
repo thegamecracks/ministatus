@@ -65,6 +65,9 @@ def setup_logging(*, verbose: int) -> None:
     logging.getLogger("discord.client").addFilter(
         lambda r: not r.getMessage().startswith("PyNaCl")
     )
+    logging.getLogger("discord.gateway").addFilter(
+        lambda r: "has successfully RESUMED session" not in r.getMessage()
+    )
 
     pkg = logging.getLogger(__package__.partition(".")[0])
     pkg.setLevel(pkg_level)
