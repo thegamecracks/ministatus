@@ -77,7 +77,11 @@ async def run_query_jobs(bot: Bot) -> None:
 
     try:
         await _run_query_jobs(bot, statuses)
-    except* (discord.DiscordServerError, discord.RateLimited) as eg:
+    except* (
+        aiohttp.ServerDisconnectedError,  # sometimes raised by message.edit()
+        discord.DiscordServerError,
+        discord.RateLimited,
+    ) as eg:
         # Ergh, drop all other exceptions so tasks.loop() can handle it
         log.warning("One or more status queries failed: %s", exc_info=eg)
         e = eg.exceptions[0]
