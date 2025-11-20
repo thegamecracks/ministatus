@@ -85,7 +85,7 @@ async def send_alert_disabled_alert(
     status_id = alert.status_id
     async with connect_discord_database_client(bot) as ddc:
         channel = await ddc.get_channel(channel_id=alert.channel_id)
-        alert_channels = await ddc.get_bulk_status_alert_channels(
+        alert_channels = await ddc.get_status_alert_channels(
             status_id,
             only_enabled=True,
             type="audit",
@@ -104,7 +104,7 @@ async def send_alert_disabled_display(
     status_id = display.status_id
     async with connect_discord_database_client(bot) as ddc:
         message = await ddc.get_message(message_id=display.message_id)
-        alert_channels = await ddc.get_bulk_status_alert_channels(
+        alert_channels = await ddc.get_status_alert_channels(
             status_id,
             only_enabled=True,
             type="audit",
@@ -123,7 +123,7 @@ async def send_alert_disabled_query(
 ) -> None:
     status_id = query.status_id
     async with connect_discord_database_client(bot) as ddc:
-        alert_channels = await ddc.get_bulk_status_alert_channels(
+        alert_channels = await ddc.get_status_alert_channels(
             status_id,
             only_enabled=True,
             type="audit",
@@ -136,7 +136,7 @@ async def send_alert_disabled_query(
 async def send_alert_downtime_started(bot: Bot, status: Status) -> None:
     status_id = status.status_id
     async with connect_discord_database_client(bot) as ddc:
-        alert_channels = await ddc.get_bulk_status_alert_channels(
+        alert_channels = await ddc.get_status_alert_channels(
             status_id,
             only_enabled=True,
             type="downtime",
@@ -149,7 +149,7 @@ async def send_alert_downtime_started(bot: Bot, status: Status) -> None:
 async def send_alert_downtime_ended(bot: Bot, status: Status) -> None:
     status_id = status.status_id
     async with connect_discord_database_client(bot) as ddc:
-        alert_channels = await ddc.get_bulk_status_alert_channels(
+        alert_channels = await ddc.get_status_alert_channels(
             status_id,
             only_enabled=True,
             type="downtime",

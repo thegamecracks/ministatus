@@ -102,7 +102,7 @@ class DiscordDatabaseClient:
         except AttributeError:
             return
 
-    async def get_bulk_status_alert_channels(
+    async def get_status_alert_channels(
         self,
         status_id: int,
         *,
