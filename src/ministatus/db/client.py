@@ -507,7 +507,7 @@ class DatabaseClient:
             return history_models
 
         sid = ", ".join("?" * len(status_ids))
-        unknown_expr = "true" if unknown else "online OR down"
+        unknown_expr = "true" if unknown else "(online OR down)"
         history_rows = await self.conn.fetch(
             f"SELECT * FROM status_history WHERE status_id IN ({sid}) "
             f"AND created_at >= ? AND {unknown_expr} "
