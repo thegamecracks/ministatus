@@ -317,11 +317,10 @@ class StatusDisplayView(LayoutView):
             status = await ddc.client.get_status(status_id=display.status_id)
             assert status is not None
 
-            history = await ddc.client.get_bulk_status_history(
+            history = await ddc.client.get_status_history(
                 status.status_id,
                 after=past(display.graph_interval),
             )
-            history = history[status.status_id]
 
         args = await self.render(status, display, history)
         await message.edit(view=self, **args.get_edit_kwargs())

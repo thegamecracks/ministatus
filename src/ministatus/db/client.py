@@ -496,66 +496,57 @@ class DatabaseClient:
 
         return status_queries
 
-    async def get_bulk_status_history(
+    async def get_status_history(
         self,
-        *status_ids: int,
+        status_id: int,
+        *,
         after: datetime.datetime,
         unknown: bool = True,
-    ) -> dict[int, list[StatusHistory]]:
-        history_models = {status_id: [] for status_id in status_ids}
-        if not status_ids:
-            return history_models
-
-        sid = ", ".join("?" * len(status_ids))
-        unknown_expr = "true" if unknown else "(online OR down)"
+    ) -> list[StatusHistory]:
+        # NOTE: for one status updating every minute with a max timeframe of 30 days,
+        #       this could return up to 60 * 24 * 30 = 43200 datapoints
+        unknown_expr = "true" if unknown else "(sh.online OR sh.down)"
         history_rows = await self.conn.fetch(
-            f"SELECT * FROM status_history WHERE status_id IN ({sid}) "
-            f"AND created_at >= ? AND {unknown_expr} "
-            f"ORDER BY status_id, created_at",
-            *status_ids,
+            f"SELECT * FROM status_history sh "
+            f"LEFT JOIN status_history_player shp USING (status_history_id) "
+            f"WHERE sh.status_id = ? AND sh.created_at >= ? AND {unknown_expr} "
+            f"ORDER BY sh.status_id, sh.created_at",
+            status_id,
             after,
         )
 
-        history_ids = {row["status_history_id"] for row in history_rows}
-        history_players = await self.get_bulk_status_history_players(*history_ids)
-
+        # Surely there's a better way to parse left-joined tables?
+        history: list[StatusHistory] = []
+        model: StatusHistory | None = None
         for row in history_rows:
-            players = history_players[row["status_history_id"]]
-            model = StatusHistory(
-                status_history_id=row["status_history_id"],
-                created_at=row["created_at"],
-                status_id=row["status_id"],
-                online=row["online"],
-                max_players=row["max_players"],
-                num_players=row["num_players"],
-                down=row["down"],
-                players=players,
-            )
-            history_models[model.status_id].append(model)
+            if (
+                model is not None
+                and model.status_history_id != row["status_history_id"]
+            ):
+                history.append(model)
+                model = None
 
-        return history_models
+            if model is None:
+                model = StatusHistory(
+                    status_history_id=row["status_history_id"],
+                    created_at=row["created_at"],
+                    status_id=row["status_id"],
+                    online=row["online"],
+                    max_players=row["max_players"],
+                    num_players=row["num_players"],
+                    down=row["down"],
+                    players=[],
+                )
 
-    async def get_bulk_status_history_players(
-        self,
-        *history_ids: int,
-    ) -> dict[int, list[StatusHistoryPlayer]]:
-        history_players = {history_id: [] for history_id in history_ids}
-        if not history_ids:
-            return history_players
+            if row["status_history_player_id"] is not None:
+                player = StatusHistoryPlayer(
+                    status_history_player_id=row["status_history_player_id"],
+                    status_history_id=row["status_history_id"],
+                    name=row["name"],
+                )
+                model.players.append(player)
 
-        hid = ", ".join("?" * len(history_ids))
-        players = await self.conn.fetch(
-            f"SELECT * FROM status_history_player WHERE status_history_id IN ({hid}) "
-            f"ORDER BY status_history_player_id",
-            *history_ids,
-        )
+        if model is not None:
+            history.append(model)
 
-        for p in players:
-            p = StatusHistoryPlayer(
-                status_history_player_id=p["status_history_player_id"],
-                status_history_id=p["status_history_id"],
-                name=p["name"],
-            )
-            history_players[p.status_history_id].append(p)
-
-        return history_players
+        return history
