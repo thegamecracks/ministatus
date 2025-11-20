@@ -36,6 +36,7 @@ A Discord bot for managing game server status embeds.
 - Minecraft (Bedrock Edition)
 - Minecraft (Java Edition)
 - Project Zomboid
+- TeamSpeak 3
 - Valve Source Query (A2S)
 
 ## Installation
