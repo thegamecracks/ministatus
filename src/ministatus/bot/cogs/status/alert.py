@@ -187,7 +187,7 @@ async def send_alerts(
 
     except* (discord.DiscordServerError, discord.RateLimited) as eg:
         # Ergh, drop all other exceptions so tasks.loop() can handle it
-        log.warning("One or more status alerts failed: %s", exc_info=eg)
+        log.warning("One or more status alerts failed", exc_info=eg)
         e = eg.exceptions[0]
         raise e from None
 
