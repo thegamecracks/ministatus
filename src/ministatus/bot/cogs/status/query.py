@@ -20,7 +20,7 @@ from dns.rdtypes.IN.A import A as ARecord
 from dns.rdtypes.IN.AAAA import AAAA as AAAARecord
 from dns.rdtypes.IN.SRV import SRV as SRVRecord
 from dns.resolver import Answer, Cache, NoAnswer, NoNameservers, NXDOMAIN, YXDOMAIN
-from little_a2s import AsyncA2S
+from little_a2s import AsyncA2S, ChallengeError, PayloadError
 from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 
 from ministatus.bot.dt import past, utcnow
@@ -287,10 +287,12 @@ async def query_source(ctx: QueryContext, query: StatusQuery) -> Info:
             info = await proto.info((host, port))
             players = await proto.players((host, port))
             # rules = await proto.get_rules()
+    except ChallengeError as e:
+        raise InvalidQueryError("Server responded with too many challenges") from e
+    except PayloadError as e:
+        raise FailedQueryError("Query response was malformed") from e
     except TimeoutError as e:
         raise FailedQueryError("Query timed out") from e
-    except ValueError as e:
-        raise FailedQueryError("Query response was malformed") from e
 
     players = [Player(name=p.name) for p in players]
 
