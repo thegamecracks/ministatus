@@ -83,8 +83,8 @@ async def run_query_jobs(bot: Bot) -> None:
         discord.RateLimited,
     ) as eg:
         # Ergh, drop all other exceptions so tasks.loop() can handle it
-        log.warning("One or more status queries failed", exc_info=eg)
         e = eg.exceptions[0]
+        log.warning("One or more status queries failed (%s)", type(e).__name__)
         raise e from None
 
 
