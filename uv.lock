@@ -646,11 +646,11 @@ wheels = [
 
 [[package]]
 name = "little-a2s"
-version = "0.6.0"
+version = "0.6.0.post2"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/3b/c4/ca7c9a5d4bcfe4dcdc21568ba9d5500f993817f5f9c232def6b542395146/little_a2s-0.6.0.tar.gz", hash = "sha256:12e189f8d820b92e7a4d9df5cd44f6cda0c79fffa30bdf4d2850024a7798faab", size = 16501, upload-time = "2025-11-22T16:20:53.191Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/8a/87/dcd8c5cae870c8f83f19694715bd1430e208e8e4eac4b3204c8146f41416/little_a2s-0.6.0.post2.tar.gz", hash = "sha256:1c84f8f3da61b0381c694b1771e7c7d56c5147609400dbe83d08e881e03c6b6c", size = 16505, upload-time = "2025-11-24T14:43:25.855Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/25/86/edcd86c86c9bd3d352d6c6be717167301a335a753983a650d9ebf73762d2/little_a2s-0.6.0-py3-none-any.whl", hash = "sha256:5cc5c6e8398e66ad9533e8bbf5bbe611e3fdeeb968451fbfac498e451ed7d800", size = 23238, upload-time = "2025-11-22T16:20:51.662Z" },
+    { url = "https://files.pythonhosted.org/packages/f5/89/7d04bd031c7a59745faaddd3ffe42b1d2c70726b46ec68966772c8e7ed8f/little_a2s-0.6.0.post2-py3-none-any.whl", hash = "sha256:8a375b9acfcac924918d481206a351d4b0ddc43074ae8babe2f3d2b8a28a0e9b", size = 23330, upload-time = "2025-11-24T14:43:24.488Z" },
 ]
 
 [[package]]
