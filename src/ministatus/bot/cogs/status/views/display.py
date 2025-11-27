@@ -435,7 +435,7 @@ class StatusDisplayView(LayoutView):
     def _maybe_add_select(self, status: Status) -> None:
         select = StatusDisplaySelect(status)
         if select.options:
-            self.add_item(select)
+            self.add_item(discord.ui.ActionRow(select))
 
     async def _maybe_refresh_attachments(
         self,
