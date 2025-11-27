@@ -15,9 +15,16 @@ from ministatus.db.models import (
     StatusDisplay,
     StatusHistory,
     StatusHistoryPlayer,
+    StatusMod,
     StatusQuery,
+    status_mod_list_adapter,
 )
 from ministatus.db.secret import Secret
+
+
+def _validate_status_mods(mods: str | None) -> list[StatusMod] | None:
+    if mods is not None:
+        return status_mod_list_adapter.validate_json(mods)
 
 
 class DatabaseClient:
@@ -294,7 +301,7 @@ class DatabaseClient:
                 failed_at=row["failed_at"],
                 game=row["game"],
                 map=row["map"],
-                mods=row["mods"],
+                mods=_validate_status_mods(row["mods"]),
                 version=row["version"],
             )
 
@@ -362,7 +369,7 @@ class DatabaseClient:
                 failed_at=row["failed_at"],
                 game=row["game"],
                 map=row["map"],
-                mods=row["mods"],
+                mods=_validate_status_mods(row["mods"]),
                 version=row["version"],
                 alerts=status_alerts[status_id],
                 displays=status_displays[status_id],
