@@ -23,6 +23,7 @@ from ministatus.db import (
     StatusDisplay,
     StatusHistory,
     StatusHistoryPlayer,
+    StatusMod,
     connect,
     connect_client,
 )
@@ -499,15 +500,39 @@ class StatusDisplaySelect(discord.ui.Select):
             return
 
         content = [f"Mods ({len(status.mods)}):"]
-        mods = []
-        for m in status.mods:
-            name = discord.utils.escape_markdown(m.name)
-            mods.append(f"[{name}]({m.url})" if m.url else name)
-        mods = ", ".join(mods)
+        mods = self._format_mods(status.mods)
         content.append(mods)
+        content = "\n".join(content)
 
-        view.add_item(discord.ui.TextDisplay("\n".join(content)))
-        await interaction.response.send_message(ephemeral=True, view=view)
+        if len(content) <= 4000:
+            view.add_item(discord.ui.TextDisplay(content))
+            await interaction.response.send_message(ephemeral=True, view=view)
+        else:
+            f = self._format_mods_file(status.mods)
+            await interaction.response.send_message(ephemeral=True, file=f)
+
+    def _format_mods(self, mods: list[StatusMod]) -> str:
+        names = []
+        for m in mods:
+            name = discord.utils.escape_markdown(m.name)
+            names.append(f"[{name}]({m.url})" if m.url else name)
+        return ", ".join(names)
+
+    def _format_mods_file(self, mods: list[StatusMod]) -> discord.File:
+        lines = [f"Number of mods: {len(mods)}"]
+
+        assert len(mods) > 0
+        pad = max(len(m.name) for m in mods)
+
+        for m in mods:
+            if m.url:
+                lines.append(f"{m.name:<{pad}}    {m.url}")
+            else:
+                lines.append(m.name)
+
+        lines.append("")  # trailing newline
+        content = "\n".join(lines).encode()
+        return discord.File(BytesIO(content), filename="mods.txt")
 
 
 async def update_display(bot: Bot, *, message_id: int) -> None:
