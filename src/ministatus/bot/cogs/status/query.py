@@ -20,7 +20,13 @@ from dns.rdtypes.IN.A import A as ARecord
 from dns.rdtypes.IN.AAAA import AAAA as AAAARecord
 from dns.rdtypes.IN.SRV import SRV as SRVRecord
 from dns.resolver import Answer, Cache, NoAnswer, NoNameservers, NXDOMAIN, YXDOMAIN
-from little_a2s import AsyncA2S, ChallengeError, PayloadError
+from little_a2s import (
+    Arma3Rules,
+    AsyncA2S,
+    ChallengeError,
+    ClientEventInfo,
+    PayloadError,
+)
 from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 
 from ministatus.bot.dt import past, utcnow
@@ -286,7 +292,7 @@ async def query_source(ctx: QueryContext, query: StatusQuery) -> Info:
         async with asyncio.timeout(QUERY_TIMEOUT):
             info = await proto.info((host, port))
             players = await proto.players((host, port))
-            # rules = await proto.get_rules()
+            rules = await SourceRules.maybe_query(proto, host, port, info)
     except ChallengeError as e:
         raise InvalidQueryError("Server responded with too many challenges") from e
     except PayloadError as e:
@@ -304,7 +310,7 @@ async def query_source(ctx: QueryContext, query: StatusQuery) -> Info:
         num_players=info.players,
         game=info.game,
         map=info.map,
-        mods=None,  # TODO: parse mods per game?
+        mods=rules and rules.mods,
         version=info.version,
         players=players,
     )
@@ -648,6 +654,41 @@ class QueryContext:
         self._a2s_ipv6 = AsyncA2S.from_ipv6()
         await self._stack.enter_async_context(self._a2s_ipv6)
         return self._a2s_ipv6
+
+
+@dataclass(kw_only=True)
+class SourceRules:
+    mods: list[StatusMod]
+
+    @classmethod
+    async def maybe_query(
+        cls,
+        proto: AsyncA2S,
+        host: str,
+        port: int,
+        info: ClientEventInfo,
+    ) -> Self | None:
+        folder = info.folder.lower()
+        if folder in ("arma3", "dayz"):
+            rules = await proto.rules((host, port))
+
+            try:
+                rules = Arma3Rules.from_rules(rules)
+            except (EOFError, ValueError) as e:
+                raise FailedQueryError("Rules response was malformed") from e
+
+            return cls.from_arma3_rules(rules)
+
+    @classmethod
+    def from_arma3_rules(cls, rules: Arma3Rules) -> Self:
+        mods = [
+            StatusMod(
+                name=m.name,
+                url=f"https://steamcommunity.com/sharedfiles/filedetails/?id={m.steam_id}",
+            )
+            for m in rules.mods
+        ]
+        return cls(mods=mods)
 
 
 @dataclass(kw_only=True)
