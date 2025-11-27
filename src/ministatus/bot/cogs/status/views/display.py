@@ -480,7 +480,8 @@ class StatusDisplaySelect(discord.ui.Select):
     def _make_options(self, status: Status) -> list[SelectOption]:
         options: list[SelectOption] = []
         if status.mods:
-            options.append(discord.SelectOption(label="Mods", emoji="🧩", value="mods"))
+            o = discord.SelectOption(label="Modlist", emoji="🧩", value="mods")
+            options.append(o)
         return options
 
     async def callback(self, interaction: Interaction) -> None:
