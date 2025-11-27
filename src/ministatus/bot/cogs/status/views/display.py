@@ -376,6 +376,8 @@ class StatusDisplayView(LayoutView):
             )
         )
 
+        self._maybe_add_select(status)
+
         files = await self._maybe_refresh_attachments(status, display, clean_history)
         rendered.files.extend(files)
         return rendered
@@ -430,6 +432,11 @@ class StatusDisplayView(LayoutView):
 
         yield discord.ui.Separator()
 
+    def _maybe_add_select(self, status: Status) -> None:
+        select = StatusDisplaySelect(status)
+        if select.options:
+            self.add_item(select)
+
     async def _maybe_refresh_attachments(
         self,
         status: Status,
@@ -459,6 +466,48 @@ class StatusDisplayView(LayoutView):
         files.append(f)
 
         return files
+
+
+class StatusDisplaySelect(discord.ui.Select):
+    def __init__(self, status: Status) -> None:
+        super().__init__(
+            options=self._make_options(status),
+            placeholder="More details...",
+        )
+        self.status = status
+
+    def _make_options(self, status: Status) -> list[SelectOption]:
+        options: list[SelectOption] = []
+        if status.mods:
+            options.append(discord.SelectOption(label="Mods", emoji="🧩", value="mods"))
+        return options
+
+    async def callback(self, interaction: Interaction) -> None:
+        interaction = cast("Interaction[Bot]", interaction)
+
+        value = self.values[0]
+        if value == "mods":
+            return await self._send_mods(interaction)
+
+    async def _send_mods(self, interaction: Interaction[Bot]) -> None:
+        status = self.status
+        view = discord.ui.LayoutView()
+
+        if not status.mods:
+            view.add_item(discord.ui.TextDisplay(f"{status.display_name} has no mods."))
+            await interaction.response.send_message(ephemeral=True, view=view)
+            return
+
+        content = [f"Mods ({len(status.mods)}):"]
+        mods = []
+        for m in status.mods:
+            name = discord.utils.escape_markdown(m.name)
+            mods.append(f"[{name}]({m.url})" if m.url else name)
+        mods = ", ".join(mods)
+        content.append(mods)
+
+        view.add_item(discord.ui.TextDisplay("\n".join(content)))
+        await interaction.response.send_message(ephemeral=True, view=view)
 
 
 async def update_display(bot: Bot, *, message_id: int) -> None:
