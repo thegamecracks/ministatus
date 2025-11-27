@@ -207,7 +207,7 @@ class DatabaseClient:
             status.failed_at,
             status.game,
             status.map,
-            status.mods,
+            status.mods_json(),
             status.version,
         )
         assert row is not None

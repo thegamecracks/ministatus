@@ -98,6 +98,10 @@ class Status(BaseModel):
     def display_name(self) -> str:
         return self.title or self.label
 
+    def mods_json(self) -> str | None:
+        if self.mods is not None:
+            return status_mod_list_adapter.dump_json(self.mods).decode()
+
 
 class StatusAlert(BaseModel):
     status_alert_id: int
