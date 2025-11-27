@@ -500,11 +500,7 @@ class StatusDisplaySelect(discord.ui.Select):
             await interaction.response.send_message(ephemeral=True, view=view)
             return
 
-        content = [f"Mods ({len(status.mods)}):"]
-        mods = self._format_mods(status.mods)
-        content.append(mods)
-        content = "\n".join(content)
-
+        content = self._format_mods(status.mods)
         if len(content) <= 4000:
             view.add_item(discord.ui.TextDisplay(content))
             await interaction.response.send_message(ephemeral=True, view=view)
@@ -513,11 +509,11 @@ class StatusDisplaySelect(discord.ui.Select):
             await interaction.response.send_message(ephemeral=True, file=f)
 
     def _format_mods(self, mods: list[StatusMod]) -> str:
-        names = []
+        content = [f"Mods ({len(mods)}):"]
         for m in mods:
             name = discord.utils.escape_markdown(m.name)
-            names.append(f"[{name}]({m.url})" if m.url else name)
-        return ", ".join(names)
+            content.append(f"- [{name}]({m.url})" if m.url else name)
+        return "\n".join(content)
 
     def _format_mods_file(self, mods: list[StatusMod]) -> discord.File:
         lines = [f"Number of mods: {len(mods)}"]
