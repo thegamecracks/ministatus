@@ -686,6 +686,11 @@ class SourceRules:
                 name=m.name,
                 url=f"https://steamcommunity.com/sharedfiles/filedetails/?id={m.steam_id}",
             )
+            if not m.dlc
+            else StatusMod(
+                name=m.name or f"Creator DLC ({m.steam_id})",
+                url=f"https://store.steampowered.com/app/{m.steam_id}",
+            )
             for m in rules.mods
         ]
         return cls(mods=mods)
