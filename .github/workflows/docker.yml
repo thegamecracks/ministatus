@@ -1,7 +1,9 @@
 name: Publish docker image
 
 on:
-  # push:
+  push:
+    tags:
+      - v*
   #   paths:
   #     - src/**
   #     - .dockerignore
