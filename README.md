@@ -17,6 +17,7 @@ A Discord bot for managing game server status embeds.
   - [Supported Games / Query Protocols](#supported-games--query-protocols)
   - [Installation](#installation)
   - [Setup](#setup)
+  - [Docker](#docker)
   - [Usage](#usage)
     - [Alerts](#alerts)
     - [Displays](#displays)
@@ -66,8 +67,8 @@ $ uvx ministatus
 Or run in a container with [Docker] or [Podman]:
 
 ```sh
-mkdir data  # using a bind mount to persist app state
-docker run --rm -it -v ./data:/home/nonroot/.local/share ghcr.io/thegamecracks/ministatus
+$ docker pull ghcr.io/thegamecracks/ministatus
+$ docker run --rm -it ministatus
 ```
 
 ![Terminal demonstration](https://github.com/user-attachments/assets/9d134fb4-446b-47cf-9697-867ab748d346)
@@ -131,6 +132,36 @@ $ ministatus start --sync
 Make sure to **only** synchronize once to avoid being ratelimited by Discord.
 If ministatus is updated with changes to application commands, you may need
 to synchronize them again.
+
+## Docker
+
+Our Docker images are hosted in the [GitHub Container Registry]. Starting a container
+from an image doesn't run the bot immediately, but it instead provides the command-line
+interface shown in the previous section. If you're planning to host from an image,
+you should mount a volume to persist the bot's application state:
+
+```sh
+$ mkdir data
+$ docker run --rm -it -v ./data:/home/nonroot/.local/share ministatus
+Usage: ministatus [OPTIONS] COMMAND [ARGS]...
+
+  A Discord bot for managing game server status embeds.
+```
+
+[GitHub Container Registry]: https://github.com/thegamecracks/ministatus/pkgs/container/ministatus
+
+To start the bot without manually entering your bot token, pass the
+[MIST_TOKEN](#environment-variables) environment variable with `-e <name>:<value>`
+or `--env-file <path>`, and invoke the `start` command:
+
+```sh
+$ echo 'MIST_TOKEN=abc.def.xyz' > .env
+$ docker run --rm -it --env-file .env ministatus start
+2025-11-28 04:48:03 INFO     ministatus.db.migrations Migrating database to v5
+2025-11-28 04:48:03 INFO     ministatus.cli.commands Reading token from MIST_TOKEN environment variable
+2025-11-28 04:48:04 INFO     discord.client logging in using static token
+...
+```
 
 ## Usage
 
