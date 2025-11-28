@@ -4,6 +4,8 @@ on:
   push:
     paths:
       - src/**
+      - .dockerignore
+      - Dockerfile
       - LICENSE
       - pyproject.toml
       - README.md
