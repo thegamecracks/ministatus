@@ -10,8 +10,6 @@ on:
       - pyproject.toml
       - README.md
       - uv.lock
-    tags:
-      - v*
   workflow_dispatch:
 
 env:
