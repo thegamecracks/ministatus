@@ -22,7 +22,7 @@ COPY --from=build --chown=nonroot:nonroot --chmod=755 /opt/python /opt/python
 COPY --from=build --chown=nonroot:nonroot --chmod=755 /app /app
 WORKDIR /app
 
-VOLUME /home/nonroot/.local/share/ministatus
+VOLUME /home/nonroot/.local/share
 RUN chown -R nonroot:nonroot /home/nonroot/.local
 
 USER nonroot
