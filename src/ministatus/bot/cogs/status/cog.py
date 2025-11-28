@@ -15,6 +15,7 @@ from .query import run_query_jobs
 from .views import StatusManageView, StatusSummaryView, display_cache
 
 DEFAULT_QUERY_INTERVAL = 60
+DEFAULT_QUERY_MAX_CONCURRENCY = 1
 
 log = logging.getLogger(__name__)
 
@@ -86,7 +87,8 @@ class StatusCog(
 
     @tasks.loop(seconds=60)
     async def query_loop(self) -> None:
-        await run_query_jobs(self.bot)
+        max_concurrency = await self._get_max_concurrency()
+        await run_query_jobs(self.bot, max_concurrency=max_concurrency)
 
     @query_loop.before_loop
     async def query_before_loop(self) -> None:
@@ -112,3 +114,12 @@ class StatusCog(
 
         self.query_interval = query_interval
         self.query_loop.change_interval(seconds=query_interval)
+
+    async def _get_max_concurrency(self) -> int:
+        async with connect_client() as client:
+            max_concurrency = await client.set_default_setting(
+                "status-max-concurrency",
+                DEFAULT_QUERY_MAX_CONCURRENCY,
+            )
+
+        return max(int(max_concurrency), DEFAULT_QUERY_MAX_CONCURRENCY)

@@ -68,7 +68,11 @@ _resolver = Resolver()
 _resolver.cache = Cache()
 
 
-async def run_query_jobs(bot: Bot) -> None:
+async def run_query_jobs(
+    bot: Bot,
+    *,
+    max_concurrency: int,
+) -> None:
     guild_ids = [guild.id for guild in bot.guilds]
 
     async with connect_client() as client:
@@ -82,7 +86,7 @@ async def run_query_jobs(bot: Bot) -> None:
         return
 
     try:
-        await _run_query_jobs(bot, statuses)
+        await _run_query_jobs(bot, statuses, max_concurrency=max_concurrency)
     except* (
         aiohttp.ServerDisconnectedError,  # sometimes raised by message.edit()
         discord.DiscordServerError,
@@ -94,11 +98,17 @@ async def run_query_jobs(bot: Bot) -> None:
         raise e from None
 
 
-async def _run_query_jobs(bot: Bot, statuses: list[Status]) -> None:
+async def _run_query_jobs(
+    bot: Bot,
+    statuses: list[Status],
+    *,
+    max_concurrency: int,
+) -> None:
     tasks = []
+    lock = asyncio.BoundedSemaphore(max_concurrency)
     async with QueryContext(bot) as ctx, asyncio.TaskGroup() as tg:
         for status in statuses:
-            tasks.append(tg.create_task(query_status(ctx, status)))
+            tasks.append(tg.create_task(query_status(ctx, status, lock)))
 
             # Let all tasks run first, and collect any errors to raise afterwards
         await asyncio.wait(tasks)
@@ -108,20 +118,25 @@ async def _run_query_jobs(bot: Bot, statuses: list[Status]) -> None:
         raise ExceptionGroup(f"{len(exceptions)} query job(s) failed", exceptions)
 
 
-async def query_status(ctx: QueryContext, status: Status) -> None:
+async def query_status(
+    ctx: QueryContext,
+    status: Status,
+    lock: asyncio.Semaphore,
+) -> None:
     if not status.queries:
         return
 
-    for query in status.queries:
-        info = await maybe_query(ctx, status, query)
-        if info is not None:
-            await record_info(ctx, status, info)
-            break
-    else:
-        await record_offline(ctx, status)
+    async with lock:
+        for query in status.queries:
+            info = await maybe_query(ctx, status, query)
+            if info is not None:
+                await record_info(ctx, status, info)
+                break
+        else:
+            await record_offline(ctx, status)
 
-    for display in status.displays:
-        await maybe_update_display(ctx.bot, status, display)
+        for display in status.displays:
+            await maybe_update_display(ctx.bot, status, display)
 
 
 async def maybe_query(

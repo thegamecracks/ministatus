@@ -266,6 +266,15 @@ $ ministatus config status-interval 60
 $ ministatus config status-interval-attachments 600
 ```
 
+The max concurrency is also set to one by default, meaning the bot will process
+all queries and displays of one status at a time. You can increase this to update
+multiple statuses in parallel, at the cost of higher peak CPU usage and network
+traffic per interval:
+
+```sh
+$ ministatus config status-max-concurrency 16
+```
+
 ## DNS Lookups (Technical)
 
 When a domain name is specified, like `ia.420thdelta.net`, the bot will attempt
@@ -312,6 +321,7 @@ Settings:
     appid = 1430326736775544903
     status-interval = 60
     status-interval-attachments = 600
+    status-max-concurrency = 1
     token = ****
 
 $ ministatus config --unset token  # unset token
