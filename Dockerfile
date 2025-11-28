@@ -19,7 +19,7 @@ COPY --from=build --chown=nonroot:nonroot --chmod=755 /app /app
 WORKDIR /app
 USER nonroot
 
-VOLUME /home/runner/.local/share/ministatus
+VOLUME /home/nonroot/.local/share/ministatus
 
 ENV PATH=/app/.venv/bin:${PATH} \
     PYTHONPATH=/app \
