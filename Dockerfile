@@ -1,6 +1,10 @@
 # https://github.com/astral-sh/uv/issues/7758#issuecomment-3263282018
 FROM cgr.dev/chainguard/wolfi-base AS base
 
+LABEL org.opencontainers.image.source=https://github.com/thegamecracks/ministatus
+LABEL org.opencontainers.image.description="A Discord bot for managing game server status embeds."
+LABEL org.opencontainers.image.licenses=MIT
+
 # Numpy runtime dependencies
 RUN apk add --no-cache libstdc++ libgcc
 
