@@ -26,4 +26,3 @@ ENV PATH=/app/.venv/bin:${PATH} \
     PYTHONUNBUFFERED=1
 STOPSIGNAL SIGINT
 ENTRYPOINT ["ministatus"]
-CMD ["start"]
