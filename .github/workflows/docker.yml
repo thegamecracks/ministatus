@@ -10,6 +10,7 @@ on:
       - pyproject.toml
       - README.md
       - uv.lock
+  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
