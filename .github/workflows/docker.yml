@@ -2,16 +2,16 @@ name: Publish docker image
 
 on:
   push:
+    paths:
+      - src/**
+      - .dockerignore
+      - Dockerfile
+      - LICENSE
+      - pyproject.toml
+      - README.md
+      - uv.lock
     tags:
       - v*
-  #   paths:
-  #     - src/**
-  #     - .dockerignore
-  #     - Dockerfile
-  #     - LICENSE
-  #     - pyproject.toml
-  #     - README.md
-  #     - uv.lock
   workflow_dispatch:
 
 env:
