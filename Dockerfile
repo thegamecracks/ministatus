@@ -23,7 +23,8 @@ COPY --from=build --chown=nonroot:nonroot --chmod=755 /app /app
 WORKDIR /app
 
 VOLUME /home/nonroot/.local/share
-RUN chown -R nonroot:nonroot /home/nonroot/.local
+RUN mkdir -p /home/nonroot/.local/share && \
+    chown -R nonroot:nonroot /home/nonroot/.local
 
 USER nonroot
 ENV PATH=/app/.venv/bin:${PATH} \
