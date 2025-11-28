@@ -43,6 +43,9 @@ jobs:
 
       - uses: docker/metadata-action@v5.10.0
         id: meta
+        # ghcr.io prefers index level annotations
+        env:
+          DOCKER_METADATA_ANNOTATIONS_LEVELS: index
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
