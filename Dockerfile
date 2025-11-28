@@ -21,10 +21,11 @@ FROM base
 COPY --from=build --chown=nonroot:nonroot --chmod=755 /opt/python /opt/python
 COPY --from=build --chown=nonroot:nonroot --chmod=755 /app /app
 WORKDIR /app
-USER nonroot
 
 VOLUME /home/nonroot/.local/share/ministatus
+RUN chown -R nonroot:nonroot /home/nonroot/.local
 
+USER nonroot
 ENV PATH=/app/.venv/bin:${PATH} \
     PYTHONPATH=/app \
     PYTHONUNBUFFERED=1
