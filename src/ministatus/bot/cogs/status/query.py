@@ -681,18 +681,20 @@ class SourceRules:
 
     @classmethod
     def from_arma3_rules(cls, rules: Arma3Rules) -> Self:
-        mods = [
-            StatusMod(
-                name=m.name,
-                url=f"https://steamcommunity.com/sharedfiles/filedetails/?id={m.steam_id}",
-            )
-            if not m.dlc
-            else StatusMod(
-                name=m.name or f"Creator DLC ({m.steam_id})",
-                url=f"https://store.steampowered.com/app/{m.steam_id}",
-            )
-            for m in rules.mods
-        ]
+        mods: list[StatusMod] = []
+        for m in rules.mods:
+            if m.dlc:
+                name = m.name or f"Creator DLC ({m.steam_id})"
+                url = "https://store.steampowered.com/app/"
+            else:
+                name = m.name
+                url = "https://steamcommunity.com/sharedfiles/filedetails/?id="
+
+            # Some mods return steam ID of 0, don't include URLs for them
+            url = f"{url}{m.steam_id}" if m.steam_id else None
+            mod = StatusMod(name=name, url=url)
+            mods.append(mod)
+
         return cls(mods=mods)
 
 
