@@ -1,5 +1,9 @@
 # https://github.com/astral-sh/uv/issues/7758#issuecomment-3263282018
 FROM cgr.dev/chainguard/wolfi-base AS base
+
+# Numpy runtime dependencies
+RUN apk add --no-cache libstdc++ libgcc
+
 FROM base AS build
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
