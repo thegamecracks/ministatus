@@ -63,10 +63,19 @@ $ ministatus
 $ uvx ministatus
 ```
 
+Or run in a container with [Docker] or [Podman]:
+
+```sh
+mkdir data  # using a bind mount to persist app state
+docker run --rm -it -v ./data:/home/nonroot/.local/share/ministatus ghcr.io/ministatus
+```
+
 ![Terminal demonstration](https://github.com/user-attachments/assets/9d134fb4-446b-47cf-9697-867ab748d346)
 
 [pipx]: https://pipx.pypa.io/latest/
 [uv]: https://docs.astral.sh/uv/
+[Docker]: https://docs.docker.com/
+[Podman]: https://podman.io/
 
 ## Setup
 
