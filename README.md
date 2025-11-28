@@ -151,7 +151,7 @@ Usage: ministatus [OPTIONS] COMMAND [ARGS]...
 [GitHub Container Registry]: https://github.com/thegamecracks/ministatus/pkgs/container/ministatus
 
 To start the bot without manually entering your bot token, pass the
-[MIST_TOKEN](#environment-variables) environment variable with `-e <name>:<value>`
+[MIST_TOKEN](#environment-variables) environment variable with `-e MIST_TOKEN=value`
 or `--env-file <path>`, and invoke the `start` command:
 
 ```sh
