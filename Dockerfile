@@ -9,7 +9,7 @@ FROM base AS build
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_PYTHON_INSTALL_DIR=/opt/python \
     UV_PYTHON_CACHE_DIR=/root/.cache/uv/python \
-    UV_PYTHON=3.11.14
+    UV_PYTHON=3.11
 WORKDIR /app
 
 COPY --link src/ src/
