@@ -67,7 +67,7 @@ Or run in a container with [Docker] or [Podman]:
 
 ```sh
 mkdir data  # using a bind mount to persist app state
-docker run --rm -it -v ./data:/home/nonroot/.local/share/ministatus ghcr.io/thegamecracks/ministatus
+docker run --rm -it -v ./data:/home/nonroot/.local/share ghcr.io/thegamecracks/ministatus
 ```
 
 ![Terminal demonstration](https://github.com/user-attachments/assets/9d134fb4-446b-47cf-9697-867ab748d346)
