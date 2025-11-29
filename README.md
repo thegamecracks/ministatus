@@ -142,6 +142,7 @@ you should mount a volume to persist the bot's application state:
 
 ```sh
 $ mkdir data
+$ docker pull ghcr.io/thegamecracks/ministatus
 $ docker run --rm -it -v ./data:/home/nonroot/.local/share ministatus
 Usage: ministatus [OPTIONS] COMMAND [ARGS]...
 
