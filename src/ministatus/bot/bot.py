@@ -24,6 +24,7 @@ class Bot(commands.Bot):
                 guilds=True,
                 messages=True,
             ),
+            max_messages=None,
             strip_after_prefix=True,
         )
 
