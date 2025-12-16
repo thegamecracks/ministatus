@@ -311,7 +311,7 @@ $ ministatus appdirs
 user_data_path    = /home/thegamecracks/.local/share/ministatus
 user_log_path     = /home/thegamecracks/.local/state/ministatus/log
 $ ministatus db path
-/home/ministatus/.local/share/ministatus/ministatus.db
+/home/thegamecracks/.local/share/ministatus/ministatus.db
 ```
 
 View or change configuration settings:
