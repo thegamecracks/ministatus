@@ -407,8 +407,6 @@ class StatusDisplayView(LayoutView):
         if status.version:
             content.append(f"**Version:** {status.version}")
 
-        # TODO: add select option to list mods with possible URLs
-
         if latest_known is None:
             return content
 
