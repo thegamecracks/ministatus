@@ -748,7 +748,7 @@ requires-dist = [
     { name = "ipaddress", specifier = "~=1.0" },
     { name = "little-a2s", specifier = "~=0.7.1" },
     { name = "matplotlib", specifier = "~=3.10" },
-    { name = "opengsq", specifier = "~=3.4.1" },
+    { name = "opengsq", specifier = "~=3.6" },
     { name = "platformdirs", specifier = "~=4.5" },
     { name = "pydantic", specifier = "~=2.12" },
 ]
@@ -956,14 +956,14 @@ wheels = [
 
 [[package]]
 name = "opengsq"
-version = "3.4.1"
+version = "3.6.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/97/68/ba889b2f11480e5675064838f43b3b801f33083d0c75ca83deede9b90dec/opengsq-3.4.1.tar.gz", hash = "sha256:e12cc685ec50ca76b1cabcd18b2b02a5490b7557103cfa42470cc557f52c969c", size = 57766, upload-time = "2025-07-10T11:15:55.526Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c6/82/a958c9a771f7c816ace4ce19a29eaa92c662e93f1277b85810d8ec1a9814/opengsq-3.6.0.tar.gz", hash = "sha256:8a0d6327cfe21e3a1ba53d45007b5a9eff0d3239c5547725a0c8beb519ce8245", size = 105304, upload-time = "2025-12-18T12:27:32.989Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ed/e8/057e8c6c9506a9d8e466e26c39c6907f2f3eb27f66af4f54ac0e3dde8958/opengsq-3.4.1-py3-none-any.whl", hash = "sha256:6ad5b3fc58483324b3425e1a8e185e5ec5134cfe764b53c2a512cea40d89236e", size = 93677, upload-time = "2025-07-10T11:15:53.823Z" },
+    { url = "https://files.pythonhosted.org/packages/2a/0c/f5f9e927c145deacf0f5a3178654b5a92eb7a8f3f321f009cf1bd1b87d57/opengsq-3.6.0-py3-none-any.whl", hash = "sha256:be1bbd4807b9a31ec758f3e72e59dae34dfea0eb7858a315e8ef884de67efe85", size = 168003, upload-time = "2025-12-18T12:27:31.348Z" },
 ]
 
 [[package]]

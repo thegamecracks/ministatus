@@ -44,7 +44,7 @@ dependencies = [
     "ipaddress~=1.0",
     "little-a2s~=0.7.1",
     "matplotlib~=3.10",
-    "opengsq~=3.4.1",
+    "opengsq~=3.6",
     "platformdirs~=4.5",
     "pydantic~=2.12",
 ]
