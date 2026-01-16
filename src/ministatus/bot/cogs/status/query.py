@@ -88,6 +88,7 @@ async def run_query_jobs(
     try:
         await _run_query_jobs(bot, statuses, max_concurrency=max_concurrency)
     except* (
+        aiohttp.ClientOSError,  # sometimes raised by message.edit()
         aiohttp.ServerDisconnectedError,  # sometimes raised by message.edit()
         discord.DiscordServerError,
         discord.RateLimited,
