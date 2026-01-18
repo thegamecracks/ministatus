@@ -234,7 +234,7 @@ class CreateStatusQueryModal(Modal, title="Create Status Query"):
         interaction = cast("Interaction[Bot]", interaction)
 
         game_port = int(self.game_port.value)
-        if self.type == StatusQueryType.ARMA_3:
+        if self.type == StatusQueryType.ARMA_3 and game_port > 0:
             query_port = game_port + 1
         else:
             query_port = int(self.query_port.value or game_port)
