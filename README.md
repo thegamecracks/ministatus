@@ -138,11 +138,11 @@ to synchronize them again.
 Our Docker images are hosted in the [GitHub Container Registry]. Starting a container
 from an image doesn't run the bot immediately, but it instead provides the command-line
 interface shown in the previous section. If you're planning to host from an image,
-you should mount a volume to persist the bot's application state:
+you should mount a volume to persist the bot's application state
+(preferably a named volume, not a bind mount):
 
 ```sh
-$ mkdir data && chmod 777 data  # see warning at end
-$ VOLUME=./data:/home/nonroot/.local/share
+$ VOLUME=mist-data:/home/nonroot/.local/share
 $ docker pull ghcr.io/thegamecracks/ministatus
 $ docker run --rm -it -v $VOLUME ministatus
 Usage: ministatus [OPTIONS] COMMAND [ARGS]...
