@@ -174,32 +174,35 @@ $ docker run --rm -it --env-file .env -v $VOLUME ministatus start
 > get an error like this:
 >
 > ```py
+> $ mkdir data  # likely mode 775, meaning other users can't write
 > $ docker run --rm -it -v ./data:/home/nonroot/.local/share ministatus start
 > Traceback (most recent call last):
 >   ...
-> PermissionError: [Errno 13] Permission denied: '/home/nonroot/.local/share/ministatus'`
+> PermissionError: [Errno 13] Permission denied: '/home/nonroot/.local/share/ministatus'
 > ```
 >
-> If you see this permission error, try the following to fix it (assuming a Linux host):
+> If you see this permission error, try the following to fix it:
 >
 > ```sh
 > $ chmod 777 data
 > $ docker run --rm -it -v ./data:/home/nonroot/.local/share ministatus start
 > ```
 >
-> If you need to delete your data directory and encounter a permission error like
-> `rm: cannot remove 'data/ministatus/ministatus.db': Permission denied`,
-> you can either delete it as root or use another container with root access to
-> delete it (and of course, **please make sure you're deleting the right directory**):
+> If you need to delete your data directory and encounter a permission error
+> like `rm: cannot remove 'data/ministatus/ministatus.db': Permission denied`,
+> you can delete it with either your root user or another container that has
+> root access (and of course, **please make sure you're deleting the right directory**):
 >
-> ```
+> ```sh
 > $ ls data
 > ministatus
+>
 > $ sudo rm -rf data
-> # or:
+>
+> # or via container:
 > $ docker run --rm -it -v ./data:/data docker.io/library/busybox rm -rf /data
 > rm: can't remove '/data': Device or resource busy
-> $ rm -rf data
+> $ rm -r data  # clean up the empty directory
 > ```
 >
 > Alternatively, you can use a named volume instead of a bind mount which allows
