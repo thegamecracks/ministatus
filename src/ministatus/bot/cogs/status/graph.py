@@ -48,7 +48,7 @@ def create_player_count_graph(
     _set_relative_date_xticks(ax, now_num, x_min, x_max)
 
     # Set yticks
-    y_step = math.ceil(max_players / 10) or 5
+    y_step = _calculate_max_players_y_step(max_players)
     ax.yaxis.set_major_locator(ticker.MultipleLocator(y_step))
 
     # Add grid
@@ -129,6 +129,24 @@ def _calculate_date_step(x_min: float, x_max: float) -> float:
             return pstep
 
     return possible_steps[-1]
+
+
+def _calculate_max_players_y_step(max_players: int) -> int:
+    min_ticks = 5
+    max_ticks = 10
+    possible_steps = [10, *(2**n for n in range(8))]
+    # Out of our preferred steps, find one that is divisible with max players
+    # (or close to divisible) and can produce the closest to max ticks,
+    # while remaining within min/max ticks
+    mod_step_n = [
+        (t[1], abs(t[0] - max_ticks), n)
+        for n in possible_steps
+        if min_ticks <= (t := divmod(max_players, n))[0] <= max_ticks
+    ]
+    if mod_step_n:
+        mod_step_n.sort()
+        return mod_step_n[0][2]
+    return math.ceil(max_players / max_ticks) or 5
 
 
 def set_axes_aspect(ax: Axes, ratio: int | float, *args, **kwargs) -> None:
