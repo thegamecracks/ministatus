@@ -142,8 +142,9 @@ you should mount a volume to persist the bot's application state:
 
 ```sh
 $ mkdir data
+$ VOLUME=./data:/home/nonroot/.local/share
 $ docker pull ghcr.io/thegamecracks/ministatus
-$ docker run --rm -it -v ./data:/home/nonroot/.local/share ministatus
+$ docker run --rm -it -v $VOLUME ministatus
 Usage: ministatus [OPTIONS] COMMAND [ARGS]...
 
   A Discord bot for managing game server status embeds.
@@ -157,7 +158,7 @@ or `--env-file <path>`, and invoke the `start` command:
 
 ```sh
 $ echo 'MIST_TOKEN=abc.def.xyz' > .env
-$ docker run --rm -it --env-file .env ministatus start
+$ docker run --rm -it --env-file .env -v $VOLUME ministatus start
 2025-11-28 04:48:03 INFO     ministatus.db.migrations Migrating database to v5
 2025-11-28 04:48:03 INFO     ministatus.cli.commands Reading token from MIST_TOKEN environment variable
 2025-11-28 04:48:04 INFO     discord.client logging in using static token
