@@ -141,7 +141,7 @@ interface shown in the previous section. If you're planning to host from an imag
 you should mount a volume to persist the bot's application state:
 
 ```sh
-$ mkdir data
+$ mkdir data && chmod 777 data  # see warning at end
 $ VOLUME=./data:/home/nonroot/.local/share
 $ docker pull ghcr.io/thegamecracks/ministatus
 $ docker run --rm -it -v $VOLUME ministatus
@@ -164,6 +164,52 @@ $ docker run --rm -it --env-file .env -v $VOLUME ministatus start
 2025-11-28 04:48:04 INFO     discord.client logging in using static token
 ...
 ```
+
+> [!WARNING]
+> This ministatus image uses a non-root user for execution.
+>
+> If you have a bind mount like `-v ./data:/home/nonroot/.local/share`,
+> you may need to change the host directory's permissions, `data` in this example,
+> such that other users are allowed to write to it. Otherwise, it's possible to
+> get an error like this:
+>
+> ```py
+> $ docker run --rm -it -v ./data:/home/nonroot/.local/share ministatus start
+> Traceback (most recent call last):
+>   ...
+> PermissionError: [Errno 13] Permission denied: '/home/nonroot/.local/share/ministatus'`
+> ```
+>
+> If you see this permission error, try the following to fix it (assuming a Linux host):
+>
+> ```sh
+> $ chmod 777 data
+> $ docker run --rm -it -v ./data:/home/nonroot/.local/share ministatus start
+> ```
+>
+> If you need to delete your data directory and encounter a permission error like
+> `rm: cannot remove 'data/ministatus/ministatus.db': Permission denied`,
+> you can either delete it as root or use another container with root access to
+> delete it (and of course, **please make sure you're deleting the right directory**):
+>
+> ```
+> $ ls data
+> ministatus
+> $ sudo rm -rf data
+> # or:
+> $ docker run --rm -it -v ./data:/data docker.io/library/busybox rm -rf /data
+> rm: can't remove '/data': Device or resource busy
+> $ rm -rf data
+> ```
+>
+> Alternatively, you can use a named volume instead of a bind mount which allows
+> Docker to correctly handle the permissions for you:
+>
+> ```sh
+> $ docker run --rm -it -v mist-data:/home/nonroot/.local/share ministatus start
+> # To remove:
+> $ docker volume rm mist-data
+> ```
 
 ## Usage
 
