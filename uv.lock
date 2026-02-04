@@ -646,11 +646,11 @@ wheels = [
 
 [[package]]
 name = "little-a2s"
-version = "0.7.1"
+version = "0.7.2"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/62/80/7d0d07f8e39df24b5a6be41b666f6d1fad79ef25f8a3ff04fcf527209466/little_a2s-0.7.1.tar.gz", hash = "sha256:79d884dfe042b80485f207ade42cdad36c84d87983573686d2b4f3ed678e937b", size = 16702, upload-time = "2025-11-27T02:53:17.779Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/d8/09/b2177cf8c40ec3c5f20c4c6121bbc5ee4b3fd0e6d048bb49abd534c95489/little_a2s-0.7.2.tar.gz", hash = "sha256:0d5e5ec8ae2356e6b3bb1c3669f05051842580c6891b9f3ba56cc46d8e29bc8b", size = 16648, upload-time = "2026-02-04T04:04:36.26Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c4/48/1d9c4ee7dd6882a6bcacc32d31c6acd965ba252258d6cc586a18aecb71fc/little_a2s-0.7.1-py3-none-any.whl", hash = "sha256:502b05eca0f726c4c72297d4c26421886507f1ab466174ffdca4834e8a6d9b5d", size = 23478, upload-time = "2025-11-27T02:53:16.338Z" },
+    { url = "https://files.pythonhosted.org/packages/7c/eb/a847430c77706a0470b2612cd99ce8deabb74e5c27f66398dd86e2a48ba2/little_a2s-0.7.2-py3-none-any.whl", hash = "sha256:9c6920b5739aff39abaf89358c9d09f48901d9ea9da127dd68ca8ae31c30ba6a", size = 23454, upload-time = "2026-02-04T04:04:35.143Z" },
 ]
 
 [[package]]
@@ -746,7 +746,7 @@ requires-dist = [
     { name = "discord-py", specifier = "~=2.6" },
     { name = "dnspython", specifier = "~=2.8" },
     { name = "ipaddress", specifier = "~=1.0" },
-    { name = "little-a2s", specifier = "~=0.7.1" },
+    { name = "little-a2s", specifier = "~=0.7.2" },
     { name = "matplotlib", specifier = "~=3.10" },
     { name = "opengsq", specifier = "~=3.6" },
     { name = "platformdirs", specifier = "~=4.5" },
