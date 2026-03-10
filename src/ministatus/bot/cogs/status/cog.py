@@ -82,8 +82,10 @@ class StatusCog(
         if not statuses:
             raise ErrorResponse("No server statuses to see here 😴")
 
-        view = StatusSummaryView(interaction, statuses)
-        await view.send(interaction, ephemeral=True)
+        # TODO: maybe replace with paginator?
+        for chunk in discord.utils.as_chunks(statuses, 10):
+            view = StatusSummaryView(interaction, chunk)
+            await view.send(interaction, ephemeral=True)
 
     @tasks.loop(seconds=60)
     async def query_loop(self) -> None:

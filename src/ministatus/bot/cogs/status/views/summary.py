@@ -65,7 +65,10 @@ class StatusSummaryView(LayoutView):
     async def send(self, interaction: Interaction, **kwargs) -> None:
         rendered = await self.render()
         kwargs = rendered.get_send_kwargs() | kwargs
-        await interaction.response.send_message(view=self, **kwargs)
+        if interaction.response.is_done():
+            await interaction.followup.send(view=self, **kwargs)
+        else:
+            await interaction.response.send_message(view=self, **kwargs)
 
     async def render(self) -> RenderArgs:
         self.clear_items()
