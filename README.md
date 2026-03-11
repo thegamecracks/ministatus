@@ -46,8 +46,8 @@ This project requires Python 3.11 or newer. You can manually install this
 project into a virtual environment:
 
 ```sh
-$ python3 -m venv
-$ .venv/bin/activate
+$ python3 -m venv .venv
+$ source .venv/bin/activate
 (.venv) $ pip install ministatus
 (.venv) $ ministatus  # or python3 -m ministatus
 ```
