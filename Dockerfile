@@ -16,8 +16,11 @@ ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_PYTHON_INSTALL_DIR=/opt/python \
     UV_PYTHON=3.14
 WORKDIR /app
 
+COPY --link pyproject.toml uv.lock ./
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --locked --no-dev --no-install-project
+COPY --link LICENSE README.md ./
 COPY --link src/ src/
-COPY --link LICENSE pyproject.toml README.md uv.lock ./
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --no-dev
 
