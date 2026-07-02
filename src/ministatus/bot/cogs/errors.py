@@ -1,5 +1,6 @@
 import functools
 import logging
+from typing import Any
 
 import discord
 from discord import app_commands
@@ -104,6 +105,9 @@ async def interaction_send(interaction: discord.Interaction, *args, **kwargs) ->
 
 
 class Errors(commands.Cog):
+    _old_command_error: Any
+    _old_tree_error: Any
+
     def __init__(self, bot: Bot) -> None:
         self.bot = bot
         self.setup_events()
@@ -113,13 +117,13 @@ class Errors(commands.Cog):
 
     def setup_events(self) -> None:
         self._old_command_error = self.bot.on_command_error
-        self.bot.on_command_error = on_command_error  # type: ignore
+        setattr(self.bot, "on_command_error", on_command_error)
 
         self._old_tree_error = self.bot.tree.on_error
         self.bot.tree.error(on_app_command_error)
 
     def teardown_events(self) -> None:
-        self.bot.on_command_error = self._old_command_error
+        setattr(self.bot, "on_command_error", self._old_command_error)
         self.bot.tree.error(self._old_tree_error)
 
 
