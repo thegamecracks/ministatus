@@ -3,9 +3,9 @@ name: Build package
 on:
   push:
     paths:
-      - src/**
-      - pyproject.toml
-      - uv.lock
+      - 'src/**'
+      - 'pyproject.toml'
+      - 'uv.lock'
   workflow_dispatch:
     inputs:
       can_publish:
