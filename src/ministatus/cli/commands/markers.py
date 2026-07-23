@@ -2,8 +2,9 @@ import asyncio
 import functools
 import sqlite3
 import sys
+from collections.abc import Callable, Coroutine
 from contextlib import closing
-from typing import Any, Callable, Coroutine, ParamSpec, TypeVar
+from typing import Any, ParamSpec, TypeVar
 
 import click
 

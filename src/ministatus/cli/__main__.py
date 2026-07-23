@@ -5,10 +5,9 @@ from ministatus.cli.commands import add_commands
 from ministatus.db import Secret
 from ministatus.logging import setup_logging
 
-
-CONTEXT_SETTINGS = dict(
-    help_option_names=("-h", "--help"),
-)
+CONTEXT_SETTINGS = {
+    "help_option_names": ("-h", "--help"),
+}
 
 
 @click.group(context_settings=CONTEXT_SETTINGS)

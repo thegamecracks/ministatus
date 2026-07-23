@@ -13,7 +13,7 @@ def is_snowflake(value: int) -> int:
 
     timestamp = ((value >> 22) + DISCORD_EPOCH) / 1000
     try:
-        datetime.datetime.fromtimestamp(timestamp, tz=datetime.timezone.utc)
+        datetime.datetime.fromtimestamp(timestamp, tz=datetime.UTC)
     except (OSError, OverflowError) as e:
         raise ValueError("Invalid Discord snowflake value") from e
 

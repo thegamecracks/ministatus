@@ -3,7 +3,7 @@ import logging
 import os
 import pkgutil
 import re
-from typing import Iterable
+from collections.abc import Iterable
 
 import click
 from click import Command, Group

@@ -15,11 +15,11 @@ import aiohttp
 import discord
 from dns.asyncresolver import Resolver
 from dns.exception import Timeout
-from dns.rdatatype import A, AAAA, RdataType, SRV
+from dns.rdatatype import AAAA, SRV, A, RdataType
 from dns.rdtypes.IN.A import A as ARecord
 from dns.rdtypes.IN.AAAA import AAAA as AAAARecord
 from dns.rdtypes.IN.SRV import SRV as SRVRecord
-from dns.resolver import Answer, Cache, NoAnswer, NoNameservers, NXDOMAIN, YXDOMAIN
+from dns.resolver import NXDOMAIN, YXDOMAIN, Answer, Cache, NoAnswer, NoNameservers
 from little_a2s import (
     Arma3Rules,
     AsyncA2S,
@@ -164,7 +164,7 @@ async def maybe_query(
 
 
 async def send_query(ctx: QueryContext, query: StatusQuery) -> Info | None:
-    if query.type == StatusQueryType.ARMA_3:
+    if query.type == StatusQueryType.ARMA_3:  # noqa: SIM114
         return await query_source(ctx, query)
     elif query.type == StatusQueryType.ARMA_REFORGER:
         return await query_source(ctx, query)

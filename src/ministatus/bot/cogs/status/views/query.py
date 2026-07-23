@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 import datetime
+from collections.abc import Awaitable, Callable
 from typing import (
     TYPE_CHECKING,
     Any,
-    Awaitable,
-    Callable,
     Self,
     TypeAlias,
     assert_never,

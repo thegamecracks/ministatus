@@ -67,7 +67,7 @@ class Cleanup(commands.Cog):
                 payload.user.id,
             )
 
-    @tasks.loop(time=datetime.time(0, 0, tzinfo=datetime.timezone.utc))
+    @tasks.loop(time=datetime.time(0, 0, tzinfo=datetime.UTC))
     async def cleanup_loop(self) -> None:
         now = utcnow()
         if now.weekday() != 6:

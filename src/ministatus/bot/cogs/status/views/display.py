@@ -6,8 +6,9 @@ import logging
 import math
 import textwrap
 import time
+from collections.abc import Callable, Iterable, Iterator
 from io import BytesIO
-from typing import TYPE_CHECKING, Any, Callable, Iterable, Iterator, Self, cast
+from typing import TYPE_CHECKING, Any, Self, cast
 
 import discord
 from discord import Interaction, SelectOption

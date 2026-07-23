@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import datetime
 import sqlite3
-from typing import TYPE_CHECKING, Any, Callable, Self, cast
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any, Self, cast
 
 import discord
 from discord import Interaction, SelectOption

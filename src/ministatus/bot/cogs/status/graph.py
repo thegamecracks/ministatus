@@ -1,12 +1,14 @@
 import datetime
 import io
 import math
-from typing import Sequence, cast
+from collections.abc import Sequence
+from typing import cast
 
 import discord
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib import dates as mdates, ticker
+from matplotlib import dates as mdates
+from matplotlib import ticker
 from matplotlib.axes import Axes
 
 
@@ -149,7 +151,7 @@ def _calculate_max_players_y_step(max_players: int) -> int:
     return math.ceil(max_players / max_ticks) or 5
 
 
-def set_axes_aspect(ax: Axes, ratio: int | float, *args, **kwargs) -> None:
+def set_axes_aspect(ax: Axes, ratio: float, *args, **kwargs) -> None:
     """Set an Axes's aspect ratio.
 
     Extra arguments are passed through to `ax.set_aspect()`.

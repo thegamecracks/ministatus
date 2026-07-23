@@ -38,9 +38,7 @@ class CancellableView(LayoutView):
         return False
 
     async def on_timeout(self) -> None:
-        if self._last_interaction is None:
-            return
-        elif self._last_interaction.is_expired():
+        if self._last_interaction is None or self._last_interaction.is_expired():
             return
         elif not self._last_interaction.response.is_done():
             await self._last_interaction.response.defer()

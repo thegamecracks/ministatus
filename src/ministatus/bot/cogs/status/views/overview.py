@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import datetime
 import sqlite3
+from collections.abc import Callable
 from io import BytesIO
-from typing import TYPE_CHECKING, Any, Callable, Self, cast
+from typing import TYPE_CHECKING, Any, Self, cast
 
 import discord
 from discord import Interaction, SelectOption
@@ -15,8 +16,8 @@ from ministatus.bot.errors import ErrorResponse
 from ministatus.bot.views import Modal
 from ministatus.db import Status, connect, connect_client
 
-from .book import Book, Page, RenderArgs, format_enabled_at, format_failed_at
 from .alert import StatusModifyAlertRow
+from .book import Book, Page, RenderArgs, format_enabled_at, format_failed_at
 from .display import StatusModifyDisplayRow
 from .query import StatusModifyQueryRow
 

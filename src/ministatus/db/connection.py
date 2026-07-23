@@ -2,17 +2,14 @@ from __future__ import annotations
 
 import logging
 import textwrap
+from collections.abc import AsyncIterator, Iterable, Iterator, Sequence
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from typing import (
     TYPE_CHECKING,
     Any,
-    AsyncIterator,
-    Iterable,
-    Iterator,
     Literal,
     Protocol,
     Self,
-    Sequence,
     TypeVar,
     assert_never,
 )

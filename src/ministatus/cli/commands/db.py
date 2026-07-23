@@ -14,9 +14,8 @@ from ministatus.db import (
     EncryptionUnsupportedError,
     Secret,
     connect_sync,
-    encrypt as db_encrypt,
 )
-
+from ministatus.db import encrypt as db_encrypt
 
 ALREADY_DECRYPTED = click.style(
     "Database is already decrypted 😴",
@@ -187,7 +186,7 @@ def dump(
         if include and not any_pattern_matches(obj, name, include):
             return False
 
-        if exclude and any_pattern_matches(obj, name, exclude):
+        if exclude and any_pattern_matches(obj, name, exclude):  # noqa: SIM103
             return False
 
         return True

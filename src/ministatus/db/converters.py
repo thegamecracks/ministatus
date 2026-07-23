@@ -10,7 +10,7 @@ def adapt_date_iso(val: datetime.date) -> str:
 
 def adapt_datetime_iso(val: datetime.datetime) -> str:
     """Adapt datetime.datetime to timezone-naive ISO 8601 date."""
-    val = val.astimezone(datetime.timezone.utc)
+    val = val.astimezone(datetime.UTC)
     return val.replace(tzinfo=None).isoformat()
 
 
@@ -41,23 +41,23 @@ def convert_datetime(val: bytes) -> datetime.datetime:
     """Convert ISO 8601 datetime to datetime.datetime object."""
     dt = datetime.datetime.fromisoformat(val.decode())
     if dt.tzinfo:
-        return dt.astimezone(datetime.timezone.utc)
-    return dt.replace(tzinfo=datetime.timezone.utc)
+        return dt.astimezone(datetime.UTC)
+    return dt.replace(tzinfo=datetime.UTC)
 
 
 def convert_timestamp(val: bytes) -> datetime.datetime:
     """Convert Unix epoch timestamp to datetime.datetime object."""
     ts = int(val) / 1000
-    dt = datetime.datetime.fromtimestamp(ts)
+    dt = datetime.datetime.fromtimestamp(ts)  # noqa: DTZ006  # see case below
 
     if ts < 86400:
         # The unix epoch probably got inserted into the database somehow...
         # Calling .astimezone() on this can cause an OSError for systems
         # with negative timezones, so we're just going to force the UTC
         # timezone on it. This changes the actual time being represented!
-        return dt.replace(tzinfo=datetime.timezone.utc)
+        return dt.replace(tzinfo=datetime.UTC)
 
-    return dt.astimezone(datetime.timezone.utc)
+    return dt.astimezone(datetime.UTC)
 
 
 def convert_interval(val: bytes) -> datetime.timedelta:

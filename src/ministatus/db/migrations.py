@@ -3,7 +3,8 @@ import logging
 import re
 import sys
 from abc import ABC, abstractmethod
-from typing import Iterable, NamedTuple, Self
+from collections.abc import Iterable
+from typing import NamedTuple, Self
 
 from ministatus.db.connection import Connection, SQLiteConnection
 

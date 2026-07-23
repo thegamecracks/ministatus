@@ -16,9 +16,9 @@ async def on_command_error(ctx: Context, error: commands.CommandError) -> None:
     # original = getattr(error, "original", error)
 
     # Invalid commands
-    if isinstance(error, commands.CommandNotFound):
+    if isinstance(error, commands.CommandNotFound):  # noqa: SIM114
         pass
-    elif isinstance(error, commands.DisabledCommand):
+    elif isinstance(error, commands.DisabledCommand):  # noqa: SIM114
         pass
     # Checks
     elif isinstance(error, commands.NotOwner):
@@ -117,13 +117,13 @@ class Errors(commands.Cog):
 
     def setup_events(self) -> None:
         self._old_command_error = self.bot.on_command_error
-        setattr(self.bot, "on_command_error", on_command_error)
+        setattr(self.bot, "on_command_error", on_command_error)  # noqa: B010
 
         self._old_tree_error = self.bot.tree.on_error
         self.bot.tree.error(on_app_command_error)
 
     def teardown_events(self) -> None:
-        setattr(self.bot, "on_command_error", self._old_command_error)
+        setattr(self.bot, "on_command_error", self._old_command_error)  # noqa: B010
         self.bot.tree.error(self._old_tree_error)
 
 
