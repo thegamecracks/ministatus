@@ -205,11 +205,11 @@ async def try_send_alert(
         await channel.send(view=view, **kwargs)
     except discord.Forbidden:
         reason = "Missing permissions to send to channel"
-        log.warning("Status alert #%d is invalid: %s", reason)
+        log.warning("Status alert #%d is invalid: %s", alert.status_alert_id, reason)
         await disable_alert(bot, status, alert, reason)
     except discord.NotFound:
         reason = "Channel could not be found"
-        log.warning("Status alert #%d is invalid: %s", reason)
+        log.warning("Status alert #%d is invalid: %s", alert.status_alert_id, reason)
         await disable_alert(bot, status, alert, reason)
 
 
