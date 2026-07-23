@@ -37,20 +37,20 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
-    "asqlite~=2.0",
-    "click~=8.3",
-    "discord.py~=2.7",
-    "dnspython~=2.8",
-    "ipaddress~=1.0",
-    "little-a2s~=0.7.2",
-    "matplotlib~=3.10",
-    "opengsq~=3.6",
-    "platformdirs~=4.5",
-    "pydantic~=2.12",
+    "asqlite>=2.0",
+    "click>=8.3",
+    "discord.py>=2.7",
+    "dnspython>=2.8",
+    "ipaddress>=1.0",
+    "little-a2s>=0.7.2",
+    "matplotlib>=3.10",
+    "opengsq>=3.6",
+    "platformdirs>=4.5",
+    "pydantic>=2.12",
 ]
 
 [dependency-groups]
-dev = ["jishaku~=2.6"]
+dev = ["jishaku>=2.6"]
 
 [project.scripts]
 ministatus = "ministatus.__main__:main"

@@ -776,20 +776,20 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "asqlite", specifier = "~=2.0" },
-    { name = "click", specifier = "~=8.3" },
-    { name = "discord-py", specifier = "~=2.7" },
-    { name = "dnspython", specifier = "~=2.8" },
-    { name = "ipaddress", specifier = "~=1.0" },
-    { name = "little-a2s", specifier = "~=0.7.2" },
-    { name = "matplotlib", specifier = "~=3.10" },
-    { name = "opengsq", specifier = "~=3.6" },
-    { name = "platformdirs", specifier = "~=4.5" },
-    { name = "pydantic", specifier = "~=2.12" },
+    { name = "asqlite", specifier = ">=2.0" },
+    { name = "click", specifier = ">=8.3" },
+    { name = "discord-py", specifier = ">=2.7" },
+    { name = "dnspython", specifier = ">=2.8" },
+    { name = "ipaddress", specifier = ">=1.0" },
+    { name = "little-a2s", specifier = ">=0.7.2" },
+    { name = "matplotlib", specifier = ">=3.10" },
+    { name = "opengsq", specifier = ">=3.6" },
+    { name = "platformdirs", specifier = ">=4.5" },
+    { name = "pydantic", specifier = ">=2.12" },
 ]
 
 [package.metadata.requires-dev]
-dev = [{ name = "jishaku", specifier = "~=2.6" }]
+dev = [{ name = "jishaku", specifier = ">=2.6" }]
 
 [[package]]
 name = "multidict"
