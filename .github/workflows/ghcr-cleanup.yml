@@ -9,6 +9,8 @@ on:
         required: true
         default: true
 
+permissions: {}
+
 jobs:
   cleanup:
     runs-on: ubuntu-latest
