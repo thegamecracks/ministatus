@@ -60,3 +60,6 @@ ministatus = "ministatus.__main__:main"
 Homepage = "https://github.com/thegamecracks/ministatus"
 GitHub = "https://github.com/thegamecracks/ministatus"
 Issues = "https://github.com/thegamecracks/ministatus/issues"
+
+[tool.ruff.lint.isort]
+combine-as-imports = true

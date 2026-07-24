@@ -7,8 +7,7 @@ from typing import cast
 import discord
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib import dates as mdates
-from matplotlib import ticker
+from matplotlib import dates as mdates, ticker
 from matplotlib.axes import Axes
 
 

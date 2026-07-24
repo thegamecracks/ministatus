@@ -14,8 +14,8 @@ from ministatus.db import (
     EncryptionUnsupportedError,
     Secret,
     connect_sync,
+    encrypt as db_encrypt,
 )
-from ministatus.db import encrypt as db_encrypt
 
 ALREADY_DECRYPTED = click.style(
     "Database is already decrypted 😴",
