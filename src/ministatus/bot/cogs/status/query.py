@@ -399,7 +399,7 @@ async def resolve_host(query: StatusQuery) -> tuple[str, int]:
 
     if ip is None:
         with suppress(ValueError):
-            ip = IPv6Address(host)
+            ip = IPv6Address(host.strip("[]"))
 
     if ip is not None and query_port < 1:
         raise InvalidQueryError("IP address was provided without a query port")
@@ -651,6 +651,7 @@ class QueryContext:
         await self._stack.__aexit__(exc_type, exc_val, tb)
 
     async def start_source(self, host: str) -> AsyncA2S:
+        # HACK: domain names theoretically permit any bytes, including colons
         if ":" in host:
             return await self._start_source_ipv6()
         return await self._start_source_ipv4()

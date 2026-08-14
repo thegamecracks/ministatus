@@ -31,7 +31,8 @@ def parse_host(value: str) -> str:
         return IPv4Address(value) and value
 
     with suppress(ValueError):
-        return IPv6Address(value) and value
+        bare_ipv6 = value.strip("[]")
+        return IPv6Address(bare_ipv6) and f"[{bare_ipv6}]"
 
     from dns.name import from_text
 
