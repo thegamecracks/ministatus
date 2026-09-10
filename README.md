@@ -27,6 +27,7 @@ A Discord bot for managing game server status embeds.
   - [DNS Lookups (Technical)](#dns-lookups-technical)
   - [Other CLI commands](#other-cli-commands)
   - [Environment Variables](#environment-variables)
+  - [TeamSpeak 3 Query](#teamspeak-3-query)
   - [License](#license)
 
 ## Supported Games / Query Protocols
@@ -37,7 +38,7 @@ A Discord bot for managing game server status embeds.
 - Minecraft (Bedrock Edition)
 - Minecraft (Java Edition)
 - Project Zomboid
-- TeamSpeak 3
+- TeamSpeak 3 (see [TeamSpeak 3 Query](#teamspeak-3-query))
 - Valve Source Query (A2S)
 
 ## Installation
@@ -446,6 +447,28 @@ The following environment variables are supported:
 > Environment variables defined in a `.env` file are currently not recognized
 > by ministatus. You should set these using `export ABC=123` on Linux,
 > `set ABC=123` on Windows, or another equivalent method.
+
+## TeamSpeak 3 Query
+
+This section covers the requirements for a TeamSpeak 3 server status.
+
+The server must have its Telnet query port open, usually 10011, and the
+Guest server group must allow the ServerQuery commands,
+`serverinfo` and `clientlist`.
+
+To enable these commands, you can open your TeamSpeak 3 Client,
+login as a server admin, and go to Permissions > Server Groups page.
+Select the Guest group, click the wrench-arrow button on the bottom left
+to show the advanced permissions display, filter by "ServerQuery",
+and then enable the permissions:
+
+- ServerQuery: View Virtual Server Info
+- ServerQuery: View List of Clients online
+
+Afterwards, you can create your Ministatus query and select TeamSpeak 3 as the type.
+The default "game port" and "query port" will be 10011 and 9987 respectively.
+This is somewhat misleading as these ports correspond to the TS query port
+and voice port, so keep that in mind if you need to change these for your server.
 
 ## License
 
