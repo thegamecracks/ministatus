@@ -238,6 +238,8 @@ async def query_minecraft_bedrock(query: StatusQuery) -> Info:
         status = await proto.get_status()
     except TimeoutError as e:
         raise FailedQueryError("Query timed out") from e
+    except OSError as e:
+        raise FailedQueryError("Failed to connect to server") from e
 
     return Info(
         title=status.motd_line1 or None,
@@ -262,8 +264,10 @@ async def query_minecraft_java(query: StatusQuery) -> Info:
 
     try:
         status = await proto.get_status()
-    except OSError as e:
+    except TimeoutError as e:
         raise FailedQueryError("Query timed out") from e
+    except OSError as e:
+        raise FailedQueryError("Failed to connect to server") from e
 
     favicon = cast(str, status.get("favicon", ""))
     if favicon.startswith("data:image/png;base64,"):
@@ -315,6 +319,8 @@ async def query_source(ctx: QueryContext, query: StatusQuery) -> Info:
         raise FailedQueryError("Query response was malformed") from e
     except TimeoutError as e:
         raise FailedQueryError("Query timed out") from e
+    except OSError as e:
+        raise FailedQueryError("Failed to connect to server") from e
 
     players = [Player(name=p.name) for p in players]
 
@@ -346,6 +352,8 @@ async def query_teamspeak_3(query: StatusQuery) -> Info:
         clients = await proto.get_clients()
     except TimeoutError as e:
         raise FailedQueryError("Query timed out") from e
+    except OSError as e:
+        raise FailedQueryError("Failed to connect to server") from e
 
     clients = [
         Player(name=name)
@@ -375,7 +383,7 @@ async def _http_get_json(session: aiohttp.ClientSession, *args, **kwargs) -> Any
             return await res.json(content_type=None)
     except TimeoutError as e:
         raise FailedQueryError("HTTP request timed out") from e
-    except aiohttp.ClientConnectorError as e:
+    except OSError as e:  # aiohttp.ClientConnectorError
         raise FailedQueryError("Failed to connect to server") from e
     except aiohttp.ClientResponseError as e:
         message = f"Server responded with {e.status}"
