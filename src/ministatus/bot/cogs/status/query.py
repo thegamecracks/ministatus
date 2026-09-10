@@ -105,18 +105,10 @@ async def _run_query_jobs(
     *,
     max_concurrency: int,
 ) -> None:
-    tasks = []
     lock = asyncio.BoundedSemaphore(max_concurrency)
     async with QueryContext(bot) as ctx, asyncio.TaskGroup() as tg:
         for status in statuses:
-            tasks.append(tg.create_task(query_status(ctx, status, lock)))
-
-            # Let all tasks run first, and collect any errors to raise afterwards
-        await asyncio.wait(tasks)
-
-    exceptions = [e for t in tasks if (e := t.exception()) is not None]
-    if exceptions:
-        raise ExceptionGroup(f"{len(exceptions)} query job(s) failed", exceptions)
+            tg.create_task(query_status(ctx, status, lock))
 
 
 async def query_status(
