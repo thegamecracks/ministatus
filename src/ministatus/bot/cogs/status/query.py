@@ -156,8 +156,11 @@ async def maybe_query(
         await set_query_failed(query)
         return await disable_query(ctx.bot, status, query, str(e))
     except Exception:
+        log.exception(
+            "Query #%d failed with unhandled exception",
+            query.status_query_id,
+        )
         await set_query_failed(query)
-        raise
     else:
         await set_query_success(query)
         return info
