@@ -17,6 +17,9 @@ def create_player_count_graph(
     colour: int,
     max_players: int,
 ) -> io.BytesIO:
+    if max_players < 0:
+        raise ValueError(f"Expected max_players >= 0, got {max_players}")
+
     now = discord.utils.utcnow()
     if len(datapoints) < 2:
         datapoints = [
