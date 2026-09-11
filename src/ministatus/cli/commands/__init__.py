@@ -7,6 +7,7 @@ from collections.abc import Iterable
 
 import click
 from click import Command, Group
+from click.types import FuncParamType
 
 from ministatus.db import Secret, connect_client
 
@@ -46,7 +47,11 @@ async def read_token() -> Secret[str]:
         "MTI0NjgyNjg0MTIzMTMyNzI3NQ.GTIAZm.x2fbSNuYJgpAocvMM53ROlMC23NixWt-0NOjMc",
         fg="green",
     )
-    token = click.prompt("Enter token", hide_input=True, type=_parse_token)
+    token = click.prompt(
+        "Enter token",
+        hide_input=True,
+        value_proc=FuncParamType(_parse_token),
+    )
 
     async with connect_client() as client:
         await client.set_setting("token", token)
