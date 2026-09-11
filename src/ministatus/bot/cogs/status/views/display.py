@@ -456,11 +456,18 @@ class StatusDisplayView(LayoutView):
             f = discord.File(BytesIO(status.thumbnail), "thumbnail.png")
             files.append(f)
 
+        if clean_history:
+            peak_num_players = max(h.num_players for h in clean_history)
+            latest_max_players = clean_history[-1].max_players
+            max_players = max(0, peak_num_players, latest_max_players)
+        else:
+            max_players = 0
+
         graph = await asyncio.to_thread(
             create_player_count_graph,
             [(h.created_at, h.num_players) for h in clean_history],
             colour=display.graph_colour,
-            max_players=max((h.max_players for h in clean_history), default=0),
+            max_players=max_players,
         )
         f = discord.File(graph, "graph.png")
         files.append(f)
