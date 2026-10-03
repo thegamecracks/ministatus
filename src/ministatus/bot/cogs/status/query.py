@@ -361,7 +361,11 @@ async def query_teamspeak_3(query: StatusQuery) -> Info:
         address=f"{query.host}:{query.query_port}" if query.query_port else query.host,
         thumbnail=None,
         max_players=int(info.get("virtualserver_maxclients") or 0),
-        num_players=int(info.get("virtualserver_clientsonline") or 0),
+        # ServerQuery reports itself as a client, so subtract one from it
+        num_players=max(
+            int(info.get("virtualserver_clientsonline") or 0) - 1,
+            len(clients),
+        ),
         game=None,
         map=None,
         mods=None,
