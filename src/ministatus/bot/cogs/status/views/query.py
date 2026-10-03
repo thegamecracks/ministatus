@@ -19,6 +19,7 @@ from ministatus.bot.db import connect_discord_database_client
 from ministatus.bot.dt import utcnow
 from ministatus.bot.views import LayoutView, Modal
 from ministatus.db import Status, StatusQuery, StatusQueryType, connect
+from ministatus.db.models import parse_host
 
 from .book import Book, Page, RenderArgs, format_enabled_at, format_failed_at
 
@@ -127,7 +128,7 @@ class CreateStatusQueryTypeModal(Modal, title="Create Status Query"):
 
     async def on_submit(self, interaction: Interaction) -> None:
         assert isinstance(self.type.component, discord.ui.Select)
-        host = self.host.value
+        host = parse_host(self.host.value)
         type = StatusQueryType(self.type.component.values[0])
         view = CreateStatusQueryView(self.status, self.callback, host, type)
         await interaction.response.edit_message(view=view)

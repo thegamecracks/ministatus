@@ -1,11 +1,19 @@
 from __future__ import annotations
 
 import datetime
+import re
 from contextlib import suppress
 from enum import StrEnum
 from typing import Annotated, assert_never
 
 from pydantic import AfterValidator, BaseModel, Field, TypeAdapter
+
+# https://github.com/pydantic/pydantic-extra-types/blob/2dd340e31d840de81dcce5e4284a671e5994222d/pydantic_extra_types/domain.py
+_domain_pattern = re.compile(
+    r"(?=^.{1,253}$)"
+    r"(^((?!-)[a-zA-Z0-9-]{1,63}(?<!-)\.)+"
+    r"([a-zA-Z]{2,63}|xn--[a-zA-Z0-9-]{2,59}(?<!-))$)"
+)
 
 
 def is_snowflake(value: int) -> int:
@@ -34,16 +42,8 @@ def parse_host(value: str) -> str:
         bare_ipv6 = value.strip("[]")
         return IPv6Address(bare_ipv6) and f"[{bare_ipv6}]"
 
-    from dns.name import from_text
-
-    with suppress(ValueError):
-        name = from_text(value)
-        if len(name.labels) < 3:
-            raise ValueError("value cannot be a top-level domain only")
-        elif name.labels[-2].decode().isdecimal():  # Incomplete IP address?
-            raise ValueError("top-level domain cannot be a number")
-
-        return name.to_text(omit_final_dot=True)
+    if _domain_pattern.fullmatch(value):
+        return value
 
     raise ValueError("value is not a valid IP address or domain name")
 
