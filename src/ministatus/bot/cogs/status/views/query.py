@@ -155,10 +155,9 @@ class CreateStatusQueryView(LayoutView):
             f"Host: {host}",
         ]
 
-        game_port, query_port = get_default_ports(type)
-        query_port = query_port or "N/A"
-        content.append(f"Game port: {game_port}")
-        content.append(f"Query port: {query_port}")
+        self.game_port, self.query_port = get_default_ports(type)
+        content.append(f"Game port: {self.game_port}")
+        content.append(f"Query port: {self.query_port or 'N/A'}")
 
         self.container.add_item(discord.ui.TextDisplay("## Create Status Query"))
         self.container.add_item(discord.ui.Separator())
@@ -184,6 +183,8 @@ class CreateStatusQueryActionRow(discord.ui.ActionRow[CreateStatusQueryView]):
             callback=self.view.callback,
             host=self.view.host,
             type=self.view.type,
+            game_port=self.view.game_port,
+            query_port=self.view.query_port,
         )
         await interaction.response.send_modal(modal)
 
@@ -216,6 +217,8 @@ class CreateStatusQueryModal(Modal, title="Create Status Query"):
         callback: _CreateCallback,
         host: str,
         type: StatusQueryType,
+        game_port: int,
+        query_port: int | None,
     ) -> None:
         super().__init__()
         self.status = status
@@ -223,7 +226,6 @@ class CreateStatusQueryModal(Modal, title="Create Status Query"):
         self.host = host
         self.type = type
 
-        game_port, query_port = get_default_ports(type)
         self.game_port.default = str(game_port)
         if query_port is not None:
             self.query_port.default = str(query_port)
